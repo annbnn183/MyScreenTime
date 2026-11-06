@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -96,6 +96,21 @@
 **バージョン互換性：** バックアップ形式はデータベースと独立。`format`/`schemaVersion` を持ち、**より新しい形式のバックアップは理由付きで拒否**、古いものは処理します。
 
 ---
+
+## ⚡ v1.0.17 体感改善（実際の実行ログに基づく）
+
+新機能は追加せず、ユーザーが実際に遭遇したカクつきと繰り返し操作だけを直しました。いずれも書き出された実行ログ（2,128 イベント、504 件のジャンク、ERROR/CRASH は 0 件）から特定しています。
+
+| ログの現象 | 原因 | 今回の対応 |
+| :--- | :--- | :--- |
+| 初回フレームで **971 ms** の停止 | `DeviceUsageViewModel` のコンストラクタで `runBlocking` により DataStore を読み、メインスレッドを塞いでいた | 先に既定の期間で描画し、設定は非同期で読み込む |
+| スキャン結果の反映時に **904 ms** の長いフレーム | 最初の画面で 40 個のアプリセル＋カード＋グラフを一度に構築していた | 最初は 20 個（1 画面分）だけ構築し、残りは必要時に展開 |
+| 「クリック数の補算」を **10 回以上**手動で押す必要（1 回 2〜10 秒） | 1 回で 31 日しか進まず、しかも毎回 10 日分のイベントを全走査していた | 1 回で 365 日まで補算。進捗を表示し、完了後はイベントを再走査しない |
+| 補算中の PSS ピークが **1.36 GB** | 1 日ごとに JSON 全体を書き直していた（365 日＝365 回の全書き込み） | 8 日分をまとめて書き込み、システムのイベント保持期間（21 日）より古い日は問い合わせずに記録のみ |
+| ユーザー自身が「クリック数が不足」と気づく必要があった | 自動実行がなかった | ホーム画面の読み込み後に 1 回だけ自動で補算（既に走査済みの日はスキップ） |
+| 自動バックアップがスイッチだけで状態不明 | 状態表示がなかった | 設定に「前回のバックアップ・サイズ・保持数」を表示 |
+
+> ログは従来どおり全件を永久保存します。今回の変更は「重複した走査」と「重複した書き込み」を減らすだけです。
 
 ## 📸 スクリーンショット
 
@@ -286,7 +301,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.16.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.17.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

@@ -88,30 +88,37 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
-          What's new in v1.0.16 — data management: complete backup, restore & migration.
-          - Full JSON backup of everything this app actually persists: all settings and the
-            permanent per-day / per-app open-count history. (Screen-time DURATION and hourly
-            distribution come from Android's UsageStatsManager — device-local system data that
-            cannot be exported into another phone; we back up only what we own and never fake a
-            "duration backup".)
-          - Versioned, self-describing format: format + schemaVersion, export time, time zone,
-            record counts and a SHA-256 checksum. Newer-format backups are rejected with a reason.
-          - Write-then-verify: after saving, the file is read back and compared; success is shown
-            ONLY when identical (otherwise "verification failed"). No "successful but empty" case.
-          - Optional password encryption: AES-256-GCM + PBKDF2 (random salt/IV). A lost password
-            cannot be recovered, and the app says so plainly.
-          - Restore is safety-first: validate (size / JSON / version / checksum / counts) -> snapshot
-            current data + "restore in progress" marker -> apply MERGE (max per day/app, so re-import
-            never doubles counts) or OVERWRITE -> re-verify counts. Any failure rolls back
-            automatically; a crash mid-restore is rolled back on next launch. No "half-restored" state.
-          - Restore re-checks usage-access permission and prompts to re-grant it (a special system
-            permission that cannot travel in a file).
-          - Auto local backup: one per day, keeps the latest 7, in the app-private external folder.
-          - Delete all data now writes a safety snapshot before clearing.
-          - Also in this build: day / week / month / year trends with a "vs previous period" card
-            (time + open counts), on top of the earlier ranking grid and month-view work.
+          What's new in v1.0.17 — a performance/UX pass driven entirely by an exported runtime log
+          (2,128 events, 504 jank records, 0 ERROR / 0 CRASH):
+          - COLD START: DeviceUsageViewModel no longer calls runBlocking on DataStore in its
+            constructor. That blocked the main thread and produced a measured 971 ms first-frame
+            stall. The first frame now renders with the default period, then the saved preference is
+            applied asynchronously (and never overrides a period the user already picked).
+          - RESULT RENDER: the first screen composed 40 app cells + summary card + chart in one go,
+            which showed up as a 904 ms long frame right after the usage scan finished. The initial
+            window is now 20 cells (one screen); the rest expands on demand.
+          - OPEN-COUNT BACKFILL REWRITTEN: the old flow advanced only 31 days per tap, so it took
+            10+ taps of 2-10 s each, and every tap forced a useCache=false full 10-day event rescan.
+            One run now backfills up to 365 days with live progress ("x days"), and on completion it
+            only rebuilds the view caches - no event rescan at all.
+          - BACKFILL DISK IO: mergeDay() rewrote the entire JSON file once per day (365 full writes
+            for a year, PSS peaked at 1.36 GB). Results are now batch-persisted every 8 days, and
+            days older than the system event window (21 days) are marked as scanned instead of
+            firing queries that can only return nothing.
+          - BACKFILL IS AUTOMATIC NOW: it runs once, silently, after the home screen loads; days
+            already scanned are skipped, so repeat calls cost almost nothing.
+          - AUTO BACKUP VISIBILITY: Settings now shows "last backup time / file size / copies kept"
+            instead of a bare switch with no feedback.
+          - Logging policy unchanged: every event is still captured, saved forever, never deleted.
+            These changes remove duplicate scans and duplicate disk writes, not log entries.
 
           Earlier releases:
+          - v1.0.16: complete backup / restore / migration — versioned JSON (format, schemaVersion,
+            export time, time zone, record counts, SHA-256 checksum); write-then-read-back verify;
+            restore = validate -> safety snapshot + crash marker -> MERGE (max per day/app, so a
+            repeat import never doubles counts) or OVERWRITE -> re-verify, with automatic rollback on
+            any failure; optional AES-256-GCM + PBKDF2 password encryption; daily auto backup keeping
+            the latest 7; safety snapshot before "delete all data"; permission re-check after restore.
           - v1.0.14: statistical accuracy - removed INTERVAL_BEST (auto-picked YEARLY for a 30-day
             window), DISJOINT DAILY+WEEKLY+MONTHLY segments, fixed DAILY filtering (~71% of rows were
             dropped), data-completeness classification, SEGMENT / DATA_COMPLETENESS log events,

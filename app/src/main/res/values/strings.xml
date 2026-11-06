@@ -209,9 +209,10 @@
     <string name="range_daily_average">Daily average</string>
     <string name="range_total_launches">Total opens</string>
     <string name="range_days_recorded">Days recorded</string>
-    <string name="click_backfill_hint">Open counts are stored day by day on this device, permanently. %1$d of %2$d days recorded; older days can be backfilled.</string>
-    <string name="click_backfill">Backfill older opens</string>
+    <string name="click_backfill_hint">Open counts are stored day by day on this device, permanently. %1$d of %2$d days recorded; older days are backfilled automatically in the background.</string>
+    <string name="click_backfill">Backfill now</string>
     <string name="click_backfill_running">Backfilling…</string>
+    <string name="click_backfill_progress">Backfilling… %1$d days</string>
     <string name="launch_count_plain">%1$d opens</string>
     <string name="hourly_distribution_title">Hours of day</string>
     <string name="hourly_peak">Peak hour: %1$d:00 (%2$s)</string>
@@ -241,6 +242,8 @@
     <string name="restore_data_desc">Import a JSON backup to restore settings and history on this device.</string>
     <string name="auto_backup">Automatic local backup</string>
     <string name="auto_backup_desc">Save one backup per day to local storage. For phone migration, export manually and copy the file.</string>
+    <string name="auto_backup_status">Last backup: %1$s · %2$s · %3$d copies kept</string>
+    <string name="auto_backup_none">No automatic backup yet. Turn this on to keep one copy per day.</string>
     <string name="delete_all_data">Delete all data</string>
     <string name="delete_all_data_desc">Erase all settings and open-count history. This cannot be undone.</string>
     <string name="delete_confirm_title">Delete all data?</string>

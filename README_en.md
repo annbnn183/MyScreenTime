@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -96,6 +96,21 @@ On top of the original open-source project, I have added capabilities while stic
 **Version compatibility:** the backup format is independent of the database; files carry `format`/`schemaVersion`; **newer-format backups are rejected with a reason**, older ones are handled.
 
 ---
+
+## ⚡ v1.0.17 performance pass (driven by real runtime logs)
+
+No new screens this release — only the stalls and repeated taps users actually hit, all located from an exported runtime log (2,128 events, 504 jank records, 0 ERROR/CRASH).
+
+| Symptom in the log | Root cause | Fix in this release |
+| :--- | :--- | :--- |
+| **971 ms** stall on the first frame | `DeviceUsageViewModel` called `runBlocking` on DataStore inside its constructor, blocking the main thread | Render the first frame with the default period, then read the preference asynchronously |
+| **904 ms** long frame when the scan result lands | The first screen composed 40 app cells + summary card + chart at once | First screen shows 20 cells (exactly one screen); the rest expands on demand |
+| "Backfill opens" had to be tapped **10+ times**, 2–10 s each | Each tap advanced only 31 days, and every run triggered a full 10-day event rescan | One tap backfills 365 days, with live progress; the result rebuilds view caches only — no event rescan |
+| **1.36 GB** PSS peak during backfill | Every day rewrote the whole JSON file (365 days = 365 full writes) | Batch-persist every 8 days; days beyond the system event window (21 days) are marked instead of queried |
+| Users had to notice and tap "backfill" themselves | Nothing ran automatically | A silent backfill runs once after the home screen loads; already-scanned days are skipped |
+| Auto-backup was a bare switch with no feedback | No status surfaced | Settings now shows "last backup · size · copies kept" |
+
+> Logging is unchanged: every event is still captured and kept forever. These changes only remove duplicate scans and duplicate disk writes.
 
 ## 📸 Screenshots
 
@@ -286,7 +301,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.16.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.17.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

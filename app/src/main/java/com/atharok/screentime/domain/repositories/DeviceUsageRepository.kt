@@ -44,11 +44,13 @@ interface DeviceUsageRepository {
     /**
      * 按天往前补算历史点击量并永久落盘，单次最多 [maxDays] 天，返回本次补算天数。
      * 分批执行，即使中途被系统回收，已算过的天也不会丢失。
+     * [onProgress] 会按批回报进度，供界面显示"正在补算 x / N 天"。
      */
     suspend fun backfillLaunchHistory(
         maxDays: Int,
         ignoreSystemApps: Boolean,
-        ignoredPackages: List<String>
+        ignoredPackages: List<String>,
+        onProgress: ((done: Int, total: Int) -> Unit)? = null
     ): Int
 
     /**

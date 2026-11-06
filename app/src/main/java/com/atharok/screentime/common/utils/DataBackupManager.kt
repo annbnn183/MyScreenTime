@@ -308,6 +308,23 @@ object DataBackupManager {
             ?.lastModified()
     }.getOrNull()
 
+    /** 自动备份的当前状态，供设置页显示「上次备份 / 份数 / 大小」。 */
+    data class AutoBackupStatus(val lastTimeMs: Long, val sizeBytes: Long, val count: Int)
+
+    fun autoBackupStatus(context: Context): AutoBackupStatus? = runCatching {
+        val files = backupDir(context)
+            .listFiles { f -> f.name.startsWith(AUTO_BACKUP_PREFIX) }
+            ?.filter { it.isFile && it.length() > 0 }
+            ?.sortedByDescending { it.lastModified() }
+            .orEmpty()
+        val latest = files.firstOrNull() ?: return null
+        AutoBackupStatus(
+            lastTimeMs = latest.lastModified(),
+            sizeBytes = latest.length(),
+            count = files.size
+        )
+    }.getOrNull()
+
     /** 写入今天的自动备份；已存在则跳过。返回是否（已存在或成功）可用。 */
     suspend fun writeAutoBackupIfNeeded(context: Context): Boolean {
         val target = autoBackupFileForToday(context)

@@ -30,6 +30,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -328,6 +329,17 @@ fun SettingsScreen(
 
             var showDeleteDialog by remember { mutableStateOf(false) }
 
+            // 自动备份状态：让用户一眼看到「上次备份是什么时候、多大、存了几份」，
+            // 而不是只有一个开关，不知道到底有没有在备份。
+            var autoBackupStatus by remember {
+                mutableStateOf<DataBackupManager.AutoBackupStatus?>(null)
+            }
+            LaunchedEffect(autoBackupEnabled) {
+                autoBackupStatus = withContext(Dispatchers.IO) {
+                    DataBackupManager.autoBackupStatus(context)
+                }
+            }
+
             // 加密备份口令
             var showBackupPasswordDialog by remember { mutableStateOf(false) }
             var backupPassword by remember { mutableStateOf("") }
@@ -519,6 +531,24 @@ fun SettingsScreen(
                     .padding(
                         horizontal = horizontalPadding,
                         vertical = verticalPadding
+                    )
+            )
+
+            // 自动备份的实际状态（时间 / 大小 / 份数），替代只有一个开关的「盲盒」体验。
+            TextSmall(
+                text = autoBackupStatus?.let { status ->
+                    stringResource(
+                        id = R.string.auto_backup_status,
+                        DateTimeUtils.formatToMediumDateTime(status.lastTimeMs),
+                        formatFileSize(status.sizeBytes),
+                        status.count
+                    )
+                } ?: stringResource(id = R.string.auto_backup_none),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = dimensionResource(id = R.dimen.padding_small)
                     )
             )
 
@@ -1019,4 +1049,10 @@ private fun SettingsAction(
             TextNormalSecondary(text = it)
         }
     }
+}
+/** 把字节数格式化成 KB / MB，供自动备份状态行显示。 */
+private fun formatFileSize(bytes: Long): String = when {
+    bytes >= 1024L * 1024L -> String.format(java.util.Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0)
+    bytes >= 1024L -> String.format(java.util.Locale.US, "%.0f KB", bytes / 1024.0)
+    else -> "$bytes B"
 }

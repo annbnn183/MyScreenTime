@@ -27,6 +27,17 @@ class DeviceUsageRepositoryImpl(
     private val tracker: UsageStatsTracker
 ): DeviceUsageRepository {
 
+    private companion object {
+        /** 系统事件明细的实际保留窗口；更早的日期不再发起逐日查询。 */
+        const val EVENT_DETAIL_HORIZON_DAYS = 21
+
+        /** 补算时每累积多少天落盘一次。 */
+        const val BACKFILL_BATCH_DAYS = 8
+
+        /** 进度回调的最小步长（天），避免每补一天就刷新一次界面。 */
+        const val BACKFILL_PROGRESS_STEP = 8
+    }
+
     // Permission
 
     override fun hasAppUsagePermission(): Boolean = tracker.hasAppUsagePermission()
@@ -390,28 +401,49 @@ class DeviceUsageRepositoryImpl(
     override suspend fun backfillLaunchHistory(
         maxDays: Int,
         ignoreSystemApps: Boolean,
-        ignoredPackages: List<String>
+        ignoredPackages: List<String>,
+        onProgress: ((done: Int, total: Int) -> Unit)?
     ): Int {
         val today = DateTimeUtils.truncateToDay(System.currentTimeMillis())
         val earliest = launchHistory.earliestScannedDay() ?: today
         val oldestAllowed = DateTimeUtils.addDaysToTimestamp(today, -365)
+        // Android 的事件明细通常只保留最近 7~14 天，更早的日期即使逐个 queryEvents 也拿不到东西，
+        // 却仍要付出一次 binder 往返（实测 30~120ms/天）。因此超过这个窗口的日期直接标记为
+        // 「已扫描、0 次点击」，既不丢数据，也不会把一次补算拖成几十秒。
+        val eventHorizonStart = DateTimeUtils.addDaysToTimestamp(today, -EVENT_DETAIL_HORIZON_DAYS)
         var day = DateTimeUtils.addDaysToTimestamp(earliest, -1)
         var done = 0
+        var pending = LinkedHashMap<Long, Map<String, Int>>()
+        var lastReported = 0
         while (done < maxDays && day >= oldestAllowed) {
             if (!launchHistory.isScanned(day)) {
-                val nextDay = DateTimeUtils.addDaysToTimestamp(day, 1)
-                val counts = tracker.countLaunchesByDay(
-                    dayStart = day,
-                    dayEnd = nextDay,
-                    ignoreSystemApps = ignoreSystemApps,
-                    ignoredPackages = ignoredPackages
-                )
-                launchHistory.mergeDay(day, counts)
-                kotlinx.coroutines.yield()
+                val counts = if (day >= eventHorizonStart) {
+                    tracker.countLaunchesByDay(
+                        dayStart = day,
+                        dayEnd = DateTimeUtils.addDaysToTimestamp(day, 1),
+                        ignoreSystemApps = ignoreSystemApps,
+                        ignoredPackages = ignoredPackages
+                    )
+                } else {
+                    emptyMap()
+                }
+                pending[day] = counts
+                // 每 8 天落盘一次：既控制单次写入量，又保证进程被杀时最多丢一批。
+                if (pending.size >= BACKFILL_BATCH_DAYS) {
+                    launchHistory.mergeDays(pending)
+                    pending = LinkedHashMap()
+                    kotlinx.coroutines.yield()
+                }
+                if (done - lastReported >= BACKFILL_PROGRESS_STEP) {
+                    lastReported = done
+                    onProgress?.invoke(done, maxDays)
+                }
             }
             day = DateTimeUtils.addDaysToTimestamp(day, -1)
             done++
         }
+        if (pending.isNotEmpty()) launchHistory.mergeDays(pending)
+        onProgress?.invoke(done, maxDays)
         AppLog.i(
             "DeviceUsageRepository",
             "Backfilled $done days of launch history (stored days: ${launchHistory.scannedDays()})"

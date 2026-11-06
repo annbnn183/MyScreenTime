@@ -70,6 +70,27 @@ class LaunchHistoryStore(private val context: Context) {
         }
     }
 
+    /**
+     * 批量写入多天的结果，只在全部合并完成后落盘一次。
+     *
+     * 逐日 [mergeDay] 每写一天都要序列化并重写整个 JSON 文件；补算 365 天就是 365 次全量写盘，
+     * 这是补算慢、内存占用高的主要原因。批量接口把 IO 次数从 N 次降到 1 次。
+     */
+    fun mergeDays(results: Map<Long, Map<String, Int>>) {
+        if (results.isEmpty()) return
+        synchronized(lock) {
+            results.forEach { (day, counts) ->
+                val key = day.toString()
+                val target = days.getOrPut(key) { mutableMapOf() }
+                counts.forEach { (pkg, count) ->
+                    if (count > 0) target[pkg] = maxOf(target[pkg] ?: 0, count)
+                }
+                scanned.add(key)
+            }
+            persist()
+        }
+    }
+
     fun isScanned(day: Long): Boolean = synchronized(lock) { day.toString() in scanned }
 
     /** 累加区间内所有已记录天的点击量。 */

@@ -267,12 +267,28 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
 
     // ---- Launch history backfill ----
 
-    /** 分批补算历史点击量（每次最多 maxDays 天），返回本次补算天数。 */
+    /** 分批补算历史点击量（单次最多 maxDays 天），返回本次推进的天数。 */
     suspend fun backfillLaunchHistory(
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>,
-        maxDays: Int = 31
-    ): Int = repository.backfillLaunchHistory(maxDays, ignoreSystemApps, ignoredPackages)
+        maxDays: Int = 31,
+        onProgress: ((done: Int, total: Int) -> Unit)? = null
+    ): Int = repository.backfillLaunchHistory(maxDays, ignoreSystemApps, ignoredPackages, onProgress)
+
+    /**
+     * 补算完成后让各周期缓存失效，但**不**重新扫描事件明细。
+     *
+     * 点击量变了、时长没变，所以只需要重新组装视图（读系统聚合桶，几十毫秒），
+     * 不必再跑一次 0.5~10 秒的 queryEvents 全量扫描。
+     */
+    fun invalidatePeriodCaches() {
+        weeklyDeviceUsageCache = null
+        monthlyDeviceUsageCache = null
+        yearlyDeviceUsageCache = null
+        for (i in dailyDeviceUsageCache.indices) {
+            dailyDeviceUsageCache[i] = null
+        }
+    }
 
     // ---- Comparison (P3): this period vs previous period ----
 

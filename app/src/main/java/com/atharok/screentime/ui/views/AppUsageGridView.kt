@@ -37,7 +37,9 @@ fun AppUsageGridView(
     onAppClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     onBackfill: (() -> Unit)? = null,
-    backfillRunning: Boolean = false
+    backfillRunning: Boolean = false,
+    /** 已补算天数（0 表示刚开始）；用于按钮文字里的进度。 */
+    backfillProgress: Int = 0
 ) {
     val monthly = deviceUsage as? MonthlyDeviceUsage
     var rangeIndex by remember { mutableIntStateOf(0) }
@@ -45,7 +47,9 @@ fun AppUsageGridView(
     // Only a few rows are composed at first. Long ranges can hold 200-300 apps; rendering all of
     // them inside a single LazyColumn item produced multi-hundred-ms frames. "Show 40 more" grows
     // the window incrementally, and switching range/sort resets it.
-    var shownCount by remember(rangeIndex, sortIndex) { mutableIntStateOf(40) }
+    // 首屏只组合一屏（4 列 × 5 行 = 20 个），其余按需展开。
+    // 导出日志里「扫描结果上屏」曾出现 904 ms 的主线程长帧，减少首帧组合量是直接收益。
+    var shownCount by remember(rangeIndex, sortIndex) { mutableIntStateOf(20) }
 
     val ranges = monthly?.rangeRankings.orEmpty()
     val fallbackApps: List<RankedApp> = remember(deviceUsage) {
@@ -151,7 +155,8 @@ fun AppUsageGridView(
                 RangeSummaryCard(
                     range = range,
                     onBackfill = onBackfill,
-                    backfillRunning = backfillRunning
+                    backfillRunning = backfillRunning,
+                    backfillProgress = backfillProgress
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -207,7 +212,7 @@ fun AppUsageGridView(
                 )
             } else {
                 TextButton(
-                    onClick = { shownCount = 40 },
+                    onClick = { shownCount = 20 },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -247,7 +252,8 @@ fun AppUsageGridView(
 private fun RangeSummaryCard(
     range: AppUsageRange,
     onBackfill: (() -> Unit)?,
-    backfillRunning: Boolean
+    backfillRunning: Boolean,
+    backfillProgress: Int
 ) {
     val hours = DateTimeUtils.convertToHourFloat(range.totalTimeMillis)
     val dailyHours = hours / range.numberOfDays.coerceAtLeast(1)
@@ -310,11 +316,19 @@ private fun RangeSummaryCard(
                 Button(onClick = onBackfill, enabled = !backfillRunning) {
                     Text(
                         text = if (backfillRunning) {
-                            stringResource(id = R.string.click_backfill_running)
+                            if (backfillProgress > 0) {
+                                stringResource(id = R.string.click_backfill_progress, backfillProgress)
+                            } else {
+                                stringResource(id = R.string.click_backfill_running)
+                            }
                         } else {
                             stringResource(id = R.string.click_backfill)
                         }
                     )
+                }
+                if (backfillRunning) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
             }
         }

@@ -146,9 +146,10 @@
     <string name="range_daily_average">日均</string>
     <string name="range_total_launches">点击总量</string>
     <string name="range_days_recorded">已记录天数</string>
-    <string name="click_backfill_hint">点击量在本机逐日永久保存，已记录 %1$d/%2$d 天；更早的历史可点击补算，每次最多 31 天。</string>
-    <string name="click_backfill">补算历史点击量</string>
+    <string name="click_backfill_hint">点击量在本机逐日永久保存，已记录 %1$d/%2$d 天；更早的历史会在后台自动补齐，无需手动操作。</string>
+    <string name="click_backfill">立即补算</string>
     <string name="click_backfill_running">正在补算…</string>
+    <string name="click_backfill_progress">正在补算… 已推进 %1$d 天</string>
     <string name="launch_count_plain">%1$d 次</string>
     <string name="hourly_distribution_title">时段分布（按小时）</string>
     <string name="hourly_peak">峰值时段：%1$d 点（%2$s）</string>
@@ -178,6 +179,8 @@
     <string name="restore_data_desc">从 JSON 备份导入，恢复本机的设置与历史。</string>
     <string name="auto_backup">自动本地备份</string>
     <string name="auto_backup_desc">每天在本地保存一份备份。换手机迁移请用「备份」手动导出并拷走文件。</string>
+    <string name="auto_backup_status">上次备份：%1$s · %2$s · 共保留 %3$d 份</string>
+    <string name="auto_backup_none">尚无自动备份；开启后每天自动保留一份</string>
     <string name="delete_all_data">删除全部数据</string>
     <string name="delete_all_data_desc">清除所有设置与打开次数历史，且不可恢复。</string>
     <string name="delete_confirm_title">确认删除全部数据？</string>

@@ -74,10 +74,17 @@ fun DeviceUsageScreen(
         viewModel.calculateComparison()
     }
 
+    // 首次成功拿到数据后，静默把历史点击量补齐（只补一次，补过的天会被直接跳过）。
+    // 旧版本要用户自己反复点「补算」按钮十几次，每次 2~10 秒。
+    val loadSucceeded = deviceUsageResource is Resource.Success
+    LaunchedEffect(loadSucceeded) {
+        if (loadSucceeded) viewModel.backfillLaunchHistoryIfNeeded()
+    }
+
     StatelessDeviceUsageScreen(
         period = viewModel.periodState.value,
         onPeriodChange = {
-            viewModel.periodState.value = it
+            viewModel.setPeriod(it)
         },
         dayIndex = viewModel.dayIndexState.intValue,
         onDayIndexChange = {
@@ -101,6 +108,7 @@ fun DeviceUsageScreen(
         },
         onBackfill = { viewModel.backfillLaunchHistory() },
         backfillRunning = viewModel.backfillRunning.value,
+        backfillProgress = viewModel.backfillProgress.intValue,
         comparison = viewModel.comparisonFlow.collectAsStateWithLifecycle(initialValue = null).value,
         modifier = modifier
     )
@@ -121,6 +129,7 @@ private fun StatelessDeviceUsageScreen(
     refresh: (Period) -> Unit,
     onBackfill: (() -> Unit)? = null,
     backfillRunning: Boolean = false,
+    backfillProgress: Int = 0,
     comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier,
     modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
@@ -168,6 +177,7 @@ private fun StatelessDeviceUsageScreen(
                 modelProducer = modelProducer,
                 onBackfill = onBackfill,
                 backfillRunning = backfillRunning,
+                backfillProgress = backfillProgress,
                 comparison = comparison
             )
         //}
@@ -188,6 +198,7 @@ private fun PortraitDeviceUsageScreen(
     modelProducer: CartesianChartModelProducer,
     onBackfill: (() -> Unit)? = null,
     backfillRunning: Boolean = false,
+    backfillProgress: Int = 0,
     comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier
 ) {
@@ -288,6 +299,7 @@ private fun PortraitDeviceUsageScreen(
                         onAppClick = openApplicationUsageScreen,
                         onBackfill = onBackfill,
                         backfillRunning = backfillRunning,
+                        backfillProgress = backfillProgress,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))

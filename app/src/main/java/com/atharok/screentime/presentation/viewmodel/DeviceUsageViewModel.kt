@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class DeviceUsageViewModel(
     private val usageUseCase: DeviceUsageUseCase,
@@ -34,9 +33,33 @@ class DeviceUsageViewModel(
 
     // Usage calculation
 
-    val defaultPeriod: Period = runBlocking { settingsUseCase.getDefaultPeriod().first() }
-    val periodState: MutableState<Period> = mutableStateOf(defaultPeriod)
+    /**
+     * 首帧先用与系统默认一致的 DAY 渲染，再异步读用户偏好。
+     *
+     * 旧实现是 `runBlocking { settingsUseCase.getDefaultPeriod().first() }`，在 ViewModel 构造
+     * （即主线程、冷启动关键路径）上阻塞等待 DataStore 读盘 —— 导出日志里实测首帧出现
+     * 971 ms 的掉帧，用户看到的就是「点开图标后白屏/卡住一秒」。改为先渲染、后修正。
+     */
+    val periodState: MutableState<Period> = mutableStateOf(Period.DAY)
     val dayIndexState: MutableIntState = mutableIntStateOf(NUMBER_OF_DAYS - 1) // We display 9 days max.
+
+    private var periodChosenByUser = false
+
+    init {
+        viewModelScope.launch(Dispatchers.IO + AppLog.ceh) {
+            val saved = runCatching { settingsUseCase.getDefaultPeriod().first() }.getOrNull()
+                ?: return@launch
+            if (!periodChosenByUser && periodState.value != saved) {
+                periodState.value = saved
+            }
+        }
+    }
+
+    /** 用户手动切换周期：之后不再被异步读到的偏好覆盖。 */
+    fun setPeriod(period: Period) {
+        periodChosenByUser = true
+        periodState.value = period
+    }
 
     val selectedCentralTendency: MutableState<CentralTendency> = mutableStateOf(CentralTendency.AVERAGE)
 
@@ -47,10 +70,24 @@ class DeviceUsageViewModel(
 
     /** 是否正在补算历史点击量。 */
     val backfillRunning: MutableState<Boolean> = mutableStateOf(false)
+    /** 已推进的天数，用于显示「正在补算 x / 365 天」。 */
+    val backfillProgress: MutableIntState = mutableIntStateOf(0)
+
+    /** 一次补满一年：旧的实现每次只推进 31 天，用户要连点 12 次才能补完。 */
+    private val backfillTargetDays = 365
+    private var autoBackfillTriggered = false
+
+    /** 进入主页后自动补一次（静默）。补过的天会被 [LaunchHistoryStore] 直接跳过，重复调用几乎无成本。 */
+    fun backfillLaunchHistoryIfNeeded() {
+        if (autoBackfillTriggered) return
+        autoBackfillTriggered = true
+        backfillLaunchHistory()
+    }
 
     fun backfillLaunchHistory() = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
         if (backfillRunning.value) return@launch
         backfillRunning.value = true
+        backfillProgress.value = 0
         try {
             val ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first()
             val ignoredPackages = try {
@@ -58,20 +95,25 @@ class DeviceUsageViewModel(
             } catch (_: Exception) {
                 emptyList()
             }
-            val goalMillis = try {
-                settingsUseCase.getDailyGoalSettings().first().goalMillis
-            } catch (_: Exception) {
-                0L
-            }
-            val done = usageUseCase.backfillLaunchHistory(ignoreSystemApps, ignoredPackages, 31)
-            AppLog.i("DeviceUsageViewModel", "Backfilled $done days of launch history")
-            // 强制重算，让界面立刻读到累加后的点击量。
-            usageUseCase.calculateMonthDeviceUsage(
+            val done = usageUseCase.backfillLaunchHistory(
                 ignoreSystemApps = ignoreSystemApps,
                 ignoredPackages = ignoredPackages,
-                goalMillis = goalMillis,
-                useCache = false
-            )
+                maxDays = backfillTargetDays
+            ) { progress, _ ->
+                backfillProgress.intValue = progress
+            }
+            AppLog.i("DeviceUsageViewModel", "Backfilled $done days of launch history")
+
+            // 点击量变了、时长没变：只让周期缓存失效并重新组装，
+            // 不再像旧实现那样跑一次 useCache=false 的 10 天事件全量扫描。
+            usageUseCase.invalidatePeriodCaches()
+            when (periodState.value) {
+                Period.DAY -> calculateDayDeviceUsage(useCache = true)
+                Period.WEEK -> calculateWeekDeviceUsage(useCache = true)
+                Period.MONTH -> calculateMonthDeviceUsage(useCache = true)
+                Period.YEAR -> calculateYearDeviceUsage(useCache = true)
+            }
+            calculateComparison()
         } catch (e: Exception) {
             AppLog.e("DeviceUsageViewModel", "Launch history backfill failed", e)
         } finally {

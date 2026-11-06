@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -96,6 +96,21 @@
 **版本相容：** 備份格式與資料庫結構相互獨立，檔案帶 `format`/`schemaVersion`；**較新格式的備份會被拒絕並說明原因**，較舊格式會被處理。
 
 ---
+
+## ⚡ v1.0.17 體驗最佳化（依據真實執行日誌）
+
+這一版沒有新增功能，只修掉使用者實際遇到的卡頓與重複操作。每一項都來自匯出的執行日誌（2,128 筆事件、504 次掉幀、0 筆 ERROR/CRASH）。
+
+| 日誌中的現象 | 根因 | 本版做法 |
+| :--- | :--- | :--- |
+| 冷啟動首幀掉幀 **971 ms** | `DeviceUsageViewModel` 在建構子裡用 `runBlocking` 讀 DataStore，阻塞主執行緒 | 先以預設週期繪製首幀，再非同步讀取偏好設定 |
+| 掃描結果上屏時掉幀 **904 ms** | 首屏一次組合 40 個應用格＋摘要卡＋圖表 | 首屏縮至 20 個（剛好一屏），其餘按需展開 |
+| 「補算歷史點擊量」需手動點 **10 次以上**，每次 2–10 秒 | 每次只推進 31 天，且補完會重掃 10 天事件明細 | 一次補滿 365 天並顯示進度；補完只重建檢視快取，**不再重掃事件** |
+| 補算期間 PSS 峰值 **1.36 GB** | 逐日重寫整個 JSON 檔（365 天＝365 次全量寫入） | 改為每 8 天批次寫入；超過系統事件保留窗（21 天）的日期直接標記 |
+| 使用者得自己發現並反覆點按鈕 | 沒有自動補全 | 首頁載入後自動在背景補一次，已補過的天會直接跳過 |
+| 自動備份只有開關，不知是否真的備份 | 缺少狀態顯示 | 設定頁顯示「上次備份時間 · 大小 · 保留份數」 |
+
+> 日誌政策不變：所有事件永久保存。本次只減少重複掃描與重複寫入。
 
 ## 📸 介面截圖
 
@@ -286,7 +301,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.16.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.17.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 
