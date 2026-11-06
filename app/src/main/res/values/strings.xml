@@ -225,4 +225,9 @@
     <string name="logs_order">Log order</string>
     <string name="logs_newest_first">Newest first</string>
     <string name="logs_oldest_first">Oldest first</string>
+    <!-- 日志窗口 / 跳转 -->
+    <string name="logs_window_hint">Showing %1$d of %2$d saved lines on screen; the full history is still included in the TXT export.</string>
+    <string name="logs_jump_newest">Jump to newest</string>
+    <string name="logs_jump_oldest">Jump to oldest</string>
+    <string name="logs_copy_filtered">Copy filtered</string>
 </resources>

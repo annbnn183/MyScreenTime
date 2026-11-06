@@ -44,7 +44,14 @@ object RuntimeMonitors {
         installStrictMode()
         startFrameMonitor()
         startSampling(app)
-        AppLog.logHistoricalExitInfo(app)
+        // getHistoricalProcessExitReasons() is a binder call that may also stream a 12KB trace.
+        // Running it inline in Application.onCreate stalled the first frame on cold start. It is
+        // pure diagnostics, so do it on a daemon thread after startup; NO event is lost, the
+        // records are simply written a fraction of a second later.
+        Thread({ AppLog.logHistoricalExitInfo(app) }, "AppLog-exit-info").apply {
+            isDaemon = true
+            start()
+        }
         AppLog.event(
             "INFO", "Monitors", "MONITORS_INSTALLED",
             "Lifecycle / system broadcasts / StrictMode / frame monitor / sampling / exit info enabled",

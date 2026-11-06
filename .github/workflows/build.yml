@@ -26,6 +26,21 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    # The app's versionName is the ONE source of truth. Reading it here (instead of hardcoding
+    # v1.0.<run_number>) guarantees the in-app version, APK filename, release tag and release
+    # name always match. Bump versionName + versionCode in app/build.gradle.kts to cut a release.
+    - name: Read app version from Gradle
+      id: version
+      run: |
+        V=$(grep -m1 -E '^[[:space:]]*versionName[[:space:]]*=' app/build.gradle.kts \
+             | sed -E 's/.*"([^"]*)".*/\1/')
+        if ! printf '%s' "$V" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "Invalid or missing versionName in app/build.gradle.kts: '$V'" >&2
+          exit 1
+        fi
+        echo "version=$V" >> "$GITHUB_OUTPUT"
+        echo "Release version: v$V (from app/build.gradle.kts)"
+
     # A fixed keystore keeps the signing certificate identical across every CI run, so users can
     # install newer builds directly over older ones instead of being forced to uninstall first.
     - name: Decode the fixed signing keystore
@@ -59,43 +74,47 @@ jobs:
         fi
         echo "Found APK: $APK"
         mkdir -p artifacts
-        cp "$APK" "artifacts/MyScreenTime-v1.0.${{ github.run_number }}.apk"
+        cp "$APK" "artifacts/MyScreenTime-v${{ steps.version.outputs.version }}.apk"
         ls -lh artifacts
 
     - name: Create Release and Upload APK
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v1.0.${{ github.run_number }}
-        name: MyScreenTime v1.0.${{ github.run_number }}
+        tag_name: v${{ steps.version.outputs.version }}
+        name: MyScreenTime v${{ steps.version.outputs.version }}
         body: |
-          Automated build from commit ${{ github.sha }}.
+          MyScreenTime **v${{ steps.version.outputs.version }}** - automated build from commit ${{ github.sha }} (run #${{ github.run_number }}).
 
-          What's new:
-          - v1.0.12 UX: icons now load asynchronously off the main thread (cache hits are instant), removing the ~1s frame stalls seen right after a cold start
-          - All long lists (ranking grid, device usage, ignored apps) render icons through the downscaled 8MB cache instead of decoding a full-size bitmap on every recomposition
-          - "Show 40 more" grows the ranking incrementally instead of composing all 200-300 apps at once
-          - Frame hiccups below 100ms are still recorded, but at DEBUG level, so the WARN/errors filter only shows stalls you can actually feel. No event is dropped
-          - Log viewer shows the newest entries first by default, with a one-tap order toggle
-          - LOGGING POLICY UNCHANGED: every event is captured, saved forever and never deleted; the full-history TXT export is untouched
-          - Measured on v1.0.11 (same devices): PSS peak 1375MB -> 266MB (OnePlus), 694MB -> 330MB (Xiaomi); >500ms frame stalls 26 -> 4 and 46 -> 1
-          - PERFORMANCE / UX: app icons are cached once and downscaled to their real display size (8MB LruCache); long-range ranking rows no longer keep ~800 full-size Drawables alive. Removes the 1.1GB PSS peak and the LOW_MEMORY kills seen on ColorOS
-          - Ranking grid composes only the top 40 apps initially, with a "Show all N apps" toggle that collapses again when range/sort changes. Removes the 600-2400ms frame stalls when opening the month view
-          - Fixed the permission-screen flash: AppOps transiently reports MODE_DEFAULT just after process start on some ROMs, so the start route is decided once and backed by a real UsageStatsManager query; the permission screen also checks immediately instead of waiting for an ON_RESUME that already fired
-          - Log viewer auto-refresh reads only the newest files instead of rescanning the whole permanent history, and no longer recounts every line every 3 seconds
-          - Device snapshot now writes a DEBUG note instead of a false WARN when ACCESS_WIFI_STATE is not granted
-          - IMPORTANT: logging behaviour is UNCHANGED - every event is still captured, saved forever and never deleted; the full-history TXT export is untouched. Only rendering/reading was optimized
-          - From v1.0.10: long-range hour totals, permanent day-by-day launch history with cancellable backfill, always-visible click counts, 24-hour distribution, full-capture runtime log + TXT export, new maintainer links
-          - Long-range HOUR totals: each range (4 weeks / 6 months / year) now shows the accumulated hours, daily average, total opens and how many days of click data are recorded -- not just per-day increments
-          - Fixed long-range click counts: Android's WEEKLY/MONTHLY/YEARLY buckets do NOT store launch counts, so a permanent local day-by-day launch history was added; counts for any period are summed from it. A "Backfill older opens" button scans at most 31 older days per tap (one-day chunks, saved to disk each day, cancellable), so a half-year/year can be filled without the long scan that used to get the process killed
-          - Click count line is always visible now (0 opens instead of a hidden row); range labels no longer say "(avg)" while showing totals
-          - New "Hours of day" 24-bar distribution with peak hour, built from the detailed usage events the device still keeps
-          - FULL-CAPTURE runtime logging: one JSON event per line, batched off the main thread, per-day files that are NEVER deleted (only split into parts past 4MB)
-          - Captures lifecycle/foreground, page path + dwell time, touch coordinates/gesture/3x3 zone, tap-to-frame latency, frame jank, query cost/thread/range/bucket counts, aggregation intermediates, memory/battery/thermal samples, StrictMode, full device snapshot, crashes, ANR watchdog, ApplicationExitInfo (LMK/ANR/native crash), WorkManager outcomes and manual markers
-          - Log viewer upgraded: keyword search, event-type filters, auto refresh, add-a-marker, copy, and full-history TXT export with a built-in AI prompt + device snapshot + capture summary + process logcat
-          - Website and source-code links now point to the new maintainer: homepage https://github.com/annbnn183 and source https://github.com/annbnn183/MyScreenTime (Fastlane store descriptions updated too); WeChat/email shown in Settings -> About
-          - Retains: 4-column ranking grid, 4-week/6-month/year buckets, launch counts and rates, month view + insights + goal calendar, CSV export, daily goal reminder
-          - Fixed APK signing: newer builds install directly over this one (no uninstall needed)
-          - Vico blank-label crash hardening on every chart axis
+          > The version shown inside the app, the APK filename and this release tag are ALL read
+          > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
+
+          What's new in v1.0.13:
+          - UNIFIED VERSIONING: removed the "-debug" suffix and the CI run-number tag. Settings -> About
+            and exported log headers now read `1.0.13 (23)`, exactly matching release `v1.0.13` and
+            `MyScreenTime-v1.0.13.apk`. versionCode 23 keeps over-the-top upgrades working.
+          - Log viewer now states how many lines are on screen out of the permanent history, with
+            one-tap "jump to newest / oldest" and "copy filtered lines" (the full TXT export is untouched).
+          - Historical process exit reasons are read after the first frame instead of during
+            Application.onCreate, shortening cold-start frame stalls.
+          - LOGGING POLICY UNCHANGED: every event is still captured, saved forever and never deleted;
+            no event is dropped and the full-history TXT export keeps exactly the same content.
+
+          Earlier releases:
+          - v1.0.12: async icon loading off the main thread, incremental "+40" ranking rendering,
+            JANK split into DEBUG/WARN, newest-first log view
+          - v1.0.11: 8MB downscaled icon LruCache, top-40 grid, permission-screen flash fix,
+            cheaper log reads, no more false Wi-Fi WARN
+          - v1.0.10: long-range hour totals, permanent per-day launch history with cancellable
+            backfill, always-visible click counts, 24-hour distribution
+          - v1.0.9: full-capture runtime log + TXT export with AI prompt
+          - v1.0.8: merged long-range ranking grid using system WEEKLY/MONTHLY/YEARLY buckets
+
+          Measured on real devices (v1.0.11 / v1.0.12 logs): PSS peak 1375MB -> 254MB (OnePlus PGZ110),
+          694MB -> 334MB (Xiaomi 22041216C); >500ms frame stalls 26 -> 1 and 46 -> 1; 0 ERROR / 0 FATAL;
+          no LOW_MEMORY kills after the fix.
+
+          Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7+ with
+          no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

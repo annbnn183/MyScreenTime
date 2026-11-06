@@ -162,4 +162,9 @@
     <string name="logs_order">日志排序</string>
     <string name="logs_newest_first">最新在上</string>
     <string name="logs_oldest_first">最早在上</string>
+    <!-- 日志窗口 / 跳转 -->
+    <string name="logs_window_hint">当前显示 %1$d 行 / 共 %2$d 行；完整历史仍会包含在 TXT 导出中。</string>
+    <string name="logs_jump_newest">跳到最新</string>
+    <string name="logs_jump_oldest">跳到最早</string>
+    <string name="logs_copy_filtered">复制当前结果</string>
 </resources>

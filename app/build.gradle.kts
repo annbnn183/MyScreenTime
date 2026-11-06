@@ -14,8 +14,12 @@ android {
         applicationId = "com.atharok.screentime"
         minSdk = 24
         targetSdk = 37
-        versionCode = 22
-        versionName = "1.11.0"
+        // SINGLE SOURCE OF TRUTH for every version number shown to users and published on GitHub.
+        // The CI workflow reads this versionName to build the release tag, release name and APK
+        // filename, so the in-app version and the GitHub release can never drift apart again.
+        // Keep it in sync with versionCode: v1.0.13 -> versionCode 23 -> versionName 1.0.13.
+        versionCode = 23
+        versionName = "1.0.13"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,8 +42,10 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
+            // Keep the ".debug" application id suffix (it defines the package name, so removing
+            // it would break over-the-top upgrades), but do NOT append "-debug" to versionName:
+            // the in-app version must read exactly like the GitHub release tag (e.g. 1.0.13).
             applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
             if (useFixedSigning) signingConfig = fixedSigning
         }
         release {

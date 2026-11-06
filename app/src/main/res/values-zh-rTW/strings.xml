@@ -165,4 +165,9 @@
     <string name="logs_order">日誌排序</string>
     <string name="logs_newest_first">最新在上</string>
     <string name="logs_oldest_first">最早在上</string>
+    <!-- 日志窗口 / 跳转 -->
+    <string name="logs_window_hint">目前顯示 %1$d 行 / 共 %2$d 行；完整歷史仍會包含在 TXT 匯出中。</string>
+    <string name="logs_jump_newest">跳到最新</string>
+    <string name="logs_jump_oldest">跳到最早</string>
+    <string name="logs_copy_filtered">複製目前結果</string>
 </resources>

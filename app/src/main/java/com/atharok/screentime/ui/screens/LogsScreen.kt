@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Share
@@ -127,6 +128,29 @@ fun LogsScreen(
         if (newestFirst) shown.asReversed() else shown
     }
 
+    val listState = rememberLazyListState()
+
+    // With a permanent history that can reach thousands of lines, the viewer only renders the
+    // newest 500. These jumps let the user reach either end without a long manual scroll.
+    val jumpToNewest: () -> Unit = {
+        scope.launch {
+            val last = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+            listState.animateScrollToItem(if (newestFirst) 0 else last)
+        }
+    }
+    val jumpToOldest: () -> Unit = {
+        scope.launch {
+            val last = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+            listState.animateScrollToItem(if (newestFirst) last else 0)
+        }
+    }
+    val copyFiltered: () -> Unit = {
+        val text = ordered.joinToString("\n")
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("MyScreenTime logs (filtered)", text))
+        Toast.makeText(context, context.getString(R.string.logs_copied), Toast.LENGTH_SHORT).show()
+    }
+
     AppScaffold(
         title = stringResource(id = R.string.runtime_logs),
         modifier = modifier,
@@ -166,6 +190,7 @@ fun LogsScreen(
     ) { innerPadding ->
 
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -173,6 +198,10 @@ fun LogsScreen(
             item {
                 LogsInfoCard(
                     stats = stats,
+                    shownCount = shown.size,
+                    onJumpNewest = jumpToNewest,
+                    onJumpOldest = jumpToOldest,
+                    onCopyFiltered = copyFiltered,
                     query = query,
                     onQueryChange = { query = it },
                     filter = filter,
@@ -242,6 +271,10 @@ fun LogsScreen(
 @Composable
 private fun LogsInfoCard(
     stats: AppLog.LogStats,
+    shownCount: Int,
+    onJumpNewest: () -> Unit,
+    onJumpOldest: () -> Unit,
+    onCopyFiltered: () -> Unit,
     query: String,
     onQueryChange: (String) -> Unit,
     filter: Int,
@@ -286,6 +319,40 @@ private fun LogsInfoCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+
+            // Be explicit about the 500-line window: the rest of the history is still on disk and
+            // still included in the full TXT export, it is simply not composed on screen.
+            Text(
+                text = stringResource(id = R.string.logs_window_hint, shownCount, stats.lineCount),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = onJumpNewest, modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(id = R.string.logs_jump_newest),
+                        fontSize = 11.sp,
+                        maxLines = 1
+                    )
+                }
+                TextButton(onClick = onJumpOldest, modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(id = R.string.logs_jump_oldest),
+                        fontSize = 11.sp,
+                        maxLines = 1
+                    )
+                }
+                TextButton(onClick = onCopyFiltered, modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(id = R.string.logs_copy_filtered),
+                        fontSize = 11.sp,
+                        maxLines = 1
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_normal)))
 
             Text(
