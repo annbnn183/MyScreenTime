@@ -20,6 +20,12 @@
 
 </div>
 
+<div align="center">
+
+[English](README_en.md) · [日本語](README_ja.md) · [한국어](README_ko.md) · [繁體中文](README_zh-TW.md)
+
+</div>
+
 ---
 
 ## 📑 目录
