@@ -158,4 +158,8 @@
     <string name="monthly_data_limited">This device only exposes a limited number of days through the system usage API. Older days are shown as zero.</string>
     <string name="export_report">Export CSV report</string>
     <string name="export_report_subject">MyScreenTime usage report</string>
+
+    <!-- Maintainer notice -->
+    <string name="maintainer_notice_title">Now maintained by 美丽的黑莓</string>
+    <string name="maintainer_notice_message">This project is now primarily written and maintained with AI assistance.</string>
 </resources>

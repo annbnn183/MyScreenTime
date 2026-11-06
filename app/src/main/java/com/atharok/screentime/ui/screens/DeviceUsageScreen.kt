@@ -44,6 +44,7 @@ import com.atharok.screentime.ui.components.SettingsAction
 import com.atharok.screentime.ui.components.TextNormal
 import com.atharok.screentime.ui.components.TextNormalSecondary
 import com.atharok.screentime.ui.components.TextSmall
+import com.atharok.screentime.ui.views.MaintainerNotice
 import com.atharok.screentime.ui.views.MonthlyInsightsView
 import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
@@ -172,6 +173,18 @@ private fun PortraitDeviceUsageScreen(
         modifier = modifier,
         contentPadding = innerPadding
     ) {
+
+        // Who is maintaining the project now, visible as soon as the app is opened.
+        item {
+            MaintainerNotice(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = dimensionResource(id = R.dimen.padding_medium),
+                        vertical = dimensionResource(id = R.dimen.padding_normal)
+                    )
+            )
+        }
 
         item {
             PeriodSelector(

@@ -121,6 +121,12 @@ Extras included in this update:
 If a ROM only returns a few days from `queryUsageStats`, the month view shows a notice and falls
 back to the event-based data for the days it does have.
 
+## Project stewardship
+
+This project is now maintained by **美丽的黑莓**. Most of the code is written and maintained with
+AI assistance. The same note is shown to users as a banner on the main screen and in
+*Settings → About*.
+
 ## Automated builds
 
 Pushing to `main` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds

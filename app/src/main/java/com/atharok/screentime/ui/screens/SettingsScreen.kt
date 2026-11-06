@@ -318,6 +318,18 @@ fun SettingsScreen(
                     )
             )
 
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            ) {
+                TextNormal(text = stringResource(id = R.string.maintainer_notice_title))
+                TextNormalSecondary(text = stringResource(id = R.string.maintainer_notice_message))
+            }
+
             SettingsScreenTimeCalculationMethodModalBottomSheet(
                 title = R.string.screen_time_calculation_method,
                 modifier = Modifier

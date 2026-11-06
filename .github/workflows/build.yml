@@ -57,6 +57,7 @@ jobs:
           - Monthly insights (longest day, active days) and a 30-day goal calendar
           - CSV report export / share from the top bar
           - Daily screen time goal reminder (from the previous release)
+          - In-app maintainer notice: now maintained by 美丽的黑莓, primarily written with AI assistance
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

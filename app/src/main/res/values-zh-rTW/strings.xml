@@ -99,4 +99,8 @@
     <string name="monthly_data_limited">此裝置的系統介面僅提供有限天數的用量資料，更早的日期顯示為 0。</string>
     <string name="export_report">匯出 CSV 報告</string>
     <string name="export_report_subject">MyScreenTime 用量報告</string>
+
+    <!-- 專案接手公告 -->
+    <string name="maintainer_notice_title">本專案現由「美麗的黑莓」接手</string>
+    <string name="maintainer_notice_message">程式碼主要由 AI 撰寫與維護</string>
 </resources>
