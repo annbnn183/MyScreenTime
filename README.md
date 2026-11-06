@@ -1,4 +1,4 @@
-<div align="center"><img src="assets/ic_launcher_round.png" width="120" /></div>
+<div align="center"><img src="assets/ic_launcher_round.png" width="120" alt="应用图标" /></div>
 
 # <div align="center">Screen Time · 屏幕使用时间</div>
 
@@ -12,45 +12,87 @@
 
 <div align="center">
 
-[![Download](https://img.shields.io/badge/Download-GitHub%20Releases-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
-[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
+[![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+[![Build](https://img.shields.io/badge/Build-GitHub%20Actions-2088FF?style=for-the-badge)](.github/workflows/build.yml)
 
 </div>
+
+---
+
+## 📑 目录
+
+- [关于这个项目](#关于这个项目)
+- [✨ 功能特性](#-功能特性)
+- [📸 界面截图](#-界面截图)
+- [⬇️ 下载](#️-下载)
+- [💬 联系我](#-联系我)
+- [☕ 打赏 / 支持我](#-打赏--支持我)
+- [⚙️ 自动构建](#️-自动构建)
+- [📄 许可证](#-许可证)
+
+---
 
 ## 关于这个项目
 
 这个项目现在由我（**美丽的黑莓**）接手。从功能规划、交互取舍到每个版本的发布，都由我推进；具体代码主要借助 AI 编写与迭代。应用内的主界面和「设置 → 关于」里也放了同样的说明。
 
-在原开源项目的基础上，我陆续补上了这些能力：
+在原开源项目的基础上，我陆续补上了这些能力，并坚持一条原则：**开源、无广告、不联网、不采集数据**。界面为 Material 3，使用 Kotlin + Jetpack Compose + Vico 开发。
 
-- **日 / 周 / 月** 多周期查看，以及 **4 周、半年、一年（平均）** 的长期趋势视图：读取系统预聚合的长周期统计，历史更完整，也不卡顿。
-- **应用四列网格排行**：可按使用时长 / 点击量 / 名称排序，附细进度条。
-- **点击量与点击率**：统计各应用的打开次数及占比，并写入 CSV 报表。
-- **每日屏幕使用目标提醒**：自定义目标时长与预警比例，每天在达标前提醒一次（Android 13+ 需通知权限）。
-- **月度洞察**：最长使用日、活跃天数，以及 30 天目标日历（绿 = 达标，红 = 超标）。
-- **CSV 导出 / 分享**：从顶部工具栏导出当前周期的每日汇总与应用排行。
-- 单个应用的独立详情页、对比图表、主屏幕小组件。
+---
 
-同时保持原有的原则：**开源、无广告、不联网、不采集数据**。界面为 Material 3，使用 Kotlin + Jetpack Compose + Vico 开发。
+## ✨ 功能特性
 
-## 下载
+| 🗓️ 多周期与长期趋势 | 📊 应用四列网格排行 |
+| :--- | :--- |
+| 日 / 周 / 月多周期查看，以及 **4 周、半年、一年（平均）** 的长期趋势视图：读取系统预聚合的长周期统计，历史更完整，也不卡顿。 | 可按使用时长 / 点击量 / 名称排序，附细进度条，支持「再显示 40 个」增量加载。 |
+| 🖱️ 点击量与点击率 | 🎯 每日屏幕使用目标提醒 |
+| 统计各应用的打开次数及占比，并写入 CSV 报表。 | 自定义目标时长与预警比例，每天在达标前提醒一次（Android 13+ 需通知权限）。 |
+| 📈 月度洞察 | 📤 CSV 导出 / 分享 |
+| 最长使用日、活跃天数，以及 30 天目标日历（绿 = 达标，红 = 超标）。 | 从顶部工具栏一键导出当前周期的每日汇总与应用排行。 |
+| 🔍 单应用详情 | 🧩 主屏幕小组件 |
+| 每个应用独立详情页，含对比图表。 | 无需打开应用即可在桌面查看使用情况。 |
+
+---
+
+## 📸 界面截图
+
+以下为 **v1.0.15** 实机截图（深色主题）。
+
+| 主界面 · 月视图 / 月度概览 | 应用排行 · 累计时长 / 四列网格 | 应用排行 · 加载更多 / 时段分布 |
+| :---: | :---: | :---: |
+| <img src="assets/screenshots/01-overview.jpg" width="200" alt="主界面：接手公告、月视图时长图表与月度概览" /> | <img src="assets/screenshots/02-ranking.jpg" width="200" alt="应用排行：本范围累计使用 238 小时与四列应用网格" /> | <img src="assets/screenshots/03-ranking-more.jpg" width="200" alt="应用排行：分批加载更多应用与按时段分布图" /> |
+
+| 设置 · 外观 / 显示 / 每日目标 | 设置 · 关于 / 运行日志 / 版本 |
+| :---: | :---: |
+| <img src="assets/screenshots/04-settings.jpg" width="200" alt="设置：主题、纯黑背景、动态取色、默认时间段与每日目标" /> | <img src="assets/screenshots/05-about.jpg" width="200" alt="设置：目标提醒、关于、运行日志、计算方法与版本号" /> |
+
+---
+
+## ⬇️ 下载
 
 到 [GitHub Releases](https://github.com/annbnn183/MyScreenTime/releases) 下载最新 APK。
 
 > 从 **v1.0.7** 起，所有构建使用同一份固定签名，新版本可以直接覆盖安装。如果你还在用 v1.0.4–v1.0.6，升级前请先卸载一次旧版本。
 
-## 联系我
+---
+
+## 💬 联系我
 
 提需求、报 bug、聊想法，或者只是想认识一下，都欢迎：
 
 | 方式 | 账号 |
-| --- | --- |
+| :--- | :--- |
 | 微信 | `cookiebesting` |
 | 邮箱 | [meilideheimei@Outlook.com](mailto:meilideheimei@Outlook.com) |
 
-也可以直接在 [Issues](https://github.com/annbnn183/MyScreenTime/issues) 里留言。如果觉得这个项目有用，给仓库点个 Star 就是对我最大的支持。
+也可以直接在 [Issues](https://github.com/annbnn183/MyScreenTime/issues) 里留言。如果觉得这个项目有用，给仓库点个 ⭐ Star 就是对我最大的支持。
 
-## 打赏 / 支持我
+---
+
+## ☕ 打赏 / 支持我
 
 如果你喜欢这个软件，可以给我打赏，支持我继续把它维护下去，谢谢你的鼓励。
 
@@ -74,23 +116,15 @@ https://payapp.wechatpay.cn/sjt/qr/AQEp0bAiFO50xLIWNTOrUoZE
 
 > 上面的链接来自收款码本身，是微信支付的官方收款地址；需要在**微信内**打开才能发起付款，普通浏览器里无法完成支付。金额由你自行填写，谢谢支持。
 
-## 界面截图
+---
 
-以下为 v1.0.15 实机截图（深色主题）。
+## ⚙️ 自动构建
 
-| 主界面 · 月视图 / 月度概览 | 应用排行 · 累计时长 / 四列网格 | 应用排行 · 加载更多 / 时段分布 |
-| --- | --- | --- |
-| <img src="assets/screenshots/01-overview.jpg" width="200" alt="主界面：接手公告、月视图时长图表与月度概览" /> | <img src="assets/screenshots/02-ranking.jpg" width="200" alt="应用排行：本范围累计使用 238 小时与四列应用网格" /> | <img src="assets/screenshots/03-ranking-more.jpg" width="200" alt="应用排行：分批加载更多应用与按时段分布图" /> |
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.15.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
-| 设置 · 外观 / 显示 / 每日目标 | 设置 · 关于 / 运行日志 / 版本 |
-| --- | --- |
-| <img src="assets/screenshots/04-settings.jpg" width="200" alt="设置：主题、纯黑背景、动态取色、默认时间段与每日目标" /> | <img src="assets/screenshots/05-about.jpg" width="200" alt="设置：目标提醒、关于、运行日志、计算方法与版本号" /> |
+---
 
-## 自动构建
-
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.13.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
-
-## 许可证
+## 📄 许可证
 
 代码沿用 [GNU General Public License v3 or later (GPL-3.0-or-later)](https://www.gnu.org/licenses/gpl-3.0)。
 
