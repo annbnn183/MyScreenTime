@@ -99,7 +99,7 @@ On top of the original open-source project, I have added capabilities while stic
 
 ## ⚡ v1.0.17 → v1.0.18: fixing what the runtime log actually showed
 
-Every change below came from a log the user exported, and each one was re-checked against a new log afterwards.
+All recent releases follow one rule: fix only what the exported log actually shows, then verify with a freshly exported log. No optimisation without evidence.
 
 | Symptom in the log | Root cause | Fix | Measured after shipping |
 | :--- | :--- | :--- | :--- |
