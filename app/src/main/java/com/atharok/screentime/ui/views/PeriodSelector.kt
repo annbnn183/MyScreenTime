@@ -17,42 +17,27 @@ fun PeriodSelector(
     onPeriodChange: (Period) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val entries = Period.entries
     MultiChoiceSegmentedButtonRow(modifier = modifier) {
-        PeriodSegmentedButton(
-            period = Period.MONTH,
-            isSelected = period == Period.MONTH,
-            onPeriodChange = onPeriodChange,
-            shape = RoundedCornerShape(
-                topStartPercent = 50,
-                topEndPercent = 0,
-                bottomEndPercent = 0,
-                bottomStartPercent = 50,
+        entries.forEachIndexed { index, p ->
+            val shape = when (index) {
+                0 -> RoundedCornerShape(
+                    topStartPercent = 50, topEndPercent = 0,
+                    bottomEndPercent = 0, bottomStartPercent = 50
+                )
+                entries.lastIndex -> RoundedCornerShape(
+                    topStartPercent = 0, topEndPercent = 50,
+                    bottomEndPercent = 50, bottomStartPercent = 0
+                )
+                else -> RoundedCornerShape(0)
+            }
+            PeriodSegmentedButton(
+                period = p,
+                isSelected = period == p,
+                onPeriodChange = onPeriodChange,
+                shape = shape
             )
-        )
-
-        PeriodSegmentedButton(
-            period = Period.WEEK,
-            isSelected = period == Period.WEEK,
-            onPeriodChange = onPeriodChange,
-            shape = RoundedCornerShape(
-                topStartPercent = 0,
-                topEndPercent = 0,
-                bottomEndPercent = 0,
-                bottomStartPercent = 0,
-            )
-        )
-
-        PeriodSegmentedButton(
-            period = Period.DAY,
-            isSelected = period == Period.DAY,
-            onPeriodChange = onPeriodChange,
-            shape = RoundedCornerShape(
-                topStartPercent = 0,
-                topEndPercent = 50,
-                bottomEndPercent = 50,
-                bottomStartPercent = 0,
-            )
-        )
+        }
     }
 }
 

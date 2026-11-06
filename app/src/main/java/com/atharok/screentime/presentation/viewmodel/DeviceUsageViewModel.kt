@@ -120,4 +120,37 @@ class DeviceUsageViewModel(
             useCache = useCache
         )
     }
+
+    fun calculateYearDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
+        usageUseCase.calculateYearDeviceUsage(
+            ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
+            ignoredPackages = try {
+                settingsUseCase.getIgnoredPackages().first()
+            } catch (_: Exception) {
+                emptyList()
+            },
+            goalMillis = try {
+                settingsUseCase.getDailyGoalSettings().first().goalMillis
+            } catch (_: Exception) {
+                0L
+            },
+            useCache = useCache
+        )
+    }
+
+    /** 计算「本周期 vs 上一周期」对比（DAY 周期为 null）。 */
+    fun calculateComparison() = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
+        usageUseCase.calculateComparison(
+            period = periodState.value,
+            ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
+            ignoredPackages = try {
+                settingsUseCase.getIgnoredPackages().first()
+            } catch (_: Exception) {
+                emptyList()
+            }
+        )
+    }
+
+    val comparisonFlow: kotlinx.coroutines.flow.StateFlow<com.atharok.screentime.domain.usecases.UsageComparison?> =
+        usageUseCase.comparisonFlow
 }

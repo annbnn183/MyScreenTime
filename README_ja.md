@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -62,6 +62,38 @@
 | 最長使用日、アクティブ日数、30 日目標カレンダー（緑＝達成、赤＝超過）。 | トップツールバーから現在の期間の日次サマリーとアプリランキングをワンタップ出力。 |
 | 🔍 アプリ別詳細 | 🧩 ホーム画面ウィジェット |
 | アプリごとの独立した詳細ページ（比較チャート付き）。 | アプリを開かずにホーム画面で使用状況を確認。 |
+
+---
+
+## 💾 データ管理：バックアップ・復元・移行
+
+> 1 年分の記録は、インストール直後より価値があります。今回の更新は、データを**完全にバックアップでき、安全に復元でき、新しい端末へ移行できる**ことに重点を置いています。
+
+**バックアップされるもの：** すべての設定（テーマ、既定の期間、除外アプリ、毎日の目標、自動バックアップのオン/オフなど）と、**日別・アプリ別の起動回数の永久履歴**。
+
+**バックアップされない（できない）もの：** 使用**時間**と時間帯分布は Android の `UsageStatsManager` に由来する**端末固有のシステムデータ**で、どのアプリも他の端末へ書き出すことはできません。本アプリは自分が保持するデータのみを正直にバックアップし、「時間のバックアップ」を偽装しません。移行後、新しい端末では権限を付与した日から時間が蓄積されます。
+
+**バックアップ**
+- 版番号・書き出し時刻・タイムゾーン・件数・SHA-256 チェックサムを含む JSON。
+- 書き込み後に読み戻して照合し、**一致したときだけ成功**を表示（不一致は「検証失敗」）。
+- 任意のパスワード暗号化（AES-256-GCM + PBKDF2、ランダム salt/IV）。**パスワードを忘れると復元できません。**
+- 保存先はシステムのファイル選択で自由に指定（内部ストレージ / ダウンロード / SD カード / Google Drive など）。アプリ専用フォルダだけに置かないでください（アンインストールで消えます）。
+
+**復元（安全第一）**
+1. 検証：空でない・≤32MB・正しい JSON・対応バージョン・チェックサムと件数の一致。
+2. 現在データの安全スナップショット（メモリ＋専用ファイル）と「復元中」マーカー。
+3. **マージ（現状を保持）**（履歴は日別・アプリ別に最大値を採用するため再インポートでも二重計上しない）または**上書き（置換）**を選択。
+4. 復元後に件数を再検証。
+5. 失敗時は**自動でスナップショットへロールバック**。中途半端な状態を残しません。
+6. クラッシュ安全：復元中に強制終了・電源断でも、次回起動時にマーカーを検出して自動ロールバック。
+
+**新しい端末への移行：** 旧端末 → バックアップ（必要なら暗号化）をコピー可能な場所へ → 新端末に同一署名のビルドを導入 → 復元 → マージ/上書きを選択 → 促されたら「使用状況へのアクセス」を再付与（ファイルでは移行できない特別なシステム権限）。
+
+**自動ローカルバックアップ：** 1 日 1 回、最新 7 件を保持、アプリ専用外部フォルダに保存（アンインストールで削除。移行は手動書き出しで）。
+
+**すべてのデータを削除：** 先に安全スナップショットを作成してから設定と履歴を消去。
+
+**バージョン互換性：** バックアップ形式はデータベースと独立。`format`/`schemaVersion` を持ち、**より新しい形式のバックアップは理由付きで拒否**、古いものは処理します。
 
 ---
 
@@ -254,7 +286,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.15.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.16.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

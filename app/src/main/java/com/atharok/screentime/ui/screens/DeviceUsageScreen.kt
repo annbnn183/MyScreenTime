@@ -50,6 +50,7 @@ import com.atharok.screentime.ui.views.MaintainerNotice
 import com.atharok.screentime.ui.views.MonthlyInsightsView
 import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
+import com.atharok.screentime.ui.views.ComparisonView
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
 
 @Composable
@@ -68,7 +69,9 @@ fun DeviceUsageScreen(
             Period.MONTH -> viewModel.calculateMonthDeviceUsage(true)
             Period.WEEK -> viewModel.calculateWeekDeviceUsage(true)
             Period.DAY -> viewModel.calculateDayDeviceUsage(true)
+            Period.YEAR -> viewModel.calculateYearDeviceUsage(true)
         }
+        viewModel.calculateComparison()
     }
 
     StatelessDeviceUsageScreen(
@@ -93,10 +96,12 @@ fun DeviceUsageScreen(
                 Period.MONTH -> viewModel.calculateMonthDeviceUsage(false)
                 Period.WEEK -> viewModel.calculateWeekDeviceUsage(false)
                 Period.DAY -> viewModel.calculateDayDeviceUsage(false)
+                Period.YEAR -> viewModel.calculateYearDeviceUsage(false)
             }
         },
         onBackfill = { viewModel.backfillLaunchHistory() },
         backfillRunning = viewModel.backfillRunning.value,
+        comparison = viewModel.comparisonFlow.collectAsStateWithLifecycle(initialValue = null).value,
         modifier = modifier
     )
 }
@@ -116,6 +121,7 @@ private fun StatelessDeviceUsageScreen(
     refresh: (Period) -> Unit,
     onBackfill: (() -> Unit)? = null,
     backfillRunning: Boolean = false,
+    comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier,
     modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
 ) {
@@ -161,7 +167,8 @@ private fun StatelessDeviceUsageScreen(
                 innerPadding = innerPadding,
                 modelProducer = modelProducer,
                 onBackfill = onBackfill,
-                backfillRunning = backfillRunning
+                backfillRunning = backfillRunning,
+                comparison = comparison
             )
         //}
     }
@@ -181,6 +188,7 @@ private fun PortraitDeviceUsageScreen(
     modelProducer: CartesianChartModelProducer,
     onBackfill: (() -> Unit)? = null,
     backfillRunning: Boolean = false,
+    comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -240,6 +248,23 @@ private fun PortraitDeviceUsageScreen(
                             .fillMaxWidth()
                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
                     )
+                }
+
+                // 本周期 vs 上一周期对比（周/月/年；日周期无对比）。
+                comparison?.let { cmp ->
+                    if (cmp.period != Period.DAY) {
+                        item {
+                            ComparisonView(
+                                comparison = cmp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = dimensionResource(id = R.dimen.padding_medium),
+                                        vertical = dimensionResource(id = R.dimen.padding_small)
+                                    )
+                            )
+                        }
+                    }
                 }
 
                 if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {

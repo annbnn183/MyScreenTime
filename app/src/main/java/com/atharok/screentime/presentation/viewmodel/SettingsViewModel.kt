@@ -55,4 +55,11 @@ class SettingsViewModel(
     fun saveDailyGoalWarningPercent(percent: Int) = viewModelScope.launch {
         useCase.saveDailyGoalWarningPercent(percent)
     }
+
+    // ---- Backup / restore / delete ----
+
+    val autoBackupEnabled: Flow<Boolean> get() = useCase.getAutoBackupEnabled()
+    fun setAutoBackupEnabled(enabled: Boolean) = viewModelScope.launch {
+        useCase.saveAutoBackupEnabled(enabled)
+    }
 }

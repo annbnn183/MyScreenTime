@@ -63,9 +63,17 @@ class SettingsRepositoryImpl(
         settingsDataStore.saveDailyGoalWarningPercent(percent)
     }
 
-    override fun getLastGoalNotifiedDate(): Flow<String> = settingsDataStore.lastGoalNotifiedDateFlow
+    override     fun getLastGoalNotifiedDate(): Flow<String> = settingsDataStore.lastGoalNotifiedDateFlow
 
     override suspend fun saveLastGoalNotifiedDate(date: String) {
         settingsDataStore.saveLastGoalNotifiedDate(date)
+    }
+
+    // ---- Backup / restore / delete ----
+
+    override fun getAutoBackupEnabled(): Flow<Boolean> = settingsDataStore.autoBackupEnabledFlow
+
+    override suspend fun saveAutoBackupEnabled(enabled: Boolean) {
+        settingsDataStore.saveAutoBackupEnabled(enabled)
     }
 }

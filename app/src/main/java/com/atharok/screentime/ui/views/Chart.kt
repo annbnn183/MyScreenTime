@@ -65,7 +65,7 @@ fun Chart(
         data = data,
         average = average,
         bottomAxis = when(period) {
-            Period.MONTH -> {
+            Period.MONTH, Period.YEAR -> {
                 // Vico (3.x) throws when a CartesianValueFormatter returns a blank string.
                 // Label spacing is controlled exclusively by ItemPlacer below, so the formatter
                 // must ALWAYS return a non-blank label — including the first frames where the

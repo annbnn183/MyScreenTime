@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -62,6 +62,38 @@ On top of the original open-source project, I have added capabilities while stic
 | Longest-usage day, active days, and a 30-day goal calendar (green = met, red = exceeded). | One-tap export of the current period's daily summary and app ranking from the top toolbar. |
 | 🔍 Per-app details | 🧩 Home-screen widget |
 | Independent detail page per app with comparison charts. | View usage on your home screen without opening the app. |
+
+---
+
+## 💾 Data management: backup, restore & migration
+
+> A year of records is worth more than a fresh install. This release makes your data **fully back-up-able, safely restorable, and migratable to a new phone**.
+
+**Backed up:** all settings (theme, default period, ignored apps, daily goal, auto-backup toggle…) and the permanent **per-day / per-app open-count history**.
+
+**Not backed up (and cannot be):** screen-time **duration** and hourly distribution come from Android's `UsageStatsManager` — device-local system data that no app can export into another phone. This app backs up only what it owns and never fakes a "duration backup". After migration the new device accumulates duration from the day access is granted.
+
+**Backup**
+- Versioned JSON with export time, time zone, record counts and a SHA-256 checksum.
+- After writing, the file is read back and compared; success is shown **only if identical** (otherwise "verification failed").
+- Optional password encryption (AES-256-GCM + PBKDF2, random salt/IV). **A lost password cannot be recovered.**
+- You choose where to save (internal storage, Downloads, SD card, Google Drive…) via the system file picker — never keep backups only in the app-private folder (deleted on uninstall).
+
+**Restore (safety first)**
+1. Validate: non-empty, ≤32 MB, valid JSON, supported version, checksum and record-count match.
+2. Safety snapshot of the current data (memory + private file) plus a "restore in progress" marker.
+3. Choose **Merge (keep current)** — history merged by max per day/app, so re-importing never doubles counts — or **Replace (overwrite)**.
+4. Re-verify counts after restore.
+5. Any failure **rolls back automatically** to the snapshot; no "half-restored" state.
+6. Crash-safe: if the app is killed or power is lost mid-restore, the marker triggers an automatic rollback on next launch.
+
+**Migrating to a new phone:** old phone → backup (optionally encrypted) to a copyable location → new phone installs the same-signature build → restore → choose Merge or Replace → re-grant "Usage access" when prompted (a special system permission that cannot travel in a file).
+
+**Auto local backup:** one per day, keeps the latest 7, in the app-private external folder (deleted on uninstall — export manually to migrate).
+
+**Delete all data:** writes a safety snapshot first, then clears settings and history.
+
+**Version compatibility:** the backup format is independent of the database; files carry `format`/`schemaVersion`; **newer-format backups are rejected with a reason**, older ones are handled.
 
 ---
 
@@ -254,7 +286,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.15.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.16.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -62,6 +62,38 @@
 | 최장 사용일, 활동 일수, 30일 목표 달력(초록=달성, 빨강=초과). | 상단 툴바에서 현재 기간의 일별 요약과 앱 순위를 원탭으로 내보내기. |
 | 🔍 앱별 상세 | 🧩 홈 화면 위젯 |
 | 앱별 독립 상세 페이지(비교 차트 포함). | 앱을 열지 않고 홈 화면에서 사용 상황 확인. |
+
+---
+
+## 💾 데이터 관리: 백업·복원·이전
+
+> 1년치 기록은 갓 설치했을 때보다 더 가치 있습니다. 이번 업데이트는 데이터를 **완전히 백업하고, 안전하게 복원하며, 새 휴대폰으로 이전**하는 데 집중합니다.
+
+**백업되는 항목:** 모든 설정(테마, 기본 기간, 무시할 앱, 일일 목표, 자동 백업 토글 등)과 **일별·앱별 실행 횟수의 영구 기록**.
+
+**백업되지 않는(될 수 없는) 항목:** 사용 **시간**과 시간대 분포는 Android `UsageStatsManager`에서 오는 **기기 자체의 시스템 데이터**로, 어떤 앱도 다른 휴대폰으로 내보낼 수 없습니다. 이 앱은 자기가 보유한 데이터만 정직하게 백업하며 "시간 백업"을 위조하지 않습니다. 이전 후 새 기기에서는 권한을 부여한 날부터 시간이 쌓입니다.
+
+**백업**
+- 버전 번호·내보낸 시각·시간대·레코드 수·SHA-256 체크섬을 포함한 JSON.
+- 기록 후 다시 읽어 비교하며, **일치할 때만 성공**을 표시(불일치는 "검증 실패").
+- 선택적 비밀번호 암호화(AES-256-GCM + PBKDF2, 임의 salt/IV). **비밀번호를 잊으면 복원할 수 없습니다.**
+- 저장 위치는 시스템 파일 선택기로 자유롭게 지정(내부 저장소/다운로드/SD 카드/Google Drive 등). 앱 전용 폴더에만 두지 마세요(제거 시 삭제됨).
+
+**복원(안전 우선)**
+1. 검증: 비어 있지 않음·≤32MB·올바른 JSON·지원 버전·체크섬과 레코드 수 일치.
+2. 현재 데이터의 안전 스냅샷(메모리+전용 파일)과 "복원 진행 중" 마커.
+3. **병합(현재 유지)**(기록은 일별·앱별 최댓값으로 합치므로 재가져오기해도 중복 집계되지 않음) 또는 **덮어쓰기(교체)** 선택.
+4. 복원 후 레코드 수 재검증.
+5. 실패 시 **자동으로 스냅샷으로 롤백**, 절반만 복원된 상태를 남기지 않음.
+6. 크래시 안전: 복원 중 강제 종료·전원 차단 시 다음 실행에서 마커를 감지해 자동 롤백.
+
+**새 휴대폰으로 이전:** 이전 폰 → 백업(필요 시 암호화)을 복사 가능한 위치에 → 새 폰에 동일 서명 빌드 설치 → 복원 → 병합/덮어쓰기 선택 → 안내 시 "사용 정보 접근" 재부여(파일로 이전 불가한 특수 시스템 권한).
+
+**자동 로컬 백업:** 하루 1회, 최근 7개 보관, 앱 전용 외부 폴더에 저장(제거 시 삭제, 이전은 수동 내보내기).
+
+**모든 데이터 삭제:** 먼저 안전 스냅샷을 만든 뒤 설정과 기록을 지웁니다.
+
+**버전 호환성:** 백업 형식은 데이터베이스와 독립적이며 `format`/`schemaVersion`을 가집니다. **더 새로운 형식의 백업은 이유와 함께 거부**하고, 이전 형식은 처리합니다.
 
 ---
 
@@ -254,7 +286,7 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 
 ## ⚙️ 자동 빌드
 
-`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.15.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.16.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
 
 ---
 

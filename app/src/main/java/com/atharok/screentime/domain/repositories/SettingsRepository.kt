@@ -33,4 +33,9 @@ interface SettingsRepository {
 
     fun getLastGoalNotifiedDate(): Flow<String>
     suspend fun saveLastGoalNotifiedDate(date: String)
+
+    // ---- Backup / restore / delete ----
+
+    fun getAutoBackupEnabled(): Flow<Boolean>
+    suspend fun saveAutoBackupEnabled(enabled: Boolean)
 }

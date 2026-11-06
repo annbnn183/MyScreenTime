@@ -55,4 +55,11 @@ class SettingsUseCase(private val repository: SettingsRepository) {
     suspend fun saveLastGoalNotifiedDate(date: String) {
         repository.saveLastGoalNotifiedDate(date)
     }
+
+    // ---- Backup / restore / delete ----
+
+    fun getAutoBackupEnabled(): Flow<Boolean> = repository.getAutoBackupEnabled()
+    suspend fun saveAutoBackupEnabled(enabled: Boolean) {
+        repository.saveAutoBackupEnabled(enabled)
+    }
 }

@@ -88,20 +88,28 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
-          What's new in v1.0.15 (bugfix + UX, from exported-log evidence):
-          - FIXED "sorting does not update icons": after re-sorting the ranking, a cell kept showing
-            the PREVIOUS app's icon while its name/data changed. Root cause: the icon was loaded via
-            produceState, whose result State lives in a plain remember {} (no keys) and whose producer
-            had an "if (value == null)" guard; when a different package moved into that slot the old
-            bitmap was still non-null, so the new icon was NEVER loaded. The icon state is now keyed
-            by (packageName, sizePx) so it is rebuilt for the correct app, and every grid cell is
-            wrapped in key(packageName) so its identity follows the app instead of the row position.
-          - Sort control is now a direct drop-down picker with a check on the active mode, instead
-            of a button that silently cycled through modes one tap at a time.
-          - LogsScreen no longer enumerates log files on the main thread (StrictMode DiskReadViolation
-            seen in every exported log when the log screen opened); the directory walk now runs on IO.
-          - LOGGING POLICY UNCHANGED: every event is still captured, saved forever, never deleted;
-            the full-history TXT export keeps exactly the same content.
+          What's new in v1.0.16 — data management: complete backup, restore & migration.
+          - Full JSON backup of everything this app actually persists: all settings and the
+            permanent per-day / per-app open-count history. (Screen-time DURATION and hourly
+            distribution come from Android's UsageStatsManager — device-local system data that
+            cannot be exported into another phone; we back up only what we own and never fake a
+            "duration backup".)
+          - Versioned, self-describing format: format + schemaVersion, export time, time zone,
+            record counts and a SHA-256 checksum. Newer-format backups are rejected with a reason.
+          - Write-then-verify: after saving, the file is read back and compared; success is shown
+            ONLY when identical (otherwise "verification failed"). No "successful but empty" case.
+          - Optional password encryption: AES-256-GCM + PBKDF2 (random salt/IV). A lost password
+            cannot be recovered, and the app says so plainly.
+          - Restore is safety-first: validate (size / JSON / version / checksum / counts) -> snapshot
+            current data + "restore in progress" marker -> apply MERGE (max per day/app, so re-import
+            never doubles counts) or OVERWRITE -> re-verify counts. Any failure rolls back
+            automatically; a crash mid-restore is rolled back on next launch. No "half-restored" state.
+          - Restore re-checks usage-access permission and prompts to re-grant it (a special system
+            permission that cannot travel in a file).
+          - Auto local backup: one per day, keeps the latest 7, in the app-private external folder.
+          - Delete all data now writes a safety snapshot before clearing.
+          - Also in this build: day / week / month / year trends with a "vs previous period" card
+            (time + open counts), on top of the earlier ranking grid and month-view work.
 
           Earlier releases:
           - v1.0.14: statistical accuracy - removed INTERVAL_BEST (auto-picked YEARLY for a 30-day

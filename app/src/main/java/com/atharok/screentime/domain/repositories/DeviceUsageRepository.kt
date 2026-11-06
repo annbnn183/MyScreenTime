@@ -4,6 +4,12 @@ import com.atharok.screentime.domain.entities.usage.DailyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.WeeklyDeviceUsage
 
+/** 某一时间区间的合计：时长来自系统聚合桶，打开次数来自本机永久逐日记录。 */
+data class IntervalTotal(
+    val totalDurationMs: Long,
+    val totalLaunches: Int
+)
+
 interface DeviceUsageRepository {
 
     // Permission
@@ -44,4 +50,15 @@ interface DeviceUsageRepository {
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): Int
+
+    /**
+     * 某一时间区间的合计：屏幕时长来自系统聚合桶，打开次数来自本机永久逐日记录。
+     * 用于「本周 vs 上周 / 本月 vs 上月 / 本年 vs 去年」对比，避免重复做事件明细扫描。
+     */
+    suspend fun getIntervalTotal(
+        startTimestamp: Long,
+        endTimestamp: Long,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): IntervalTotal
 }

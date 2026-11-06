@@ -19,6 +19,7 @@
     <!-- Period -->
     <string name="week">Week</string>
     <string name="day">Day</string>
+    <string name="year">Year</string>
     <string name="today">Today</string>
 
     <!-- Date - Time units -->
@@ -231,4 +232,55 @@
     <string name="logs_jump_oldest">Jump to oldest</string>
     <string name="logs_copy_filtered">Copy filtered</string>
     <string name="range_retention_hint">Android keeps about %1$d days of this bucket, so older data cannot be exact. Open counts come from the local per-day history, not from these buckets.</string>
+
+    <!-- Data backup / restore / delete (P2) -->
+    <string name="data_management">Data management</string>
+    <string name="backup_data">Back up data</string>
+    <string name="backup_data_desc">Export all settings and open-count history as a JSON file. Copy it to a new phone to keep years of records.</string>
+    <string name="restore_data">Restore data</string>
+    <string name="restore_data_desc">Import a JSON backup to restore settings and history on this device.</string>
+    <string name="auto_backup">Automatic local backup</string>
+    <string name="auto_backup_desc">Save one backup per day to local storage. For phone migration, export manually and copy the file.</string>
+    <string name="delete_all_data">Delete all data</string>
+    <string name="delete_all_data_desc">Erase all settings and open-count history. This cannot be undone.</string>
+    <string name="delete_confirm_title">Delete all data?</string>
+    <string name="delete_confirm_message">This will erase all settings and the day-by-day open-count history. The action cannot be undone.</string>
+    <string name="delete_confirm_ok">Delete</string>
+    <string name="backup_saved">Backup exported</string>
+    <string name="backup_export_failed">Backup export failed</string>
+    <string name="backup_verify_failed">Backup verification failed (incomplete write)</string>
+    <string name="backup_too_large">File too large to restore</string>
+    <string name="backup_data_encrypted">Back up data (encrypted)</string>
+    <string name="backup_data_encrypted_desc">Protect the JSON file with a password. If you forget it, the data CANNOT be recovered.</string>
+    <string name="backup_password_title">Set a backup password</string>
+    <string name="backup_password_message">The export will be encrypted with this password (at least 4 characters). There is no way to recover the data if the password is lost.</string>
+    <string name="password_hint">Password</string>
+    <string name="password_confirm_hint">Confirm password</string>
+    <string name="password_mismatch">Passwords do not match or are too short</string>
+    <string name="restore_success">Backup restored</string>
+    <string name="restore_failed">Restore failed: invalid file</string>
+    <string name="restore_failed_reason">Restore failed: %1$s</string>
+    <string name="restore_rolled_back">current data was kept</string>
+    <string name="restore_password_title">Enter backup password</string>
+    <string name="restore_password_message">This backup is encrypted. Enter the password used when it was created.</string>
+    <string name="restore_options_title">Restore data</string>
+    <string name="restore_merge">Merge (keep current)</string>
+    <string name="restore_replace">Replace (overwrite)</string>
+    <string name="restore_replace_warning">A safety copy of your current data is made first; if anything goes wrong it is restored automatically.</string>
+    <string name="restore_running">Restoring…</string>
+    <string name="permission_needed_title">Usage access needed</string>
+    <string name="permission_needed_after_restore">Settings and history were restored. To keep tracking screen time, grant usage access again (it cannot be migrated by a file).</string>
+    <string name="grant">Grant</string>
+    <string name="data_deleted">All local data deleted</string>
+
+    <!-- Comparison (P3) -->
+    <string name="comparison_title">vs previous period</string>
+    <string name="comparison_current">This period</string>
+    <string name="comparison_previous">Previous period</string>
+    <string name="vs_last_week">vs last week</string>
+    <string name="vs_last_month">vs last month</string>
+    <string name="vs_last_year">vs last year</string>
+    <string name="increased_by">▲ %1$s</string>
+    <string name="decreased_by">▼ %1$s</string>
+    <string name="no_comparison_data">No data for the previous period yet</string>
 </resources>

@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -62,6 +62,38 @@
 | 最長使用日、活躍天數，以及 30 天目標日曆（綠 = 達標，紅 = 超標）。 | 從頂部工具列一鍵匯出目前週期的每日摘要與應用程式排行。 |
 | 🔍 單一應用程式詳情 | 🧩 主畫面小工具 |
 | 每個應用程式獨立詳情頁，含對比圖表。 | 無需開啟應用程式即可在桌面檢視使用情況。 |
+
+---
+
+## 💾 資料管理：備份、還原與移轉
+
+> 你累積了一年的資料，比剛安裝時更有價值。本次更新聚焦於讓資料**能被完整備份、安全還原，並在換手機時移轉過去**。
+
+**會備份哪些資料：** 全部設定（主題、預設時間段、忽略應用清單、每日目標、自動備份開關等）與**逐日、逐應用的開啟次數永久紀錄**。
+
+**不會（也無法）備份的資料：** 使用**時長**與小時分布來自 Android 的 `UsageStatsManager`，是**裝置本身的系統資料**，任何應用都無法將它匯出並寫入另一支手機。本應用**如實**只備份自己持有的資料，絕不偽造「時長備份」。移轉後，新裝置從授權當天起重新累積時長。
+
+**備份**
+- 具版本號、匯出時間、時區、筆數與 SHA-256 校驗和的 JSON。
+- 寫入後立即讀回比對，**只有一致才提示成功**（不一致提示「校驗失敗」）。
+- 可選密碼加密（AES-256-GCM + PBKDF2，隨機 salt/IV）。**密碼一旦忘記，資料無法找回。**
+- 儲存位置由你決定（內部儲存、下載、SD 卡、Google Drive 等），請勿只留在應用私有目錄（解除安裝會被刪除）。
+
+**還原（安全優先）**
+1. 校驗：非空、≤32MB、合法 JSON、版本可辨識、校驗和與筆數一致。
+2. 目前資料的安全快照（記憶體＋私有檔案）與「還原進行中」標記。
+3. 選擇**合併（保留現有）**（歷史按逐日逐應用取較大值併入，重複匯入不會翻倍）或**覆蓋（取代現有）**。
+4. 還原後再次核對筆數。
+5. 任何失敗都**自動回滾**到快照，絕不留「只還原一半」的狀態。
+6. 崩潰安全：還原途中被強制關閉或斷電，下次啟動會偵測標記並自動回滾。
+
+**換手機移轉步驟：** 舊手機 → 備份（可加密）到可拷走的位置 → 新手機安裝同簽名版本 → 還原 → 選擇合併或覆蓋 → 依提示重新授予「使用情況存取」權限（此系統特殊權限無法隨檔案移轉）。
+
+**自動本機備份：** 每天一份，只保留最近 7 份，存於應用私有外部目錄（解除安裝即刪除，移轉請手動匯出）。
+
+**刪除全部資料：** 先留一份安全快照，再清空設定與歷史。
+
+**版本相容：** 備份格式與資料庫結構相互獨立，檔案帶 `format`/`schemaVersion`；**較新格式的備份會被拒絕並說明原因**，較舊格式會被處理。
 
 ---
 
@@ -254,7 +286,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.15.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.16.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 

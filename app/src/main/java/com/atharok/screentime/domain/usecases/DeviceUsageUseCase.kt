@@ -4,14 +4,34 @@ import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS_IN_MONTH
+import com.atharok.screentime.common.utils.MILLIS_IN_A_DAY
 import com.atharok.screentime.domain.entities.usage.DailyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.DeviceUsage
 import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.WeeklyDeviceUsage
+import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.repositories.DeviceUsageRepository
+import com.atharok.screentime.domain.repositories.IntervalTotal
 import com.atharok.screentime.domain.resources.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+
+/** 本周期与上一周期的对比结果（时长 + 打开次数）。 */
+data class UsageComparison(
+    val period: Period,
+    val currentDurationMs: Long,
+    val previousDurationMs: Long,
+    val currentLaunches: Int,
+    val previousLaunches: Int
+) {
+    /** 时长相对上一周期的变化比例（正=增加，负=减少），无上一周期数据时返回 null。 */
+    val durationDeltaRatio: Double?
+        get() = if (previousDurationMs <= 0L) null
+        else (currentDurationMs - previousDurationMs).toDouble() / previousDurationMs
+    val launchDeltaRatio: Double?
+        get() = if (previousLaunches <= 0) null
+        else (currentLaunches - previousLaunches).toDouble() / previousLaunches
+}
 
 class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
 
@@ -196,6 +216,55 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
         }
     }
 
+    // ---- Year ----
+
+    private var yearlyDeviceUsageCache: MonthlyDeviceUsage? = null
+    private var yearlyGoalMillis: Long = 0L
+
+    /**
+     * Builds the 365-day view by reusing the month pipeline with a full year of day timestamps.
+     * The system's WEEKLY / MONTHLY / YEARLY buckets (each with its own retention) fill the older
+     * days; days beyond the DAILY retention cap are flagged as estimates by the repository, so the
+     * UI can still be honest about completeness.
+     */
+    suspend fun calculateYearDeviceUsage(
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>,
+        goalMillis: Long,
+        useCache: Boolean = true
+    ) {
+        showLoadingIfEmpty()
+        try {
+            if(!isInitialised || !useCache) {
+                reset(ignoreSystemApps, ignoredPackages)
+            }
+            if(yearlyDeviceUsageCache == null || !useCache || yearlyGoalMillis != goalMillis) {
+                val now = System.currentTimeMillis()
+                val days = 365
+                val timeInterval = DateTimeUtils.computeInterval(now, days - 1)
+                val today = DateTimeUtils.truncateToDay(now)
+                val dayTimestamps: List<Long> = (0 until days).map { index ->
+                    DateTimeUtils.addDaysToTimestamp(timestamp = today, dayOffset = -(days - 1 - index))
+                }
+                yearlyDeviceUsageCache = repository.getMonthDeviceUsage(
+                    timeInterval = timeInterval,
+                    dayTimestamps = dayTimestamps,
+                    goalMillis = goalMillis,
+                    ignoreSystemApps = ignoreSystemApps,
+                    ignoredPackages = ignoredPackages
+                )
+                yearlyGoalMillis = goalMillis
+            }
+            yearlyDeviceUsageCache?.let {
+                _deviceUsageFlow.value = Resource.success(it)
+            } ?: run { throw Exception("Cache is null.") }
+        } catch (e: Exception) {
+            AppLog.e("DeviceUsageUseCase", "Failed to compute YEAR usage", e)
+            yearlyDeviceUsageCache = null
+            _deviceUsageFlow.value = Resource.failure(e)
+        }
+    }
+
     // ---- Launch history backfill ----
 
     /** 分批补算历史点击量（每次最多 maxDays 天），返回本次补算天数。 */
@@ -204,6 +273,43 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
         ignoredPackages: List<String>,
         maxDays: Int = 31
     ): Int = repository.backfillLaunchHistory(maxDays, ignoreSystemApps, ignoredPackages)
+
+    // ---- Comparison (P3): this period vs previous period ----
+
+    private val _comparisonFlow: MutableStateFlow<UsageComparison?> = MutableStateFlow(null)
+    val comparisonFlow: StateFlow<UsageComparison?> = _comparisonFlow
+
+    /**
+     * 计算「本周期 vs 上一周期」：当前窗口 [now-N, now]，上一窗口 [now-2N, now-N]。
+     * 时长来自系统聚合桶、打开次数来自本机永久逐日记录，无需重复事件明细扫描。
+     * DAY 周期无上一周期，comparison 置空。
+     */
+    suspend fun calculateComparison(
+        period: Period,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ) {
+        if (period == Period.DAY) {
+            _comparisonFlow.value = null
+            return
+        }
+        val n = period.numberOfDays
+        val now = System.currentTimeMillis()
+        val dayMs = MILLIS_IN_A_DAY
+        val curEnd = now
+        val curStart = now - n.toLong() * dayMs
+        val prevEnd = curStart
+        val prevStart = now - 2L * n.toLong() * dayMs
+        val current = repository.getIntervalTotal(curStart, curEnd, ignoreSystemApps, ignoredPackages)
+        val previous = repository.getIntervalTotal(prevStart, prevEnd, ignoreSystemApps, ignoredPackages)
+        _comparisonFlow.value = UsageComparison(
+            period = period,
+            currentDurationMs = current.totalDurationMs,
+            previousDurationMs = previous.totalDurationMs,
+            currentLaunches = current.totalLaunches,
+            previousLaunches = previous.totalLaunches
+        )
+    }
 
     // ---- Reset ----
 

@@ -14,8 +14,10 @@ import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.ThemeEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
+import org.json.JSONObject
 import java.io.IOException
 
 class SettingsDataStore(private val context: Context) {
@@ -31,6 +33,7 @@ class SettingsDataStore(private val context: Context) {
         private const val DAILY_GOAL_MINUTES_KEY = "daily_goal_minutes_key"
         private const val DAILY_GOAL_WARNING_PERCENT_KEY = "daily_goal_warning_percent_key"
         private const val DAILY_GOAL_LAST_NOTIFIED_DATE_KEY = "daily_goal_last_notified_date_key"
+        private const val AUTO_BACKUP_ENABLED_KEY = "auto_backup_enabled_key"
     }
 
     private val themeKey = stringPreferencesKey(THEME_KEY)
@@ -43,6 +46,7 @@ class SettingsDataStore(private val context: Context) {
     private val dailyGoalMinutesKey = intPreferencesKey(DAILY_GOAL_MINUTES_KEY)
     private val dailyGoalWarningPercentKey = intPreferencesKey(DAILY_GOAL_WARNING_PERCENT_KEY)
     private val dailyGoalLastNotifiedDateKey = stringPreferencesKey(DAILY_GOAL_LAST_NOTIFIED_DATE_KEY)
+    private val autoBackupEnabledKey = booleanPreferencesKey(AUTO_BACKUP_ENABLED_KEY)
 
     private fun Flow<Preferences>.catchException(): Flow<Preferences> = this.catch {
         if (it is IOException) {
@@ -201,6 +205,64 @@ class SettingsDataStore(private val context: Context) {
     suspend fun saveLastGoalNotifiedDate(date: String) {
         context.dataStore.edit {
             it[dailyGoalLastNotifiedDateKey] = date
+        }
+    }
+
+    // ---- Backup / restore / delete (P2) ----
+
+    /**
+     * 把所有设置序列化成 JSON，供「完整数据备份」复用。
+     * 直接读底层 Preferences，避免逐条走 Flow，保证一次性快照一致。
+     */
+    suspend fun exportAll(): org.json.JSONObject {
+        val prefs = context.dataStore.data.first()
+        return org.json.JSONObject().apply {
+            put("theme", prefs[themeKey] ?: ThemeEntity.SYSTEM.name)
+            put("dynamicColors", prefs[useDynamicColorsKey] ?: isDynamicColorsAvailable())
+            put("blackColor", prefs[useBlackColorForDarkThemeKey] == true)
+            put("defaultPeriod", prefs[defaultPeriodKey] ?: Period.DAY.name)
+            put("ignoreSystemApps", prefs[ignoreSystemAppsKey] == true)
+            put("ignoredPackages", prefs[ignoredPackagesKey] ?: "[]")
+            put("dailyGoalEnabled", prefs[dailyGoalEnabledKey] ?: false)
+            put("dailyGoalMinutes", prefs[dailyGoalMinutesKey] ?: DailyGoalSettings.DEFAULT_GOAL_MINUTES)
+            put("dailyGoalWarningPercent", prefs[dailyGoalWarningPercentKey] ?: DailyGoalSettings.DEFAULT_WARNING_PERCENT)
+            put("autoBackupEnabled", prefs[autoBackupEnabledKey] == true)
+        }
+    }
+
+    /** 把 [exportAll] 产出的 JSON 写回；遇到缺字段或类型不符时跳过该项，保证部分恢复也不崩。 */
+    suspend fun importAll(json: org.json.JSONObject) {
+        if (json.optBoolean("__clearFirst__", false)) {
+            context.dataStore.edit { it.clear() }
+        }
+        context.dataStore.edit { prefs ->
+            if (json.has("theme")) runCatching { ThemeEntity.valueOf(json.getString("theme")) }
+                .getOrNull()?.let { prefs[themeKey] = it.name }
+            if (json.has("dynamicColors")) prefs[useDynamicColorsKey] = json.getBoolean("dynamicColors")
+            if (json.has("blackColor")) prefs[useBlackColorForDarkThemeKey] = json.getBoolean("blackColor")
+            if (json.has("defaultPeriod")) runCatching { Period.valueOf(json.getString("defaultPeriod")) }
+                .getOrNull()?.let { prefs[defaultPeriodKey] = it.name }
+            if (json.has("ignoreSystemApps")) prefs[ignoreSystemAppsKey] = json.getBoolean("ignoreSystemApps")
+            if (json.has("ignoredPackages")) prefs[ignoredPackagesKey] = json.getString("ignoredPackages")
+            if (json.has("dailyGoalEnabled")) prefs[dailyGoalEnabledKey] = json.getBoolean("dailyGoalEnabled")
+            if (json.has("dailyGoalMinutes")) prefs[dailyGoalMinutesKey] = json.getInt("dailyGoalMinutes").coerceAtLeast(1)
+            if (json.has("dailyGoalWarningPercent")) prefs[dailyGoalWarningPercentKey] = json.getInt("dailyGoalWarningPercent").coerceIn(1, 100)
+            if (json.has("autoBackupEnabled")) prefs[autoBackupEnabledKey] = json.getBoolean("autoBackupEnabled")
+        }
+    }
+
+    /** 清空全部设置（恢复出厂），打开次数等历史由 LaunchHistoryStore 单独处理。 */
+    suspend fun clearAll() {
+        context.dataStore.edit { it.clear() }
+    }
+
+    val autoBackupEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .catchException()
+        .map { preferences -> preferences[autoBackupEnabledKey] == true }
+
+    suspend fun saveAutoBackupEnabled(enabled: Boolean) {
+        context.dataStore.edit {
+            it[autoBackupEnabledKey] = enabled
         }
     }
 }

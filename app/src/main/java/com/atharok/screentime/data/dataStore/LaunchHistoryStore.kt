@@ -100,6 +100,94 @@ class LaunchHistoryStore(private val context: Context) {
 
     fun scannedDays(): Int = synchronized(lock) { scanned.size }
 
+    /** 把全部永久存档序列化为 JSON，供「完整数据备份」复用。 */
+    fun toJson(): JSONObject = synchronized(lock) {
+        val root = JSONObject()
+        val daysObj = JSONObject()
+        days.forEach { (day, counts) ->
+            val obj = JSONObject()
+            counts.forEach { (pkg, count) -> obj.put(pkg, count) }
+            daysObj.put(day, obj)
+        }
+        root.put("version", 1)
+        root.put("days", daysObj)
+        root.put("scanned", JSONArray(scanned.toList()))
+        root
+    }
+
+    /** 用备份里的 JSON 覆盖本地存档（先清空再写入），失败抛异常交由上层处理。 */
+    fun fromJson(json: JSONObject) {
+        val newDays = mutableMapOf<String, MutableMap<String, Int>>()
+        val newScanned = mutableSetOf<String>()
+        val daysObj = json.optJSONObject("days") ?: JSONObject()
+        val dayKeys = daysObj.keys()
+        while (dayKeys.hasNext()) {
+            val day = dayKeys.next()
+            val obj = daysObj.optJSONObject(day) ?: continue
+            val counts = mutableMapOf<String, Int>()
+            val pkgKeys = obj.keys()
+            while (pkgKeys.hasNext()) {
+                val pkg = pkgKeys.next()
+                counts[pkg] = obj.optInt(pkg, 0)
+            }
+            newDays[day] = counts
+            newScanned.add(day)
+        }
+        val arr = json.optJSONArray("scanned")
+        if (arr != null) {
+            for (i in 0 until arr.length()) newScanned.add(arr.optString(i))
+        } else {
+            newScanned.addAll(newDays.keys)
+        }
+        synchronized(lock) {
+            days.clear()
+            days.putAll(newDays)
+            scanned.clear()
+            scanned.addAll(newScanned)
+            persist()
+        }
+    }
+
+    /**
+     * 合并备份里的历史（「合并恢复」用）：逐日逐应用取较大值，并集 scanned。
+     *
+     * 取 max 而不是求和，保证重复导入同一份备份不会让打开次数翻倍。
+     */
+    fun mergeFromJson(json: JSONObject) = synchronized(lock) {
+        val daysObj = json.optJSONObject("days")
+        if (daysObj != null) {
+            val dayKeys = daysObj.keys()
+            while (dayKeys.hasNext()) {
+                val day = dayKeys.next()
+                val obj = daysObj.optJSONObject(day) ?: continue
+                val target = days.getOrPut(day) { mutableMapOf() }
+                val pkgKeys = obj.keys()
+                while (pkgKeys.hasNext()) {
+                    val pkg = pkgKeys.next()
+                    val count = obj.optInt(pkg, 0)
+                    if (count > 0) target[pkg] = maxOf(target[pkg] ?: 0, count)
+                }
+            }
+        }
+        val arr = json.optJSONArray("scanned")
+        if (arr != null) {
+            for (i in 0 until arr.length()) scanned.add(arr.optString(i))
+        } else {
+            daysObj?.let { obj ->
+                val keys = obj.keys()
+                while (keys.hasNext()) scanned.add(keys.next())
+            }
+        }
+        persist()
+    }
+
+    /** 清空全部打开次数历史（用户自主删除数据）。 */
+    fun clearAll() = synchronized(lock) {
+        days.clear()
+        scanned.clear()
+        persist()
+    }
+
     private fun persist() {
         try {
             val root = JSONObject()

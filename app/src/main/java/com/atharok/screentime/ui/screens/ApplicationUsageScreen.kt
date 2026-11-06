@@ -49,6 +49,7 @@ fun ApplicationUsageScreen(
             Period.MONTH -> viewModel.calculateMonthDeviceUsage(true)
             Period.WEEK -> viewModel.calculateWeekDeviceUsage(true)
             Period.DAY -> viewModel.calculateDayDeviceUsage(true)
+            Period.YEAR -> viewModel.calculateYearDeviceUsage(true)
         }
     }
 
@@ -74,6 +75,7 @@ fun ApplicationUsageScreen(
                 Period.MONTH -> viewModel.calculateMonthDeviceUsage(false)
                 Period.WEEK -> viewModel.calculateWeekDeviceUsage(false)
                 Period.DAY -> viewModel.calculateDayDeviceUsage(false)
+                Period.YEAR -> viewModel.calculateYearDeviceUsage(false)
             }
         },
         modifier = modifier

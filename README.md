@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.15-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.16-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -32,6 +32,7 @@
 
 - [关于这个项目](#关于这个项目)
 - [✨ 功能特性](#-功能特性)
+- [💾 数据管理：备份、恢复与迁移](#-数据管理备份恢复与迁移)
 - [📸 界面截图](#-界面截图)
 - [⬇️ 下载](#️-下载)
 - [💬 联系我](#-联系我)
@@ -62,6 +63,8 @@
 | 最长使用日、活跃天数，以及 30 天目标日历（绿 = 达标，红 = 超标）。 | 从顶部工具栏一键导出当前周期的每日汇总与应用排行。 |
 | 🔍 单应用详情 | 🧩 主屏幕小组件 |
 | 每个应用独立详情页，含对比图表。 | 无需打开应用即可在桌面查看使用情况。 |
+| 💾 完整备份 / 恢复 / 迁移 | 🔒 加密与完整性校验 |
+| 完整 JSON 备份与恢复；恢复前自动安全快照、失败自动回滚；支持「合并（保留现有）」与「覆盖（替换现有）」两种模式。 | 可选口令加密（AES-256-GCM + PBKDF2）；SHA-256 校验和 + 记录条数校验；写入后回读验证，确认完整才提示成功。 |
 
 ---
 
@@ -225,12 +228,12 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 - [ ] 每日平均使用时长与中位数
 
 **阶段三 · 历史数据与自主权（P2）**
-- [ ] 完整历史数据备份
+- [x] 完整历史数据备份
 - [ ] CSV 导入与导出
-- [ ] JSON 备份与恢复
+- [x] JSON 备份与恢复
 - [ ] 自定义日期范围查询
 - [ ] 数据清理与日志保留设置
-- [ ] 统计数据完整性检查
+- [x] 统计数据完整性检查
 
 **阶段四 · 体验与生态（长期）**
 - [ ] 桌面小组件优化
@@ -254,7 +257,7 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 
 ## ⚙️ 自动构建
 
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.15.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.16.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
 ---
 

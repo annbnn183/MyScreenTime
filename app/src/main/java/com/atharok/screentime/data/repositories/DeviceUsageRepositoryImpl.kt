@@ -7,9 +7,11 @@ import com.atharok.screentime.common.extensions.getApplicationIconSafety
 import com.atharok.screentime.common.extensions.getApplicationName
 import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
+import com.atharok.screentime.common.utils.MILLIS_IN_A_DAY
 import com.atharok.screentime.data.dataStore.LaunchHistoryStore
 import com.atharok.screentime.data.statsTracker.UsageStatsTracker
 import com.atharok.screentime.domain.entities.usage.AppUsageRange
+import com.atharok.screentime.domain.repositories.IntervalTotal
 import com.atharok.screentime.domain.entities.usage.DailyAppUsage
 import com.atharok.screentime.domain.entities.usage.DailyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.DailyDuration
@@ -415,5 +417,35 @@ class DeviceUsageRepositoryImpl(
             "Backfilled $done days of launch history (stored days: ${launchHistory.scannedDays()})"
         )
         return done
+    }
+
+    override suspend fun getIntervalTotal(
+        startTimestamp: Long,
+        endTimestamp: Long,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): IntervalTotal {
+        // 按窗口长度选择能完整覆盖该区间的系统聚合桶：
+        // 周级窗口用 WEEKLY（约 4 周保留），月级用 MONTHLY（约 6 月保留），更长用 YEARLY（约 2 年保留）。
+        val windowDays = ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY).toInt()
+        val interval = when {
+            windowDays <= 9 -> UsageStatsManager.INTERVAL_WEEKLY
+            windowDays <= 33 -> UsageStatsManager.INTERVAL_MONTHLY
+            else -> UsageStatsManager.INTERVAL_YEARLY
+        }
+        val aggregated = tracker.queryAggregatedUsage(
+            intervalType = interval,
+            startTimestamp = startTimestamp,
+            endTimestamp = endTimestamp,
+            ignoreSystemApps = ignoreSystemApps,
+            ignoredPackages = ignoredPackages
+        )
+        val totalDurationMs = aggregated.values.sumOf { it.totalTimeInForeground }
+        // 系统聚合桶不含启动次数，逐日历史才是真实来源（仅覆盖已记录的那些天）。
+        val totalLaunches = launchHistory.sumRange(startTimestamp, endTimestamp).values.sum()
+        return IntervalTotal(
+            totalDurationMs = totalDurationMs,
+            totalLaunches = totalLaunches
+        )
     }
 }

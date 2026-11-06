@@ -17,6 +17,7 @@
     <!-- Period -->
     <string name="week">周</string>
     <string name="day">日</string>
+    <string name="year">年</string>
     <string name="today">今天</string>
 
     <!-- Date - Time units -->
@@ -168,4 +169,55 @@
     <string name="logs_jump_oldest">跳到最早</string>
     <string name="logs_copy_filtered">复制当前结果</string>
     <string name="range_retention_hint">系统该聚合桶约保留 %1$d 天，更早数据无法精确；点击量来自本机逐日记录，而非这些聚合桶。</string>
+
+    <!-- 数据备份 / 恢复 / 删除 (P2) -->
+    <string name="data_management">数据管理</string>
+    <string name="backup_data">备份数据</string>
+    <string name="backup_data_desc">把全部设置与打开次数历史导出为 JSON 文件。复制到新手机即可保留多年的记录。</string>
+    <string name="restore_data">恢复数据</string>
+    <string name="restore_data_desc">从 JSON 备份导入，恢复本机的设置与历史。</string>
+    <string name="auto_backup">自动本地备份</string>
+    <string name="auto_backup_desc">每天在本地保存一份备份。换手机迁移请用「备份」手动导出并拷走文件。</string>
+    <string name="delete_all_data">删除全部数据</string>
+    <string name="delete_all_data_desc">清除所有设置与打开次数历史，且不可恢复。</string>
+    <string name="delete_confirm_title">确认删除全部数据？</string>
+    <string name="delete_confirm_message">这将清除所有设置以及逐日打开次数历史，且无法恢复。</string>
+    <string name="delete_confirm_ok">删除</string>
+    <string name="backup_saved">备份已导出</string>
+    <string name="backup_export_failed">备份导出失败</string>
+    <string name="backup_verify_failed">备份校验失败（写入不完整）</string>
+    <string name="backup_too_large">文件过大，无法恢复</string>
+    <string name="backup_data_encrypted">加密备份数据</string>
+    <string name="backup_data_encrypted_desc">用密码保护 JSON 文件。密码一旦忘记，数据将无法找回。</string>
+    <string name="backup_password_title">设置备份密码</string>
+    <string name="backup_password_message">导出文件将用此密码加密（至少 4 位）。密码丢失后无法找回数据。</string>
+    <string name="password_hint">密码</string>
+    <string name="password_confirm_hint">确认密码</string>
+    <string name="password_mismatch">两次输入不一致或长度不足</string>
+    <string name="restore_success">备份已恢复</string>
+    <string name="restore_failed">恢复失败：文件无效</string>
+    <string name="restore_failed_reason">恢复失败：%1$s</string>
+    <string name="restore_rolled_back">已保留当前数据</string>
+    <string name="restore_password_title">输入备份密码</string>
+    <string name="restore_password_message">该备份已加密，请输入创建时使用的密码。</string>
+    <string name="restore_options_title">恢复数据</string>
+    <string name="restore_merge">合并（保留现有）</string>
+    <string name="restore_replace">覆盖（替换现有）</string>
+    <string name="restore_replace_warning">将先为当前数据做一份安全备份；一旦出错会自动还原。</string>
+    <string name="restore_running">正在恢复…</string>
+    <string name="permission_needed_title">需要重新授权</string>
+    <string name="permission_needed_after_restore">设置与历史已恢复。要继续统计屏幕使用时间，请重新授予「使用情况访问」权限（该权限无法通过文件迁移）。</string>
+    <string name="grant">去授权</string>
+    <string name="data_deleted">已删除全部本地数据</string>
+
+    <!-- 对比 (P3) -->
+    <string name="comparison_title">与上一周期相比</string>
+    <string name="comparison_current">本期</string>
+    <string name="comparison_previous">上一周期</string>
+    <string name="vs_last_week">较上周</string>
+    <string name="vs_last_month">较上月</string>
+    <string name="vs_last_year">较去年</string>
+    <string name="increased_by">▲ %1$s</string>
+    <string name="decreased_by">▼ %1$s</string>
+    <string name="no_comparison_data">上一周期暂无数据</string>
 </resources>

@@ -61,6 +61,19 @@ import com.atharok.screentime.ui.components.TextNormal
 import com.atharok.screentime.ui.components.TextNormalSecondary
 import com.atharok.screentime.ui.views.PeriodSelector
 
+import android.widget.Toast
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import com.atharok.screentime.common.utils.DataBackupManager
+import com.atharok.screentime.ui.components.TextSmall
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 @Composable
 fun SettingsScreen(
     navigateUp: () -> Unit,
@@ -298,6 +311,394 @@ fun SettingsScreen(
                         vertical = verticalPadding
                     )
             )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = verticalPadding)
+            )
+
+            // ---- Data management (P2) ----
+
+            val autoBackupEnabled: Boolean by settingsViewModel.autoBackupEnabled
+                .collectAsStateWithLifecycle(initialValue = false)
+
+            val scope = rememberCoroutineScope()
+            val localActivity = LocalActivity.current
+
+            var showDeleteDialog by remember { mutableStateOf(false) }
+
+            // 加密备份口令
+            var showBackupPasswordDialog by remember { mutableStateOf(false) }
+            var backupPassword by remember { mutableStateOf("") }
+            var backupPasswordConfirm by remember { mutableStateOf("") }
+            var backupPasswordError by remember { mutableStateOf(false) }
+
+            // 恢复流程
+            var pendingRestore by remember { mutableStateOf<String?>(null) }
+            var restorePassword by remember { mutableStateOf("") }
+            var showRestorePasswordDialog by remember { mutableStateOf(false) }
+            var showRestoreModeDialog by remember { mutableStateOf(false) }
+            var restoreRunning by remember { mutableStateOf(false) }
+            var showPermissionDialog by remember { mutableStateOf(false) }
+
+            // 明文备份：写入后回读比对，确认完整才提示成功
+            val backupLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.CreateDocument("application/json")
+            ) { uri ->
+                if (uri == null) return@rememberLauncherForActivityResult
+                scope.launch {
+                    val ok = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val json = DataBackupManager.exportToString(context, null)
+                            context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                                ?: throw IllegalStateException("openOutputStream null")
+                            val readBack = context.contentResolver.openInputStream(uri)
+                                ?.use { it.bufferedReader().readText() }
+                            readBack == json
+                        }.getOrDefault(false)
+                    }
+                    Toast.makeText(
+                        context,
+                        if (ok) R.string.backup_saved else R.string.backup_verify_failed,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            // 加密备份：口令确认后，再用 SAF 选择保存位置
+            val encryptedBackupLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.CreateDocument("application/json")
+            ) { uri ->
+                if (uri == null) return@rememberLauncherForActivityResult
+                val password = backupPassword
+                scope.launch {
+                    val ok = withContext(Dispatchers.IO) {
+                        runCatching {
+                            val json = DataBackupManager.exportToString(context, password)
+                            context.contentResolver.openOutputStream(uri)?.use { it.write(json.toByteArray()) }
+                                ?: throw IllegalStateException("openOutputStream null")
+                            val readBack = context.contentResolver.openInputStream(uri)
+                                ?.use { it.bufferedReader().readText() }
+                            readBack == json
+                        }.getOrDefault(false)
+                    }
+                    Toast.makeText(
+                        context,
+                        if (ok) R.string.backup_saved else R.string.backup_verify_failed,
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+            // 恢复：读取文件 -> 若加密先问口令 -> 再选择合并/覆盖
+            val restoreLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.OpenDocument()
+            ) { uri ->
+                if (uri == null) return@rememberLauncherForActivityResult
+                scope.launch {
+                    val raw = withContext(Dispatchers.IO) {
+                        runCatching {
+                            context.contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() }
+                        }.getOrNull()
+                    }
+                    if (raw.isNullOrBlank()) {
+                        Toast.makeText(context, R.string.restore_failed, Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                    if (DataBackupManager.isTooLarge(raw)) {
+                        Toast.makeText(context, R.string.backup_too_large, Toast.LENGTH_SHORT).show()
+                        return@launch
+                    }
+                    pendingRestore = raw
+                    restorePassword = ""
+                    if (DataBackupManager.isEncrypted(raw)) {
+                        showRestorePasswordDialog = true
+                    } else {
+                        showRestoreModeDialog = true
+                    }
+                }
+            }
+
+            val performRestore: (DataBackupManager.RestoreMode) -> Unit = { mode ->
+                val raw = pendingRestore
+                showRestoreModeDialog = false
+                if (raw != null) {
+                    scope.launch {
+                        restoreRunning = true
+                        val result = withContext(Dispatchers.IO) {
+                            DataBackupManager.restore(
+                                context = context,
+                                raw = raw,
+                                password = restorePassword.ifBlank { null },
+                                mode = mode
+                            )
+                        }
+                        restoreRunning = false
+                        if (result.success) {
+                            Toast.makeText(context, R.string.restore_success, Toast.LENGTH_SHORT).show()
+                            if (!DataBackupManager.hasUsageAccessPermission(context)) {
+                                showPermissionDialog = true
+                            }
+                        } else {
+                            val base = context.getString(
+                                R.string.restore_failed_reason,
+                                result.reason ?: "error"
+                            )
+                            val message = if (result.rolledBack) {
+                                "$base · ${context.getString(R.string.restore_rolled_back)}"
+                            } else {
+                                base
+                            }
+                            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
+            }
+
+            SettingsTitle(
+                text = stringResource(id = R.string.data_management),
+                icon = Icons.Rounded.Lock,
+                iconDescription = stringResource(id = R.string.data_management),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsAction(
+                primaryText = stringResource(id = R.string.backup_data),
+                secondaryText = stringResource(id = R.string.backup_data_desc),
+                onClick = { backupLauncher.launch("MyScreenTime-backup-${System.currentTimeMillis()}.json") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsAction(
+                primaryText = stringResource(id = R.string.backup_data_encrypted),
+                secondaryText = stringResource(id = R.string.backup_data_encrypted_desc),
+                onClick = {
+                    backupPassword = ""
+                    backupPasswordConfirm = ""
+                    backupPasswordError = false
+                    showBackupPasswordDialog = true
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsAction(
+                primaryText = stringResource(id = R.string.restore_data),
+                secondaryText = stringResource(id = R.string.restore_data_desc),
+                onClick = { restoreLauncher.launch(arrayOf("application/json")) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsSwitch(
+                primaryText = stringResource(id = R.string.auto_backup),
+                secondaryText = stringResource(id = R.string.auto_backup_desc),
+                checked = autoBackupEnabled,
+                onCheckedChange = { settingsViewModel.setAutoBackupEnabled(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsAction(
+                primaryText = stringResource(id = R.string.delete_all_data),
+                secondaryText = stringResource(id = R.string.delete_all_data_desc),
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            // 删除确认（删除前会自动留一份安全快照）
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = { TextNormal(text = stringResource(id = R.string.delete_confirm_title)) },
+                    text = { TextNormal(text = stringResource(id = R.string.delete_confirm_message)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showDeleteDialog = false
+                                scope.launch {
+                                    withContext(Dispatchers.IO) {
+                                        DataBackupManager.clearAllData(context)
+                                    }
+                                    Toast.makeText(context, R.string.data_deleted, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        ) {
+                            TextNormal(text = stringResource(id = R.string.delete_confirm_ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            TextNormal(text = stringResource(android.R.string.cancel))
+                        }
+                    }
+                )
+            }
+
+            // 加密备份：设置口令
+            if (showBackupPasswordDialog) {
+                AlertDialog(
+                    onDismissRequest = { showBackupPasswordDialog = false },
+                    title = { TextNormal(text = stringResource(id = R.string.backup_password_title)) },
+                    text = {
+                        Column {
+                            TextNormalSecondary(text = stringResource(id = R.string.backup_password_message))
+                            OutlinedTextField(
+                                value = backupPassword,
+                                onValueChange = { backupPassword = it; backupPasswordError = false },
+                                singleLine = true,
+                                label = { TextNormal(text = stringResource(id = R.string.password_hint)) },
+                                visualTransformation = PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = backupPasswordConfirm,
+                                onValueChange = { backupPasswordConfirm = it; backupPasswordError = false },
+                                singleLine = true,
+                                label = { TextNormal(text = stringResource(id = R.string.password_confirm_hint)) },
+                                visualTransformation = PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            if (backupPasswordError) {
+                                TextSmall(text = stringResource(id = R.string.password_mismatch))
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                if (backupPassword.length >= 4 && backupPassword == backupPasswordConfirm) {
+                                    showBackupPasswordDialog = false
+                                    encryptedBackupLauncher.launch("MyScreenTime-backup-${System.currentTimeMillis()}.json")
+                                } else {
+                                    backupPasswordError = true
+                                }
+                            }
+                        ) {
+                            TextNormal(text = stringResource(android.R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showBackupPasswordDialog = false }) {
+                            TextNormal(text = stringResource(android.R.string.cancel))
+                        }
+                    }
+                )
+            }
+
+            // 恢复：输入备份口令
+            if (showRestorePasswordDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRestorePasswordDialog = false },
+                    title = { TextNormal(text = stringResource(id = R.string.restore_password_title)) },
+                    text = {
+                        Column {
+                            TextNormalSecondary(text = stringResource(id = R.string.restore_password_message))
+                            OutlinedTextField(
+                                value = restorePassword,
+                                onValueChange = { restorePassword = it },
+                                singleLine = true,
+                                label = { TextNormal(text = stringResource(id = R.string.password_hint)) },
+                                visualTransformation = PasswordVisualTransformation(),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showRestorePasswordDialog = false
+                                showRestoreModeDialog = true
+                            }
+                        ) {
+                            TextNormal(text = stringResource(android.R.string.ok))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showRestorePasswordDialog = false }) {
+                            TextNormal(text = stringResource(android.R.string.cancel))
+                        }
+                    }
+                )
+            }
+
+            // 恢复：选择合并 / 覆盖
+            if (showRestoreModeDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRestoreModeDialog = false },
+                    title = { TextNormal(text = stringResource(id = R.string.restore_options_title)) },
+                    text = {
+                        Column {
+                            TextNormalSecondary(text = stringResource(id = R.string.restore_replace_warning))
+                            if (restoreRunning) {
+                                TextSmall(text = stringResource(id = R.string.restore_running))
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = { performRestore(DataBackupManager.RestoreMode.MERGE) }) {
+                            TextNormal(text = stringResource(id = R.string.restore_merge))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { performRestore(DataBackupManager.RestoreMode.OVERWRITE) }) {
+                            TextNormal(text = stringResource(id = R.string.restore_replace))
+                        }
+                    }
+                )
+            }
+
+            // 恢复后：使用情况访问权限需要重新授予
+            if (showPermissionDialog) {
+                AlertDialog(
+                    onDismissRequest = { showPermissionDialog = false },
+                    title = { TextNormal(text = stringResource(id = R.string.permission_needed_title)) },
+                    text = { TextNormal(text = stringResource(id = R.string.permission_needed_after_restore)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                showPermissionDialog = false
+                                localActivity?.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+                            }
+                        ) {
+                            TextNormal(text = stringResource(id = R.string.grant))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showPermissionDialog = false }) {
+                            TextNormal(text = stringResource(android.R.string.cancel))
+                        }
+                    }
+                )
+            }
 
             HorizontalDivider(
                 modifier = Modifier
@@ -598,5 +999,24 @@ private fun SettingsText(
             text = text,
             modifier = Modifier.fillMaxSize()
         )
+    }
+}
+
+@Composable
+private fun SettingsAction(
+    primaryText: String,
+    secondaryText: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = Modifier
+            .clickable { onClick() }
+            .then(modifier)
+    ) {
+        TextNormal(text = primaryText)
+        secondaryText?.let {
+            TextNormalSecondary(text = it)
+        }
     }
 }
