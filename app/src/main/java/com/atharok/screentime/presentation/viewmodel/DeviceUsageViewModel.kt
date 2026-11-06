@@ -104,6 +104,11 @@ class DeviceUsageViewModel(
             }
             AppLog.i("DeviceUsageViewModel", "Backfilled $done days of launch history")
 
+            // 一天都没补（历史已经齐了）时什么都不用做。
+            // 旧实现在这种情况下依然 invalidate 缓存 + 重算整屏，实测造成一次 627ms 的长帧，
+            // 而数据根本没有变化——纯属白卡。
+            if (done <= 0) return@launch
+
             // 点击量变了、时长没变：只让周期缓存失效并重新组装，
             // 不再像旧实现那样跑一次 useCache=false 的 10 天事件全量扫描。
             usageUseCase.invalidatePeriodCaches()

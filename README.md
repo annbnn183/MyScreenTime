@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -33,7 +33,7 @@
 - [关于这个项目](#关于这个项目)
 - [✨ 功能特性](#-功能特性)
 - [💾 数据管理：备份、恢复与迁移](#-数据管理备份恢复与迁移)
-- [⚡ v1.0.17 体验优化](#-v1017-体验优化依据真实运行日志)
+- [⚡ v1.0.17 → v1.0.18：体验优化](#-v1017--v1018依据真实运行日志的体验优化)
 - [📸 界面截图](#-界面截图)
 - [⬇️ 下载](#️-下载)
 - [💬 联系我](#-联系我)
@@ -89,7 +89,7 @@
 {
   "format": 2,
   "schemaVersion": 2,
-  "appVersion": "1.0.17",
+  "appVersion": "1.0.18",
   "exportedAt": "2026-11-07 05:13:23",
   "exportedAtEpochMs": 1793999603000,
   "timeZoneId": "Asia/Shanghai",
@@ -138,20 +138,33 @@
 
 ---
 
-## ⚡ v1.0.17 体验优化（依据真实运行日志）
+## ⚡ v1.0.17 → v1.0.18：依据真实运行日志的体验优化
 
-这一版没有堆新功能，只做一件事：**把用户实际遇到的卡顿和重复操作修掉**。下面每一条都来自用户导出的运行日志（2128 条事件、504 次掉帧记录、0 条 ERROR/CRASH）。
+三轮改动都只做一件事：**把用户实际遇到的卡顿和重复操作修掉**。每一条都来自用户导出的运行日志，改完再用新日志验收。
 
-| 日志里的现象 | 根因 | 这一版的改法 |
+### v1.0.17 改了什么，实测结果如何
+
+| 日志里的现象 | 根因 | 改法 | 装上新版后的实测 |
+| :--- | :--- | :--- | :--- |
+| 冷启动首帧掉帧 **971 ms** | `DeviceUsageViewModel` 在构造函数里 `runBlocking` 读 DataStore，阻塞主线程 | 先按默认周期渲染首帧，偏好异步读取，且不覆盖用户已手动选的周期 | 日志中不再出现 `MAIN_THREAD_BLOCKED` |
+| 扫描结果上屏后 **904 ms** 长帧 | 首屏一次性组合 40 个应用格 + 汇总卡 + 图表 | 首屏收窄到 20 个（正好一屏），其余按需展开 | 点击到首帧最差 **397 ms → 76 ms**，均值 14 ms → 10 ms |
+| 「补算历史点击量」要手动点 **10 次以上**，每次 2–10 秒 | 每次只推进 31 天；补完还会 `useCache=false` 重扫 10 天事件 | 一次补满 365 天 + 实时进度，补完只重建缓存 | 日志确认：`stored days: 366`，之后每次 `Backfilled 0 days`，全自动 |
+| 补算期间 PSS 峰值 **1.36 GB**，进程被系统杀过 | 逐日重写整个 JSON（365 天 = 365 次全量写盘） | 每 8 天批量落盘；超出系统事件窗口（21 天）的日期直接标记 | PSS 峰值 **1375 MB → 303 MB**，不再出现 `LOW_MEMORY` 杀进程 |
+| 用户得自己发现「打开次数不全」 | 没有自动补全 | 首页加载成功后静默补一次，补过的天直接跳过 | 已生效 |
+| 自动备份只有开关，不知道有没有在备 | 缺少状态展示 | 设置页显示「上次备份 · 大小 · 保留份数」 | 已生效 |
+
+### v1.0.18 改了什么：让日志说真话
+
+这一版没动界面，只修**上一次日志分析差点被带偏**的地方。
+
+| 发现 | 为什么必须修 | 这一版的做法 |
 | :--- | :--- | :--- |
-| 冷启动首帧掉帧 **971 ms** | `DeviceUsageViewModel` 在构造函数里 `runBlocking` 读 DataStore，直接阻塞主线程 | 先按默认周期渲染首帧，再异步读用户偏好；期间如果用户已手动切换，不会被覆盖 |
-| 扫描结果上屏时掉帧 **904 ms**，随后连续 100–200 ms 长帧 | 首屏一次性组合 40 个应用格 + 汇总卡 + 图表 | 首屏收窄到 20 个（正好一屏），点击「显示更多」再增量展开 |
-| 「补算历史点击量」要手动点 **10 次以上**，每次 2–10 秒，还伴随卡顿 | 每次只推进 31 天；且补完会触发 `useCache=false`，把 10 天事件明细整段重扫一遍 | 一次补满 365 天；按钮实时显示「已推进 x 天 + 进度条」；补完只重建视图缓存，**不再重扫事件** |
-| 补算期间 PSS 峰值 **1.36 GB** | 逐日 `mergeDay()` 每天重写整个 JSON 文件，365 天 = 365 次全量写盘 | 改为每 8 天批量落盘一次；超过系统事件保留窗口（21 天）的日期直接标记为「已扫描」，不再发起注定为空的查询 |
-| 用户得自己发现「打开次数不全」并反复点按钮 | 没有任何自动补全 | 首页数据加载成功后，自动在后台补一次；已补过的天会被直接跳过，重复调用几乎零成本 |
-| 自动备份只有一个开关，不知道到底有没有在备份 | 缺少状态展示 | 设置页显示「上次备份时间 · 文件大小 · 保留份数」，未开启时明确提示 |
+| 922 条 `JANK` 里绝大多数是**假警报** | 帧监视器把「界面静止、本来就没有新帧」的空闲间隔也算成掉帧，实测出现过 2.3 秒的“掉帧”。而同一时段点击到首帧只要 10 ms。数据自相矛盾，后续优化会被误导 | 引入「是否在交互」判断：最近 1.2 秒内有触摸才算真掉帧；静止期的间隔改记为 `IDLE_GAP`，单独统计，不混进 JANK |
+| 静止期日志刷屏 | 空闲时每秒都可能记一条，日志文件一天涨到 1.7 MB，导出也变慢 | `IDLE_GAP` 每 30 秒汇总一条，记这段窗口内最长的无帧间隔 |
+| 摘要里 `jank=922` 无法判断体验好坏 | 真假混在一起 | 摘要新增 `Idle gaps` 单独一行；并在导出给分析用的提示里写明：**优先看 `CLICK_TO_FRAME`** |
+| 补算 0 天时仍重建整屏 | 没有任何数据变化，却让界面卡了 **627 ms** | 补算结果为 0 时直接返回，不失效缓存、不重算 |
 
-> 日志仍然一条不丢、永久保存：上述改动只减少**重复扫描与重复写盘**，不减少任何一条日志事件。
+> 日志策略不变：仍然一条不丢、永久保存、绝不自动删除。「不再记录空闲间隔为掉帧」不是删日志，而是不再把**没有发生的事**记成掉帧——静止时到底空闲了多久，`IDLE_GAP` 里仍然完整保留。
 
 ## 📸 界面截图
 
@@ -342,7 +355,7 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 
 ## ⚙️ 自动构建
 
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.17.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.18.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
 ---
 

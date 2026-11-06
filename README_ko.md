@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -97,20 +97,27 @@
 
 ---
 
-## ⚡ v1.0.17 사용성 개선 (실제 실행 로그 기반)
+## ⚡ v1.0.17 → v1.0.18: 실행 로그가 보여준 문제를 실제로 고치기
 
-새 기능은 늘리지 않고, 사용자가 실제로 겪은 끊김과 반복 조작만 고쳤습니다. 모두 내보낸 실행 로그(이벤트 2,128건, 끊김 504건, ERROR/CRASH 0건)에서 확인한 내용입니다.
+모든 항목은 사용자가 내보낸 실행 로그에서 찾았고, 수정 후 새 로그로 다시 검증했습니다.
 
-| 로그에서 보인 현상 | 원인 | 이번 변경 |
+| 로그의 현상 | 원인 | 수정 | 출시 후 실측 |
+| :--- | :--- | :--- | :--- |
+| 첫 프레임 **971 ms** 멈춤 | 생성자에서 `runBlocking`으로 DataStore를 읽어 메인 스레드를 막음 | 기본 기간으로 먼저 그리고 설정은 비동기로 읽음 | `MAIN_THREAD_BLOCKED` 더 이상 없음 |
+| 결과 표시 시 **904 ms** 긴 프레임 | 첫 화면에서 앱 40개+카드+차트를 한 번에 구성 | 처음에는 20개(한 화면)만, 나머지는 필요 시 확장 | 탭→프레임 최악 **397 ms → 76 ms**, 평균 14 → 10 ms |
+| "보정"을 **10번 이상** 직접 눌러야 함 | 한 번에 31일, 매번 10일치 이벤트 재스캔 | 한 번에 365일+진행률, 완료 후 캐시만 재구성 | `stored days: 366`, 이후 `Backfilled 0 days`로 완전 자동 |
+| PSS 피크 **1.36 GB**, 프로세스 kill | 하루마다 JSON 전체를 다시 기록 | 8일 단위로 모아 기록, 이벤트 보관 기간 밖은 표시만 | PSS 피크 **1375 MB → 303 MB**, `LOW_MEMORY` kill 없음 |
+
+### v1.0.18: 로그를 정직하게 만들기
+
+| 발견 | 반드시 고쳐야 했던 이유 | 이번 변경 |
 | :--- | :--- | :--- |
-| 첫 프레임에서 **971 ms** 멈춤 | `DeviceUsageViewModel` 생성자에서 `runBlocking`으로 DataStore를 읽어 메인 스레드를 막고 있었음 | 기본 기간으로 먼저 그리고, 설정은 비동기로 읽음 |
-| 스캔 결과 표시 시 **904 ms** 긴 프레임 | 첫 화면에서 앱 셀 40개 + 카드 + 차트를 한 번에 구성 | 처음에는 20개(한 화면)만 구성하고 필요할 때 확장 |
-| "열람 횟수 보정"을 **10번 이상** 직접 눌러야 함(1회 2~10초) | 한 번에 31일만 진행했고, 매번 10일치 이벤트를 전부 다시 스캔 | 한 번에 365일까지 보정, 진행률 표시, 완료 후 이벤트 재스캔 없음 |
-| 보정 중 PSS 피크 **1.36 GB** | 하루마다 JSON 전체를 다시 기록(365일 = 365회 전체 쓰기) | 8일 단위로 모아 기록하고, 시스템 이벤트 보관 기간(21일)보다 오래된 날은 조회 없이 표시만 |
-| 사용자가 직접 "보정" 버튼을 찾아 눌러야 했음 | 자동 실행이 없었음 | 홈 화면 로드 후 한 번 자동 보정(이미 스캔한 날은 건너뜀) |
-| 자동 백업이 스위치뿐이라 상태를 알 수 없음 | 상태 표시가 없음 | 설정에 "마지막 백업 · 크기 · 보관 개수" 표시 |
+| 922건의 `JANK` 중 대부분이 **오탐** | "화면이 정지되어 새 프레임이 없음"까지 끊김으로 기록. 2.3초 "끊김"이 찍히는 동안 탭은 10 ms에 그려짐 | 최근 1.2초 내 터치가 있을 때만 실제 끊김으로 기록, 정지 중은 `IDLE_GAP`으로 분리 |
+| 정지 중 로그 폭주 | 초당 1건 수준, 하루 1.7 MB, 내보내기도 느려짐 | `IDLE_GAP`은 30초에 1회, 그 구간 최장 간격으로 요약 |
+| 요약의 `jank=922`로는 판단 불가 | 실제와 오탐이 섞임 | 요약에 `Idle gaps` 별도 표시, 분석 프롬프트에 `CLICK_TO_FRAME` 우선 확인 명시 |
+| 0일 보정에도 화면 전체 재구성 | 데이터 변화 없이 **627 ms** 멈춤 | 0일이면 즉시 return |
 
-> 로그 정책은 그대로입니다. 모든 이벤트를 영구 보관하며, 이번 변경은 중복 스캔과 중복 쓰기만 줄입니다.
+> 로그 정책은 그대로입니다. 모든 이벤트를 영구 보관합니다. "정지 중을 끊김이라 부르지 않기"는 삭제가 아니라 일어나지 않은 일을 기록하지 않는 것입니다.
 
 ## 📸 스크린샷
 
@@ -301,7 +308,7 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 
 ## ⚙️ 자동 빌드
 
-`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.17.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.18.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
 
 ---
 

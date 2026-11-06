@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -97,20 +97,27 @@ On top of the original open-source project, I have added capabilities while stic
 
 ---
 
-## ⚡ v1.0.17 performance pass (driven by real runtime logs)
+## ⚡ v1.0.17 → v1.0.18: fixing what the runtime log actually showed
 
-No new screens this release — only the stalls and repeated taps users actually hit, all located from an exported runtime log (2,128 events, 504 jank records, 0 ERROR/CRASH).
+Every change below came from a log the user exported, and each one was re-checked against a new log afterwards.
 
-| Symptom in the log | Root cause | Fix in this release |
+| Symptom in the log | Root cause | Fix | Measured after shipping |
+| :--- | :--- | :--- | :--- |
+| **971 ms** first-frame stall | `DeviceUsageViewModel` called `runBlocking` on DataStore in its constructor | Render the first frame with the default period, read the preference asynchronously | `MAIN_THREAD_BLOCKED` no longer appears |
+| **904 ms** long frame when results land | First screen composed 40 app cells + card + chart at once | First screen is 20 cells (one screen), rest expands on demand | Worst tap-to-frame **397 ms → 76 ms**, average 14 ms → 10 ms |
+| "Backfill" needed **10+ taps** of 2–10 s | 31 days per tap, plus a full 10-day event rescan each time | 365 days in one run with live progress; caches only, no rescan | Log confirms `stored days: 366`, then `Backfilled 0 days` — fully automatic |
+| PSS peak **1.36 GB**, process killed by the system | Every day rewrote the whole JSON (365 days = 365 full writes) | Batch-persist every 8 days; days past the event window are marked | PSS peak **1375 MB → 303 MB**, no more `LOW_MEMORY` kills |
+
+### v1.0.18: making the log tell the truth
+
+| Finding | Why it had to be fixed | What this release does |
 | :--- | :--- | :--- |
-| **971 ms** stall on the first frame | `DeviceUsageViewModel` called `runBlocking` on DataStore inside its constructor, blocking the main thread | Render the first frame with the default period, then read the preference asynchronously |
-| **904 ms** long frame when the scan result lands | The first screen composed 40 app cells + summary card + chart at once | First screen shows 20 cells (exactly one screen); the rest expands on demand |
-| "Backfill opens" had to be tapped **10+ times**, 2–10 s each | Each tap advanced only 31 days, and every run triggered a full 10-day event rescan | One tap backfills 365 days, with live progress; the result rebuilds view caches only — no event rescan |
-| **1.36 GB** PSS peak during backfill | Every day rewrote the whole JSON file (365 days = 365 full writes) | Batch-persist every 8 days; days beyond the system event window (21 days) are marked instead of queried |
-| Users had to notice and tap "backfill" themselves | Nothing ran automatically | A silent backfill runs once after the home screen loads; already-scanned days are skipped |
-| Auto-backup was a bare switch with no feedback | No status surfaced | Settings now shows "last backup · size · copies kept" |
+| Most of the 922 `JANK` records were **false alarms** | The frame monitor counted "the UI is idle, so no new frames" as dropped frames — a 2.3 s "stall" appeared while taps rendered in 10 ms | Only intervals within 1.2 s of a touch count as real jank; idle intervals are logged separately as `IDLE_GAP` |
+| Idle logging flooded the file | Up to one record per second, ~1.7 MB/day, slow exports | `IDLE_GAP` is summarised once per 30 s with the longest gap in that window |
+| `jank=922` in the summary said nothing useful | Real and idle gaps were mixed | Summary has a separate `Idle gaps` line; the analysis prompt now says to read `CLICK_TO_FRAME` first |
+| Backfill with 0 days still rebuilt the whole screen | No data changed, yet the UI stalled **627 ms** | Return early when nothing was backfilled |
 
-> Logging is unchanged: every event is still captured and kept forever. These changes only remove duplicate scans and duplicate disk writes.
+> Logging policy is unchanged: every event is still kept forever. Recording "no new frame because the UI is idle" as jank was recording something that never happened — the idle duration is still fully preserved in `IDLE_GAP`.
 
 ## 📸 Screenshots
 
@@ -301,7 +308,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.17.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.18.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

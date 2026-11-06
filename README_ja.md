@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -97,20 +97,27 @@
 
 ---
 
-## ⚡ v1.0.17 体感改善（実際の実行ログに基づく）
+## ⚡ v1.0.17 → v1.0.18：実行ログが示した問題を実際に直す
 
-新機能は追加せず、ユーザーが実際に遭遇したカクつきと繰り返し操作だけを直しました。いずれも書き出された実行ログ（2,128 イベント、504 件のジャンク、ERROR/CRASH は 0 件）から特定しています。
+すべてユーザーが書き出した実行ログから特定し、修正後は新しいログで検証しています。
 
-| ログの現象 | 原因 | 今回の対応 |
+| ログの現象 | 原因 | 対応 | 出荷後の実測 |
+| :--- | :--- | :--- | :--- |
+| 初回フレームで **971 ms** 停止 | コンストラクタで `runBlocking` により DataStore を読み、メインスレッドを塞いでいた | 既定の期間で先に描画し、設定は非同期で読む | `MAIN_THREAD_BLOCKED` は出現しなくなった |
+| 結果反映時に **904 ms** の長いフレーム | 最初の画面でアプリ 40 個＋カード＋グラフを一度に構築 | 最初は 20 個（1 画面分）だけ構築 | タップからフレームまで最悪 **397 ms → 76 ms**、平均 14 → 10 ms |
+| 「補算」を **10 回以上**手動で押す必要 | 1 回 31 日のみ、さらに毎回 10 日分のイベントを再走査 | 1 回で 365 日＋進捗表示、完了後はキャッシュ再構築のみ | `stored days: 366`、以降 `Backfilled 0 days` で完全自動 |
+| PSS ピーク **1.36 GB**、プロセスが kill された | 1 日ごとに JSON 全体を書き直していた | 8 日単位でまとめて書き込み、イベント保持期間外は記録のみ | PSS ピーク **1375 MB → 303 MB**、`LOW_MEMORY` の kill なし |
+
+### v1.0.18：ログを正直にする
+
+| 発見 | 直す必要があった理由 | 本版の対応 |
 | :--- | :--- | :--- |
-| 初回フレームで **971 ms** の停止 | `DeviceUsageViewModel` のコンストラクタで `runBlocking` により DataStore を読み、メインスレッドを塞いでいた | 先に既定の期間で描画し、設定は非同期で読み込む |
-| スキャン結果の反映時に **904 ms** の長いフレーム | 最初の画面で 40 個のアプリセル＋カード＋グラフを一度に構築していた | 最初は 20 個（1 画面分）だけ構築し、残りは必要時に展開 |
-| 「クリック数の補算」を **10 回以上**手動で押す必要（1 回 2〜10 秒） | 1 回で 31 日しか進まず、しかも毎回 10 日分のイベントを全走査していた | 1 回で 365 日まで補算。進捗を表示し、完了後はイベントを再走査しない |
-| 補算中の PSS ピークが **1.36 GB** | 1 日ごとに JSON 全体を書き直していた（365 日＝365 回の全書き込み） | 8 日分をまとめて書き込み、システムのイベント保持期間（21 日）より古い日は問い合わせずに記録のみ |
-| ユーザー自身が「クリック数が不足」と気づく必要があった | 自動実行がなかった | ホーム画面の読み込み後に 1 回だけ自動で補算（既に走査済みの日はスキップ） |
-| 自動バックアップがスイッチだけで状態不明 | 状態表示がなかった | 設定に「前回のバックアップ・サイズ・保持数」を表示 |
+| 922 件の `JANK` の大半は**誤検知** | 「画面が静止していて新しいフレームが無い」時間までドロップとして記録。2.3 秒の“カクつき”が出る一方、タップは 10 ms で描画されていた | 直近 1.2 秒にタッチがある場合のみ実際のジャンクとして記録。静止中は `IDLE_GAP` として別記録 |
+| 静止中のログが大量 | 1 秒に 1 件近く記録され、1 日 1.7 MB、書き出しも遅くなる | `IDLE_GAP` は 30 秒に 1 回、その区間の最長間隔にまとめる |
+| 要約の `jank=922` では判断できない | 本物と誤検知が混在 | 要約に `Idle gaps` を独立表示。解析プロンプトに「まず `CLICK_TO_FRAME` を見る」と明記 |
+| 補算 0 日でも画面全体を再構築 | データは変わっていないのに **627 ms** 停止 | 0 日なら即 return |
 
-> ログは従来どおり全件を永久保存します。今回の変更は「重複した走査」と「重複した書き込み」を減らすだけです。
+> ログ方針は不変です。すべてのイベントを永久保存します。「静止中をジャンクと呼ばない」は削除ではなく、起きていないことを起きたと記録しないだけです。
 
 ## 📸 スクリーンショット
 
@@ -301,7 +308,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.17.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.18.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

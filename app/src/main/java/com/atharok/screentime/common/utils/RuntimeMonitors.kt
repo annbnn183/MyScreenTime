@@ -37,6 +37,12 @@ object RuntimeMonitors {
     // Every gap >= 34ms is still recorded (nothing is dropped), but small hiccups are logged at
     // DEBUG so the WARN stream only contains stalls a user can actually feel.
     private const val JANK_WARN_THRESHOLD_MS = 100L
+    /** 超过这个时间没有触摸，就认为界面处于静止状态，此时的帧间隔不是掉帧。 */
+    private const val IDLE_AFTER_MS = 1_200L
+    /** 静止状态下只有超过这个时长才纳入统计，避免空闲期把日志刷满。 */
+    private const val IDLE_GAP_LOG_MS = 700L
+    /** 静止状态下最多每 30 秒汇总一条 IDLE_GAP。 */
+    private const val IDLE_GAP_SUMMARY_MS = 30_000L
 
     fun install(app: Application) {
         installLifecycle(app)
@@ -179,19 +185,51 @@ object RuntimeMonitors {
 
     // ---- 4. Frame jank monitor ---------------------------------------------
 
+    /**
+     * 帧间隔监视器。
+     *
+     * 关键修正（v1.0.18）：旧实现把「界面没有任何重绘需求」的空闲间隔也当成掉帧。
+     * 持续 postFrameCallback 会让 Choreographer 一直回调，但用户手指停下、界面静止时
+     * 相邻两次回调之间本来就会隔很久（实测出现过 2.3 秒），这跟卡顿完全是两件事。
+     * 旧日志里 590 条 JANK 绝大多数属于这种空闲间隔，反而把真正的掉帧淹没了。
+     *
+     * 现在按「是否正在交互」分开记录，两类都保留、都不丢：
+     *  - 交互中（最近 [IDLE_AFTER_MS] 内有触摸）：阈值 [JANK_THRESHOLD_MS]，记为真掉帧。
+     *  - 空闲中：只有超过 [IDLE_GAP_LOG_MS] 才记一条，并带 `idle=true`，
+     *    供分析时排除；这不会掩盖真问题，因为交互期的记录一条不少。
+     */
     private fun startFrameMonitor() {
         runCatching {
             Choreographer.getInstance().postFrameCallback(object : Choreographer.FrameCallback {
                 private var last = 0L
+                private var lastIdleLog = 0L
+                private var idleMaxGap = 0L
                 override fun doFrame(frameTimeNanos: Long) {
                     if (last != 0L) {
                         val gap = (frameTimeNanos - last) / 1_000_000L
-                        if (gap >= JANK_THRESHOLD_MS && AppLog.isForeground) {
-                            AppLog.event(
-                                if (gap >= JANK_WARN_THRESHOLD_MS) "WARN" else "DEBUG",
-                                "Perf", "JANK", "Frame gap ${gap}ms",
-                                "gapMs" to gap, "screen" to AppLog.screen
-                            )
+                        val nowUptime = SystemClock.uptimeMillis()
+                        val idle = (nowUptime - TouchTracker.lastEventUptime) >= IDLE_AFTER_MS
+                        if (AppLog.isForeground) {
+                            if (!idle && gap >= JANK_THRESHOLD_MS) {
+                                AppLog.event(
+                                    if (gap >= JANK_WARN_THRESHOLD_MS) "WARN" else "DEBUG",
+                                    "Perf", "JANK", "Frame gap ${gap}ms",
+                                    "gapMs" to gap, "screen" to AppLog.screen, "idle" to false
+                                )
+                            } else if (idle && gap >= IDLE_GAP_LOG_MS) {
+                                // 静止期最多每 30 秒汇总一条，记录这段时间内最长的无帧间隔。
+                                // 这样既不丢「空闲了多久」这个事实，也不会让日志被空闲刷满。
+                                if (gap > idleMaxGap) idleMaxGap = gap
+                                if (nowUptime - lastIdleLog >= IDLE_GAP_SUMMARY_MS) {
+                                    lastIdleLog = nowUptime
+                                    AppLog.event(
+                                        "DEBUG", "Perf", "IDLE_GAP",
+                                        "No frame for ${idleMaxGap}ms while idle",
+                                        "gapMs" to idleMaxGap, "screen" to AppLog.screen
+                                    )
+                                    idleMaxGap = 0L
+                                }
+                            }
                         }
                     }
                     last = frameTimeNanos
@@ -315,6 +353,14 @@ object TouchTracker {
     private var lastMoveLog = 0L
     private var moveCount = 0
 
+    /**
+     * 最后一次触摸事件的时间（uptimeMillis）。帧监视器用它判断当前是否处于交互中：
+     * 屏幕静止时本来就不产生新帧，把它算成掉帧会让日志完全失真。
+     */
+    @Volatile
+    var lastEventUptime: Long = 0L
+        private set
+
     fun attach(context: Context) {
         val dm = context.resources.displayMetrics
         width = dm.widthPixels
@@ -324,6 +370,7 @@ object TouchTracker {
     fun dispatch(ev: MotionEvent) {
         runCatching {
             val now = SystemClock.uptimeMillis()
+            lastEventUptime = now
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     downTime = now

@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.17-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -97,20 +97,27 @@
 
 ---
 
-## ⚡ v1.0.17 體驗最佳化（依據真實執行日誌）
+## ⚡ v1.0.17 → v1.0.18：依真實執行日誌修正
 
-這一版沒有新增功能，只修掉使用者實際遇到的卡頓與重複操作。每一項都來自匯出的執行日誌（2,128 筆事件、504 次掉幀、0 筆 ERROR/CRASH）。
+每一項都來自使用者匯出的執行日誌，改完再用新日誌驗收。
 
-| 日誌中的現象 | 根因 | 本版做法 |
+| 日誌中的現象 | 根因 | 改法 | 出貨後實測 |
+| :--- | :--- | :--- | :--- |
+| 首幀掉幀 **971 ms** | 建構子裡用 `runBlocking` 讀 DataStore，阻塞主執行緒 | 先以預設週期繪製，設定改非同步讀取 | 不再出現 `MAIN_THREAD_BLOCKED` |
+| 結果上屏時 **904 ms** 長幀 | 首屏一次組合 40 個應用格＋卡片＋圖表 | 首屏 20 個（剛好一屏），其餘按需展開 | 點擊到首幀最差 **397 ms → 76 ms**，平均 14 → 10 ms |
+| 「補算」要手動點 **10 次以上** | 每次只推進 31 天，且每次重掃 10 天事件 | 一次補滿 365 天＋進度，完成後只重建快取 | `stored days: 366`，之後 `Backfilled 0 days`，全自動 |
+| PSS 峰值 **1.36 GB**，行程被系統殺掉 | 逐日重寫整個 JSON | 每 8 天批次寫入，超出事件窗口的日期直接標記 | PSS 峰值 **1375 MB → 303 MB**，不再被 `LOW_MEMORY` 殺 |
+
+### v1.0.18：讓日誌說真話
+
+| 發現 | 為何必須修 | 本版做法 |
 | :--- | :--- | :--- |
-| 冷啟動首幀掉幀 **971 ms** | `DeviceUsageViewModel` 在建構子裡用 `runBlocking` 讀 DataStore，阻塞主執行緒 | 先以預設週期繪製首幀，再非同步讀取偏好設定 |
-| 掃描結果上屏時掉幀 **904 ms** | 首屏一次組合 40 個應用格＋摘要卡＋圖表 | 首屏縮至 20 個（剛好一屏），其餘按需展開 |
-| 「補算歷史點擊量」需手動點 **10 次以上**，每次 2–10 秒 | 每次只推進 31 天，且補完會重掃 10 天事件明細 | 一次補滿 365 天並顯示進度；補完只重建檢視快取，**不再重掃事件** |
-| 補算期間 PSS 峰值 **1.36 GB** | 逐日重寫整個 JSON 檔（365 天＝365 次全量寫入） | 改為每 8 天批次寫入；超過系統事件保留窗（21 天）的日期直接標記 |
-| 使用者得自己發現並反覆點按鈕 | 沒有自動補全 | 首頁載入後自動在背景補一次，已補過的天會直接跳過 |
-| 自動備份只有開關，不知是否真的備份 | 缺少狀態顯示 | 設定頁顯示「上次備份時間 · 大小 · 保留份數」 |
+| 922 筆 `JANK` 絕大多數是**誤報** | 把「介面靜止、本來就沒有新幀」也算成掉幀，出現 2.3 秒的「掉幀」，但同時點擊只要 10 ms | 只有最近 1.2 秒內有觸碰才算真掉幀；靜止期改記為 `IDLE_GAP`，分開統計 |
+| 靜止期日誌刷屏 | 空閒時每秒都可能記一筆，一天 1.7 MB，匯出也變慢 | `IDLE_GAP` 每 30 秒彙總一筆，記錄該區間最長無幀間隔 |
+| 摘要 `jank=922` 無法判斷體驗 | 真假混在一起 | 摘要新增 `Idle gaps` 一行；分析提示改為**優先看 `CLICK_TO_FRAME`** |
+| 補算 0 天仍重建整屏 | 資料沒變，卻卡了 **627 ms** | 結果為 0 直接返回 |
 
-> 日誌政策不變：所有事件永久保存。本次只減少重複掃描與重複寫入。
+> 日誌政策不變：仍然一筆不丟、永久保存。「不把靜止期算成掉幀」不是刪日誌，而是不再把沒發生的事記成掉幀。
 
 ## 📸 介面截圖
 
@@ -301,7 +308,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.17.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.18.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 

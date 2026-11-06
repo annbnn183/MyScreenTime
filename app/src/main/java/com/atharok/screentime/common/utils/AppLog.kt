@@ -479,6 +479,9 @@ object AppLog {
         var jank = 0
         var jankMax = 0L
         var jankSum = 0L
+        // 界面静止时的无帧间隔，单独统计，不计入真实掉帧。
+        var idleGaps = 0
+        var idleGapMax = 0L
         var queryCount = 0
         var queryMax = 0L
         var querySum = 0L
@@ -517,6 +520,11 @@ object AppLog {
                                 val g = x?.optLong("gapMs", 0L) ?: 0L
                                 jankSum += g
                                 if (g > jankMax) jankMax = g
+                            }
+                            "IDLE_GAP" -> {
+                                idleGaps++
+                                val g = x?.optLong("gapMs", 0L) ?: 0L
+                                if (g > idleGapMax) idleGapMax = g
                             }
                             "QUERY_RESULT" -> {
                                 queryCount++
@@ -561,6 +569,9 @@ object AppLog {
             append("Screens      : ").append(top(screens)).append('\n')
             append("Fore/Back    : foregrounds=$foregrounds backgrounds=$backgrounds trims=$trims\n")
             append("Frames       : jank=$jank maxGapMs=$jankMax avgGapMs=${if (jank > 0) jankSum / jank else 0}\n")
+            if (idleGaps > 0) {
+                append("Idle gaps    : count=$idleGaps maxIdleGapMs=$idleGapMax (no touch in 1.2s; not counted as jank)\n")
+            }
             append("Queries      : count=$queryCount maxCostMs=$queryMax avgCostMs=${if (queryCount > 0) querySum / queryCount else 0}\n")
             append("Touches      : total=$touches taps=$taps swipes=$swipes\n")
             append("Page stays   : count=$stays avgStayMs=${if (stays > 0) totalStay / stays else 0}\n")
@@ -583,6 +594,9 @@ object AppLog {
   1. 找出所有 ERROR / FATAL / CRASH / MAIN_THREAD_BLOCKED 记录，分析崩溃与异常的根本原因，给出可落地的修复方案
      （尽量指出应修改的模块、类或取数逻辑）。
   2. 检查 WARN、JANK、TRIM_MEMORY 与带耗时的记录，指出可能导致卡顿、被系统杀进程、或统计结果不准的地方。
+     注意：JANK 只统计「交互中」（最近 1.2s 内有触摸）的帧间隔，是真实掉帧；
+     IDLE_GAP 是界面静止时本来就没有新帧的间隔，不是卡顿，分析时请排除。
+     判断体验好坏请优先看 CLICK_TO_FRAME（点击到下一帧的耗时）。
   3. 结合页面路径、触摸与响应时间，还原用户操作路径，提出功能与体验上的改进建议。
   4. 核对「采集统计」里的查询条数与耗时分布，判断各时间桶数据是否完整、排行与平均口径是否可信。
   5. 如果日志不足以判断，请列出还需要补充哪些埋点信息。
