@@ -73,9 +73,11 @@ fun LogsScreen(
         scope.launch {
             if (showLoading) loading = true
             val result = withContext(Dispatchers.IO) {
-                AppLog.stats() to AppLog.readTail(500)
+                // Counting every line of the permanent history is only needed on a full reload;
+                // the 3s auto-refresh just reads the newest files so it never slows down over time.
+                Pair(if (showLoading) AppLog.stats() else null, AppLog.readRecent(500))
             }
-            stats = result.first
+            result.first?.let { stats = it }
             lines = if (result.second.isEmpty()) emptyList() else result.second.lines()
             loading = false
         }

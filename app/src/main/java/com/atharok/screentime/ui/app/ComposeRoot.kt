@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -37,15 +38,20 @@ fun ComposeRoot(
 ) {
     ScreenTimeTheme(settingsViewModel) {
         Surface(modifier = Modifier.fillMaxSize()) {
+            // Decide once. Recomputing on every recomposition could flip the start route while
+            // the NavHost is being composed on ROMs with a delayed AppOps answer.
+            val startDestination = remember {
+                if (deviceUsageViewModel.hasAppUsagePermission()) {
+                    AppNavDestination.DeviceUsageDestination.route
+                } else {
+                    AppNavDestination.PermissionDestination.route
+                }
+            }
 
             AppNavHost(
                 navController = navController,
 
-                startDestination = if (deviceUsageViewModel.hasAppUsagePermission()) {
-                    AppNavDestination.DeviceUsageDestination.route
-                } else {
-                    AppNavDestination.PermissionDestination.route
-                },
+                startDestination = startDestination,
 
                 permissionScreen = {
                     PermissionScreen(

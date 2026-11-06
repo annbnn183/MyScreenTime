@@ -259,7 +259,11 @@ class DeviceUsageRepositoryImpl(
                 RankedApp(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
-                    appIcon = context.packageManager.getApplicationIconSafety(packageName),
+                    // Keep only the package name here. Holding a full-size Drawable for every
+                    // app in all 3 long ranges used to keep ~800 large objects alive and required
+                    // hundreds of binder calls on every refresh. Icons are now resolved lazily
+                    // and downscaled by AppIconCache only for the cells actually on screen.
+                    appIcon = null,
                     duration = item?.totalTimeInForeground ?: 0L,
                     launchCount = maxOf(item?.launchCount ?: 0, history[packageName] ?: 0)
                 )

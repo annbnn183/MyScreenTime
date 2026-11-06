@@ -71,6 +71,13 @@ jobs:
           Automated build from commit ${{ github.sha }}.
 
           What's new:
+          - PERFORMANCE / UX: app icons are cached once and downscaled to their real display size (8MB LruCache); long-range ranking rows no longer keep ~800 full-size Drawables alive. Removes the 1.1GB PSS peak and the LOW_MEMORY kills seen on ColorOS
+          - Ranking grid composes only the top 40 apps initially, with a "Show all N apps" toggle that collapses again when range/sort changes. Removes the 600-2400ms frame stalls when opening the month view
+          - Fixed the permission-screen flash: AppOps transiently reports MODE_DEFAULT just after process start on some ROMs, so the start route is decided once and backed by a real UsageStatsManager query; the permission screen also checks immediately instead of waiting for an ON_RESUME that already fired
+          - Log viewer auto-refresh reads only the newest files instead of rescanning the whole permanent history, and no longer recounts every line every 3 seconds
+          - Device snapshot now writes a DEBUG note instead of a false WARN when ACCESS_WIFI_STATE is not granted
+          - IMPORTANT: logging behaviour is UNCHANGED - every event is still captured, saved forever and never deleted; the full-history TXT export is untouched. Only rendering/reading was optimized
+          - From v1.0.10: long-range hour totals, permanent day-by-day launch history with cancellable backfill, always-visible click counts, 24-hour distribution, full-capture runtime log + TXT export, new maintainer links
           - Long-range HOUR totals: each range (4 weeks / 6 months / year) now shows the accumulated hours, daily average, total opens and how many days of click data are recorded -- not just per-day increments
           - Fixed long-range click counts: Android's WEEKLY/MONTHLY/YEARLY buckets do NOT store launch counts, so a permanent local day-by-day launch history was added; counts for any period are summed from it. A "Backfill older opens" button scans at most 31 older days per tap (one-day chunks, saved to disk each day, cancellable), so a half-year/year can be filled without the long scan that used to get the process killed
           - Click count line is always visible now (0 opens instead of a hidden row); range labels no longer say "(avg)" while showing totals

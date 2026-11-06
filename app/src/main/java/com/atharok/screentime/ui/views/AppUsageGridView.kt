@@ -40,6 +40,10 @@ fun AppUsageGridView(
     val monthly = deviceUsage as? MonthlyDeviceUsage
     var rangeIndex by remember { mutableIntStateOf(0) }
     var sortIndex by remember { mutableIntStateOf(0) }
+    // Only the top apps are composed at first. Long ranges can hold 200-300 apps; rendering all
+    // of them inside a single LazyColumn item produced multi-hundred-ms frames and huge memory
+    // spikes. Switching range or sort collapses the list again.
+    var expanded by remember(rangeIndex, sortIndex) { mutableStateOf(false) }
 
     val ranges = monthly?.rangeRankings.orEmpty()
     val fallbackApps: List<RankedApp> = remember(deviceUsage) {
@@ -76,6 +80,7 @@ fun AppUsageGridView(
         }.filter { it.duration > 0L || it.launchCount > 0 }
     }
 
+    val visibleApps = if (expanded) apps else apps.take(40)
     val sortLabels = listOf(R.string.sort_time, R.string.sort_launches, R.string.sort_name)
 
     Column(
@@ -126,7 +131,7 @@ fun AppUsageGridView(
             apps.maxOfOrNull { it.duration }?.coerceAtLeast(1L) ?: 1L
         }
 
-        apps.chunked(4).forEach { rowApps ->
+        visibleApps.chunked(4).forEach { rowApps ->
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowApps.forEach { app ->
                     Box(modifier = Modifier.weight(1f)) {
@@ -141,6 +146,29 @@ fun AppUsageGridView(
                 repeat(4 - rowApps.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
+            }
+        }
+
+        if (apps.size > 40) {
+            TextButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(
+                        id = if (expanded) R.string.grid_collapse else R.string.grid_show_all,
+                        apps.size
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            if (!expanded) {
+                Text(
+                    text = stringResource(id = R.string.grid_lazy_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 4.dp)
+                )
             }
         }
 
@@ -325,7 +353,7 @@ private fun GridAppItem(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ApplicationIcon(
-            drawable = app.appIcon,
+            packageName = app.packageName,
             contentDescription = app.appName,
             modifier = Modifier.size(dimensionResource(id = R.dimen.icon_large_size))
         )

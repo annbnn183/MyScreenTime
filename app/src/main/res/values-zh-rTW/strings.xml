@@ -155,4 +155,9 @@
     <string name="hourly_distribution_title">時段分佈（按小時）</string>
     <string name="hourly_peak">峰值時段：%1$d 點（%2$s）</string>
     <string name="hourly_distribution_hint">時段分佈基於系統仍保留的事件明細統計。</string>
+
+    <!-- 網格流暢渲染 -->
+    <string name="grid_show_all">顯示全部 %1$d 個應用</string>
+    <string name="grid_collapse">只看前 40 個</string>
+    <string name="grid_lazy_hint">預設只繪製前 40 個應用，避免列表卡頓；點上方按鈕可查看全部。</string>
 </resources>

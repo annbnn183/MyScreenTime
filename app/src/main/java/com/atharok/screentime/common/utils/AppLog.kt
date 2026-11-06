@@ -440,9 +440,18 @@ object AppLog {
     }
 
     /** Streams every log file but keeps only the last [maxLines] rendered lines in memory. */
-    fun readTail(maxLines: Int = 500): String {
+    fun readTail(maxLines: Int = 500): String = tailOf(logFiles(), maxLines)
+
+    /**
+     * Only scans the two newest files. The permanent history grows forever, so re-reading every
+     * file on each 3-second auto-refresh would get slower the longer the app is used. Nothing is
+     * deleted or skipped in the saved files themselves -- this is viewer-only.
+     */
+    fun readRecent(maxLines: Int = 500): String = tailOf(logFiles().takeLast(2), maxLines)
+
+    private fun tailOf(files: List<File>, maxLines: Int): String {
         val queue = ArrayDeque<String>()
-        logFiles().forEach { file ->
+        files.forEach { file ->
             runCatching {
                 file.useLines(Charsets.UTF_8) { seq ->
                     seq.forEach { raw ->
@@ -707,5 +716,5 @@ object AppLog {
 
     /** Short version for the clipboard: header + summary + the most recent lines. */
     fun clipboardText(): String =
-        header() + "\n===== 最近日志 / RECENT LOG (last 500 lines) =====\n" + readTail(500)
+        header() + "\n===== 最近日志 / RECENT LOG (last 500 lines) =====\n" + readRecent(500)
 }

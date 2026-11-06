@@ -24,7 +24,19 @@ class UsageStatsTracker(
             android.os.Process.myUid(),
             context.packageName
         )
-        return mode == AppOpsManager.MODE_ALLOWED
+        if (mode == AppOpsManager.MODE_ALLOWED) return true
+        // Some ROMs (ColorOS / OxygenOS / MIUI) transiently report MODE_DEFAULT during the first
+        // moments after process start even though usage access is granted. That made the app open
+        // on the permission screen and wait for an ON_RESUME that had already fired. A real query
+        // is the authoritative fallback: without the permission the system returns an empty list.
+        return try {
+            val now = System.currentTimeMillis()
+            usageStatsManager.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY, now - MILLIS_IN_A_DAY, now
+            ).orEmpty().isNotEmpty()
+        } catch (_: Throwable) {
+            false
+        }
     }
 
     // ---- Usage calculation ----

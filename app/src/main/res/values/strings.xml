@@ -215,4 +215,9 @@
     <string name="hourly_distribution_title">Hours of day</string>
     <string name="hourly_peak">Peak hour: %1$d:00 (%2$s)</string>
     <string name="hourly_distribution_hint">Hourly breakdown uses the detailed usage events this device still keeps.</string>
+
+    <!-- Smooth grid rendering -->
+    <string name="grid_show_all">Show all %1$d apps</string>
+    <string name="grid_collapse">Show top 40 only</string>
+    <string name="grid_lazy_hint">Only the top 40 apps are drawn at once to keep scrolling smooth.</string>
 </resources>

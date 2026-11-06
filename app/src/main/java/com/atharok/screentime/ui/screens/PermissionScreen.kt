@@ -18,6 +18,7 @@ import androidx.compose.material.icons.rounded.Key
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -37,6 +38,7 @@ import com.atharok.screentime.ui.components.OnLifecycleEvent
 import com.atharok.screentime.ui.components.SettingsAction
 import com.atharok.screentime.ui.components.TextMedium
 import com.atharok.screentime.ui.components.TextNormalSecondary
+import kotlinx.coroutines.delay
 
 @Composable
 fun PermissionScreen(
@@ -64,6 +66,23 @@ private fun StatefulPermissionScreen(
     content: @Composable (Context) -> Unit
 ) {
     val context = LocalContext.current
+
+    // ON_RESUME is registered after the first resume has already fired, so an already-granted
+    // device used to sit on this screen for seconds. Check immediately, then retry briefly to
+    // cover ROMs whose AppOps answer arrives a little late.
+    LaunchedEffect(Unit) {
+        var granted = isAppUsageAccessAllowed()
+        if (!granted) {
+            repeat(3) {
+                delay(300L)
+                if (isAppUsageAccessAllowed()) {
+                    granted = true
+                    return@repeat
+                }
+            }
+        }
+        if (granted) openDeviceUsageScreen()
+    }
 
     OnLifecycleEvent { _, event ->
         if(event == Lifecycle.Event.ON_RESUME) {

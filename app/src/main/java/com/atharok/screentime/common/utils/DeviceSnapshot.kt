@@ -258,17 +258,27 @@ object DeviceSnapshot {
         put("totalTxBytes", TrafficStats.getTotalTxBytes())
         put("uidRxBytes", TrafficStats.getUidRxBytes(Process.myUid()))
         put("uidTxBytes", TrafficStats.getUidTxBytes(Process.myUid()))
-        val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
-        wm?.let { put("wifiEnabled", it.isWifiEnabled) }
-        val info = wm?.connectionInfo
-        info?.let {
-            put("bssid", it.bssid ?: "?")
-            put("rssi", it.rssi)
-            put("linkSpeedMbps", it.linkSpeed)
-            put("frequencyMHz", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) it.frequency else -1)
+        // ACCESS_WIFI_STATE is not declared by this app. Asking WifiManager anyway used to throw
+        // a SecurityException that aborted the whole network section and produced a WARN on every
+        // export. Record why the detail is absent instead (DEBUG, no false alarm, data unchanged).
+        val wifiGranted = context.checkSelfPermission(android.Manifest.permission.ACCESS_WIFI_STATE) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (wifiGranted) {
+            val wm = context.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            wm?.let { put("wifiEnabled", it.isWifiEnabled) }
+            val info = wm?.connectionInfo
+            info?.let {
+                put("bssid", it.bssid ?: "?")
+                put("rssi", it.rssi)
+                put("linkSpeedMbps", it.linkSpeed)
+                put("frequencyMHz", if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) it.frequency else -1)
+            }
+            put("ssid", runCatching { info?.ssid ?: "?" }.getOrDefault("UNAVAILABLE(permission)"))
+        } else {
+            put("wifiInfo", "UNAVAILABLE(ACCESS_WIFI_STATE not granted)")
+            put("ssid", "UNAVAILABLE(ACCESS_WIFI_STATE not granted)")
+            AppLog.d("DeviceSnapshot", "Skipped WifiManager detail: ACCESS_WIFI_STATE not granted")
         }
-        // SSID requires location permission on modern Android; record the reason instead.
-        put("ssid", runCatching { info?.ssid ?: "?" }.getOrDefault("UNAVAILABLE(permission)"))
         val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
         tm?.let {
             put("networkOperatorName", runCatching { it.networkOperatorName ?: "?" }.getOrDefault("UNAVAILABLE(permission)"))
