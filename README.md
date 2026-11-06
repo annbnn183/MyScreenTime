@@ -38,6 +38,7 @@
 - [☕ 打赏 / 支持我](#-打赏--支持我)
 - [🧭 产品战略与发展路线](#-产品战略与发展路线)
 - [⚙️ 自动构建](#️-自动构建)
+- [🔐 校验和](#-校验和)
 - [📄 许可证](#-许可证)
 
 ---
@@ -254,6 +255,20 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 ## ⚙️ 自动构建
 
 推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.15.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+
+---
+
+## 🔐 校验和
+
+为验证发布 APK 的真实性与完整性，可将其签名证书指纹与下方对照：
+
+```
+SHA-256: d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501
+SHA-1: 57839e6c38b7821da9c9c80767e7cedf9d8b5eab
+MD5: bf656b4b431a1a688a9b2fa69b430e9e
+```
+
+证书主题：`CN=MyScreenTime, OU=OpenSource, O=MyScreenTime, L=Beijing, ST=Beijing, C=CN`。本仓库所有发布的 APK 均使用同一固定密钥签名，签名一致即可直接覆盖安装、无需卸载旧版。
 
 ---
 

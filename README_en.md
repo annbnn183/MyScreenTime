@@ -38,6 +38,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 - [☕ Donate / Support me](#-donate--support-me)
 - [🧭 Product Strategy & Roadmap](#-product-strategy--roadmap)
 - [⚙️ Automated build](#️-automated-build)
+- [🔐 Checksums](#-checksums)
 - [📄 License](#-license)
 
 ---
@@ -254,6 +255,20 @@ MyScreenTime does not need to become the screen-time app with the most features,
 ## ⚙️ Automated build
 
 Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.15.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+
+---
+
+## 🔐 Checksums
+
+To verify the authenticity and integrity of the released APK, compare its signing certificate fingerprints against the values below:
+
+```
+SHA-256: d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501
+SHA-1: 57839e6c38b7821da9c9c80767e7cedf9d8b5eab
+MD5: bf656b4b431a1a688a9b2fa69b430e9e
+```
+
+Certificate subject: `CN=MyScreenTime, OU=OpenSource, O=MyScreenTime, L=Beijing, ST=Beijing, C=CN`. Every APK released from this repository is signed with the same fixed key, so a matching signature means it can be installed over the previous version without uninstalling.
 
 ---
 

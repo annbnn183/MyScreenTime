@@ -38,6 +38,7 @@
 - [☕ 후원 / 응원](#-후원--응원)
 - [🧭 제품 전략 및 로드맵](#-제품-전략-및-로드맵)
 - [⚙️ 자동 빌드](#️-자동-빌드)
+- [🔐 체크섬](#-체크섬)
 - [📄 라이선스](#-라이선스)
 
 ---
@@ -254,6 +255,20 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 ## ⚙️ 자동 빌드
 
 `main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.15.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+
+---
+
+## 🔐 체크섬
+
+배포된 APK의 진위와 무결성을 확인하려면 서명 인증서 지문을 아래 값과 대조하세요.
+
+```
+SHA-256: d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501
+SHA-1: 57839e6c38b7821da9c9c80767e7cedf9d8b5eab
+MD5: bf656b4b431a1a688a9b2fa69b430e9e
+```
+
+인증서 주체: `CN=MyScreenTime, OU=OpenSource, O=MyScreenTime, L=Beijing, ST=Beijing, C=CN`. 이 저장소에서 배포되는 모든 APK는 동일한 고정 키로 서명되므로, 서명이 일치하면 이전 버전을 삭제하지 않고 덮어설치할 수 있습니다.
 
 ---
 

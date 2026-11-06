@@ -38,6 +38,7 @@
 - [☕ 寄付 / 応援](#-寄付--応援)
 - [🧭 プロダクト戦略とロードマップ](#-プロダクト戦略とロードマップ)
 - [⚙️ 自動ビルド](#️-自動ビルド)
+- [🔐 チェックサム](#-チェックサム)
 - [📄 ライセンス](#-ライセンス)
 
 ---
@@ -254,6 +255,20 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 ## ⚙️ 自動ビルド
 
 `main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.15.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+
+---
+
+## 🔐 チェックサム
+
+リリースされた APK の真正性と完全性を検証するため、署名証明書の指紋を以下の値と照合してください。
+
+```
+SHA-256: d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501
+SHA-1: 57839e6c38b7821da9c9c80767e7cedf9d8b5eab
+MD5: bf656b4b431a1a688a9b2fa69b430e9e
+```
+
+証明書のサブジェクト： `CN=MyScreenTime, OU=OpenSource, O=MyScreenTime, L=Beijing, ST=Beijing, C=CN`。本リポジトリからリリースされるすべての APK は同一の固定鍵で署名されているため、署名が一致すればアンインストールせずに上書きインストールできます。
 
 ---
 
