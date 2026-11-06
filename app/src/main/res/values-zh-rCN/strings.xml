@@ -66,8 +66,8 @@
     <string name="screen_time_calculation_method_part_3_details">当多个应用同时在前台使用时（例如分屏模式），每个应用的使用时间将分别统计。\n\n但对于总的屏幕使用时长来说，只会计算实际面对屏幕的时间，而不管同时有多少个应用处于前台。\n\n例如，如果有两个应用在同一时间段内同时使用了 40 分钟，每个应用都会显示 40 分钟的使用时间，但总屏幕使用时长仍为 40 分钟，而不是 80 分钟。</string>
     <string name="language">语言</string>
     <string name="third_party_library">第三方库</string>
-    <string name="website">网站</string>
-    <string name="source_code">源代码</string>
+    <string name="website">我的主页（美丽的黑莓）</string>
+    <string name="source_code">源代码（美丽的黑莓）</string>
     <string name="code_version">版本 %1$s</string>
     <string name="unknown">未知</string>
 
@@ -104,9 +104,9 @@
     <!-- 合体版：长期排行网格 -->
     <string name="usage_analysis">用量分析</string>
     <string name="app_usage_ranking">应用排行</string>
-    <string name="range_4_weeks">4周（平均）</string>
-    <string name="range_half_year">半年（平均）</string>
-    <string name="range_year">年（平均）</string>
+    <string name="range_4_weeks">4周</string>
+    <string name="range_half_year">半年</string>
+    <string name="range_year">一年</string>
     <string name="sort_time">时间</string>
     <string name="sort_launches">点击量</string>
     <string name="sort_name">名称</string>
@@ -128,4 +128,28 @@
     <string name="only_errors">仅看错误和警告</string>
     <string name="logs_empty">暂时还没有日志，使用一会儿再回来看看。</string>
     <string name="logs_loading">正在读取日志…</string>
+    <string name="logs_search_hint">搜索日志（关键字）</string>
+    <string name="logs_filter_all">全部</string>
+    <string name="logs_filter_errors">错误</string>
+    <string name="logs_filter_touch">触摸</string>
+    <string name="logs_filter_query">查询</string>
+    <string name="logs_filter_system">系统</string>
+    <string name="logs_auto_refresh">自动刷新（3 秒）</string>
+    <string name="logs_mark_hint">手动标记：记下当时的现象</string>
+    <string name="logs_mark">添加标记</string>
+    <string name="logs_mark_done">已记录标记</string>
+
+    <!-- 长范围小时 / 点击量统计 -->
+    <string name="range_total_hours">本范围累计使用</string>
+    <string name="hours_value">%1$.1f 小时</string>
+    <string name="range_daily_average">日均</string>
+    <string name="range_total_launches">点击总量</string>
+    <string name="range_days_recorded">已记录天数</string>
+    <string name="click_backfill_hint">点击量在本机逐日永久保存，已记录 %1$d/%2$d 天；更早的历史可点击补算，每次最多 31 天。</string>
+    <string name="click_backfill">补算历史点击量</string>
+    <string name="click_backfill_running">正在补算…</string>
+    <string name="launch_count_plain">%1$d 次</string>
+    <string name="hourly_distribution_title">时段分布（按小时）</string>
+    <string name="hourly_peak">峰值时段：%1$d 点（%2$s）</string>
+    <string name="hourly_distribution_hint">时段分布基于系统仍保留的事件明细统计。</string>
 </resources>

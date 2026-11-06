@@ -8,11 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -23,11 +23,14 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,6 +48,7 @@ import com.atharok.screentime.ui.components.AppScaffold
 import com.atharok.screentime.ui.components.NavigateUpAction
 import com.atharok.screentime.ui.components.RefreshAction
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
@@ -57,14 +61,17 @@ fun LogsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var stats by remember { mutableStateOf(AppLog.LogStats(0, 0L, 0, "-", "-")) }
+    var stats by remember { mutableStateOf(AppLog.LogStats()) }
     var lines by remember { mutableStateOf(emptyList<String>()) }
-    var onlyErrors by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(true) }
+    var query by remember { mutableStateOf("") }
+    var filter by remember { mutableIntStateOf(0) }
+    var autoRefresh by remember { mutableStateOf(false) }
+    var markText by remember { mutableStateOf("") }
 
-    val reload: () -> Unit = {
+    val reload: (Boolean) -> Unit = { showLoading ->
         scope.launch {
-            loading = true
+            if (showLoading) loading = true
             val result = withContext(Dispatchers.IO) {
                 AppLog.stats() to AppLog.readTail(500)
             }
@@ -76,7 +83,39 @@ fun LogsScreen(
 
     LaunchedEffect(Unit) {
         AppLog.i("LogsScreen", "Runtime log screen opened; ${AppLog.logFiles().size} log files on disk")
-        reload()
+        reload(true)
+    }
+
+    // While enabled, keep the tail live without blocking the UI.
+    LaunchedEffect(autoRefresh) {
+        while (autoRefresh) {
+            delay(3000L)
+            reload(false)
+        }
+    }
+
+    val filterLabels = listOf(
+        stringResource(id = R.string.logs_filter_all),
+        stringResource(id = R.string.logs_filter_errors),
+        stringResource(id = R.string.logs_filter_touch),
+        stringResource(id = R.string.logs_filter_query),
+        stringResource(id = R.string.logs_filter_system)
+    )
+
+    val shown = remember(lines, query, filter) {
+        lines.filter { line ->
+            val matchQuery = query.isBlank() || line.contains(query, ignoreCase = true)
+            val matchFilter = when (filter) {
+                1 -> line.contains("| ERROR |") || line.contains("| FATAL |") || line.contains("| WARN |")
+                2 -> line.contains("[TOUCH]") || line.contains("[CLICK_TO_FRAME]")
+                3 -> line.contains("[QUERY") || line.contains("[AGGREGATE_INTERMEDIATE]")
+                4 -> line.contains("| System |") || line.contains("| Lifecycle |") ||
+                        line.contains("| Memory |") || line.contains("| ExitInfo |") ||
+                        line.contains("| Permission |") || line.contains("[SYS_SAMPLE]")
+                else -> true
+            }
+            matchQuery && matchFilter
+        }
     }
 
     AppScaffold(
@@ -113,7 +152,7 @@ fun LogsScreen(
                 )
             }
 
-            RefreshAction(refresh = reload)
+            RefreshAction(refresh = { reload(true) })
         }
     ) { innerPadding ->
 
@@ -125,18 +164,29 @@ fun LogsScreen(
             item {
                 LogsInfoCard(
                     stats = stats,
-                    onlyErrors = onlyErrors,
-                    onOnlyErrorsChange = { onlyErrors = it },
+                    query = query,
+                    onQueryChange = { query = it },
+                    filter = filter,
+                    filterLabels = filterLabels,
+                    onFilterChange = { filter = it },
+                    autoRefresh = autoRefresh,
+                    onAutoRefreshChange = { autoRefresh = it },
+                    markText = markText,
+                    onMarkTextChange = { markText = it },
+                    onMark = {
+                        AppLog.mark(markText)
+                        markText = ""
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.logs_mark_done),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        reload(false)
+                    },
                     onExport = {
                         scope.launch { withContext(Dispatchers.IO) { AppLog.export() } }
                     }
                 )
-            }
-
-            val shown = if (onlyErrors) {
-                lines.filter { it.contains("| ERROR |") || it.contains("| FATAL |") || it.contains("| WARN |") }
-            } else {
-                lines
             }
 
             if (shown.isEmpty()) {
@@ -181,8 +231,16 @@ fun LogsScreen(
 @Composable
 private fun LogsInfoCard(
     stats: AppLog.LogStats,
-    onlyErrors: Boolean,
-    onOnlyErrorsChange: (Boolean) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
+    filter: Int,
+    filterLabels: List<String>,
+    onFilterChange: (Int) -> Unit,
+    autoRefresh: Boolean,
+    onAutoRefreshChange: (Boolean) -> Unit,
+    markText: String,
+    onMarkTextChange: (String) -> Unit,
+    onMark: () -> Unit,
     onExport: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -231,29 +289,66 @@ private fun LogsInfoCard(
             )
             Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_normal)))
 
+            OutlinedTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                label = { Text(text = stringResource(id = R.string.logs_search_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+
+            Row(modifier = Modifier.fillMaxWidth()) {
+                filterLabels.forEachIndexed { index, label ->
+                    TextButton(
+                        onClick = { onFilterChange(index) },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = label,
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            color = if (filter == index) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(id = R.string.only_errors),
+                    text = stringResource(id = R.string.logs_auto_refresh),
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Switch(checked = onlyErrors, onCheckedChange = onOnlyErrorsChange)
+                Switch(checked = autoRefresh, onCheckedChange = onAutoRefreshChange)
             }
 
-            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_normal)))
-            Button(
-                onClick = onExport,
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+            OutlinedTextField(
+                value = markText,
+                onValueChange = onMarkTextChange,
+                label = { Text(text = stringResource(id = R.string.logs_mark_hint)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Share,
-                    contentDescription = null
-                )
+            )
+            Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = onMark, modifier = Modifier.weight(1f)) {
+                    Text(text = stringResource(id = R.string.logs_mark))
+                }
                 Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_normal)))
-                Text(text = stringResource(id = R.string.export_logs))
+                Button(onClick = onExport, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.padding_small)))
+                    Text(text = stringResource(id = R.string.export_logs))
+                }
             }
         }
     }

@@ -71,17 +71,16 @@ jobs:
           Automated build from commit ${{ github.sha }}.
 
           What's new:
-          - Runtime log viewer: browse the app's own logs, filter errors/warnings, copy to clipboard, and export a TXT ready to hand to an AI assistant (device info + permission state + a built-in prompt + full history + process logcat)
-          - Logs are written to per-day files in private storage and kept FOREVER (never rotated or deleted); uncaught crashes are captured automatically
-          - Entry points: document icon on the main screen and Settings -> About -> Runtime logs
-          - Key scan/query/export paths are now logged so crashes and data issues can be diagnosed from the exported TXT
-          - Combined view: Usage Analyzer style 4-column app ranking grid with range switch (4 weeks / 6 months / year) and sort by time, launches or name
-          - Long-range totals now come from Android WEEKLY / MONTHLY / YEARLY buckets, so they stay complete even on ROMs that discard DAILY buckets after a few days
-          - 30-day totals and daily averages corrected from long-lived system buckets (no more empty first 20 days)
-          - App launch counts and launch rate, shown per app and included in the CSV report
-          - Month view, monthly insights, 30-day goal calendar, CSV export, daily goal reminder
-          - In-app maintainer notice: now maintained by 美丽的黑莓, primarily written with AI assistance
-          - Fixed APK signing: newer builds can be installed directly over this one (no uninstall needed)
+          - Long-range HOUR totals: each range (4 weeks / 6 months / year) now shows the accumulated hours, daily average, total opens and how many days of click data are recorded -- not just per-day increments
+          - Fixed long-range click counts: Android's WEEKLY/MONTHLY/YEARLY buckets do NOT store launch counts, so a permanent local day-by-day launch history was added; counts for any period are summed from it. A "Backfill older opens" button scans at most 31 older days per tap (one-day chunks, saved to disk each day, cancellable), so a half-year/year can be filled without the long scan that used to get the process killed
+          - Click count line is always visible now (0 opens instead of a hidden row); range labels no longer say "(avg)" while showing totals
+          - New "Hours of day" 24-bar distribution with peak hour, built from the detailed usage events the device still keeps
+          - FULL-CAPTURE runtime logging: one JSON event per line, batched off the main thread, per-day files that are NEVER deleted (only split into parts past 4MB)
+          - Captures lifecycle/foreground, page path + dwell time, touch coordinates/gesture/3x3 zone, tap-to-frame latency, frame jank, query cost/thread/range/bucket counts, aggregation intermediates, memory/battery/thermal samples, StrictMode, full device snapshot, crashes, ANR watchdog, ApplicationExitInfo (LMK/ANR/native crash), WorkManager outcomes and manual markers
+          - Log viewer upgraded: keyword search, event-type filters, auto refresh, add-a-marker, copy, and full-history TXT export with a built-in AI prompt + device snapshot + capture summary + process logcat
+          - Website and source-code links now point to the new maintainer: homepage https://github.com/annbnn183 and source https://github.com/annbnn183/MyScreenTime (Fastlane store descriptions updated too); WeChat/email shown in Settings -> About
+          - Retains: 4-column ranking grid, 4-week/6-month/year buckets, launch counts and rates, month view + insights + goal calendar, CSV export, daily goal reminder
+          - Fixed APK signing: newer builds install directly over this one (no uninstall needed)
           - Vico blank-label crash hardening on every chart axis
         files: artifacts/*.apk
         fail_on_unmatched_files: true

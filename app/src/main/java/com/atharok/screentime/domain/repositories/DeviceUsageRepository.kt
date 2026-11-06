@@ -34,4 +34,14 @@ interface DeviceUsageRepository {
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): MonthlyDeviceUsage
+
+    /**
+     * 按天往前补算历史点击量并永久落盘，单次最多 [maxDays] 天，返回本次补算天数。
+     * 分批执行，即使中途被系统回收，已算过的天也不会丢失。
+     */
+    suspend fun backfillLaunchHistory(
+        maxDays: Int,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): Int
 }

@@ -25,7 +25,9 @@ class MonthlyDeviceUsage(
     /** Complete period total from the best-fit aggregation bucket. */
     val aggregatedTotalTimeMillis: Long = 0L,
     /** Calendar days covered by the view; used for an honest daily average. */
-    val requestedDays: Int = 0
+    val requestedDays: Int = 0,
+    /** 按一天 24 小时累计的屏幕时间，来自系统仍保留的事件明细。 */
+    val hourlyTotals: LongArray = LongArray(24)
 ) : DeviceUsage<MonthlyAppUsage>(
     usages = usages,
     timeInterval = timeInterval,

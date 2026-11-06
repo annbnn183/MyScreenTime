@@ -1,26 +1,12 @@
 package com.atharok.screentime.ui.views
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.atharok.screentime.R
 import com.atharok.screentime.common.utils.DateTimeUtils
+import com.atharok.screentime.domain.entities.usage.AppUsageRange
 import com.atharok.screentime.domain.entities.usage.DeviceUsage
 import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.RankedApp
@@ -37,16 +24,18 @@ import com.atharok.screentime.ui.components.ApplicationIcon
 import java.util.Locale
 
 /**
- * Four-column app ranking, inspired by Usage Analyzer: icon, name, total time, launch count and
- * share, with a switchable long-range period (4 weeks / 6 months / year) and a sort mode.
- * Long ranges read the system's WEEKLY / MONTHLY / YEARLY buckets, so their totals stay complete
- * even on ROMs that discard DAILY buckets after a few days.
+ * Four-column app ranking, inspired by Usage Analyzer. Long ranges (4 weeks / 6 months / year)
+ * read the system's WEEKLY / MONTHLY / YEARLY buckets for screen time, while the launch counts
+ * come from the app's own permanent day-by-day history. A summary card shows how many hours the
+ * whole period adds up to instead of only per-day increments.
  */
 @Composable
 fun AppUsageGridView(
     deviceUsage: DeviceUsage<*>,
     onAppClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onBackfill: (() -> Unit)? = null,
+    backfillRunning: Boolean = false
 ) {
     val monthly = deviceUsage as? MonthlyDeviceUsage
     var rangeIndex by remember { mutableIntStateOf(0) }
@@ -84,7 +73,7 @@ fun AppUsageGridView(
             )
             2 -> sourceApps.sortedBy { it.appName.lowercase(Locale.getDefault()) }
             else -> sourceApps.sortedByDescending { it.duration }
-        }.filter { it.duration > 0L }
+        }.filter { it.duration > 0L || it.launchCount > 0 }
     }
 
     val sortLabels = listOf(R.string.sort_time, R.string.sort_launches, R.string.sort_name)
@@ -122,7 +111,15 @@ fun AppUsageGridView(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            ranges.getOrNull(rangeIndex)?.let { range ->
+                RangeSummaryCard(
+                    range = range,
+                    onBackfill = onBackfill,
+                    backfillRunning = backfillRunning
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
         }
 
         val maxDuration = remember(apps) {
@@ -162,6 +159,154 @@ fun AppUsageGridView(
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
+
+        // 按小时的数量统计：一天 24 小时各用了多久。
+        if (monthly != null && monthly.hourlyTotals.any { it > 0L }) {
+            Spacer(modifier = Modifier.height(16.dp))
+            HourlyDistributionCard(hours = monthly.hourlyTotals)
+        }
+    }
+}
+
+/** 这一个范围总共多少小时、日均多少、点击总量多少、点击量覆盖了多少天。 */
+@Composable
+private fun RangeSummaryCard(
+    range: AppUsageRange,
+    onBackfill: (() -> Unit)?,
+    backfillRunning: Boolean
+) {
+    val hours = DateTimeUtils.convertToHourFloat(range.totalTimeMillis)
+    val dailyHours = hours / range.numberOfDays.coerceAtLeast(1)
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = stringResource(id = R.string.range_total_hours),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(id = R.string.hours_value, hours),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                StatColumn(
+                    label = stringResource(id = R.string.range_daily_average),
+                    value = stringResource(id = R.string.hours_value, dailyHours)
+                )
+                StatColumn(
+                    label = stringResource(id = R.string.range_total_launches),
+                    value = range.totalLaunchCount.toString()
+                )
+                StatColumn(
+                    label = stringResource(id = R.string.range_days_recorded),
+                    value = "${range.clickDaysRecorded} / ${range.numberOfDays}"
+                )
+            }
+
+            if (onBackfill != null && range.clickDaysRecorded < range.numberOfDays) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(
+                        id = R.string.click_backfill_hint,
+                        range.clickDaysRecorded,
+                        range.numberOfDays
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(onClick = onBackfill, enabled = !backfillRunning) {
+                    Text(
+                        text = if (backfillRunning) {
+                            stringResource(id = R.string.click_backfill_running)
+                        } else {
+                            stringResource(id = R.string.click_backfill)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RowScope.StatColumn(label: String, value: String) {
+    Column(modifier = Modifier.weight(1f)) {
+        Text(
+            text = label,
+            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            maxLines = 1,
+            style = MaterialTheme.typography.titleSmall
+        )
+    }
+}
+
+@Composable
+private fun HourlyDistributionCard(hours: LongArray) {
+    val max = hours.maxOrNull()?.coerceAtLeast(1L) ?: 1L
+    val peak = hours.indices.maxByOrNull { hours[it] } ?: 0
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(id = R.string.hourly_distribution_title),
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = stringResource(
+                id = R.string.hourly_peak,
+                peak,
+                DateTimeUtils.formatToDuration(hours[peak])
+            ),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(90.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            hours.forEach { value ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight((value.toFloat() / max.toFloat()).coerceIn(0.02f, 1f))
+                        .padding(horizontal = 1.dp)
+                        .clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                )
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            listOf("0:00", "6:00", "12:00", "18:00", "23:00").forEach { label ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(id = R.string.hourly_distribution_hint),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
@@ -192,22 +337,34 @@ private fun GridAppItem(
             style = MaterialTheme.typography.bodySmall
         )
         Text(
-            text = DateTimeUtils.formatToDuration(app.duration),
+            text = stringResource(
+                id = R.string.hours_value,
+                DateTimeUtils.convertToHourFloat(app.duration)
+            ),
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium
         )
-        if (totalLaunches > 0) {
-            Text(
-                text = stringResource(
+        Text(
+            text = DateTimeUtils.formatToDuration(app.duration),
+            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        // 点击量始终显示；即使总量为 0 也不隐藏这一行。
+        Text(
+            text = if (totalLaunches > 0) {
+                stringResource(
                     id = R.string.launch_count_line,
                     app.launchCount,
                     app.launchCount * 100f / totalLaunches
-                ),
-                maxLines = 1,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
+                )
+            } else {
+                stringResource(id = R.string.launch_count_plain, app.launchCount)
+            },
+            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         LinearProgressIndicator(
             progress = { (app.duration.toFloat() / maxDuration.toFloat()).coerceIn(0f, 1f) },
             modifier = Modifier

@@ -69,8 +69,8 @@
     <string name="screen_time_calculation_method_part_3_details">當同時在前景使用多個應用程式時（例如在分屏模式下），每個應用程式的使用時間會分開計算。\n\n然而，但對於總螢幕使用時間而言，無論當時有多少個應用程式在前景處於活動狀態，都只會計算您在螢幕前花費的實際時間。\n\n例如，如果兩個應用程式同時在前景使用了 40 分鐘，每個應用程式都會顯示 40 分鐘的使用時間，但總螢幕時間仍會是 40 分鐘，而不是 80 分鐘。</string>
     <string name="language">語言</string>
     <string name="third_party_library">第三方函式庫</string>
-    <string name="website">網站</string>
-    <string name="source_code">原始碼</string>
+    <string name="website">我的主頁（美麗的黑莓）</string>
+    <string name="source_code">原始碼（美麗的黑莓）</string>
     <string name="code_version">版本 %1$s</string>
     <string name="unknown">未知</string>
 
@@ -107,9 +107,9 @@
     <!-- 合體版：長期排行網格 -->
     <string name="usage_analysis">用量分析</string>
     <string name="app_usage_ranking">應用程式排行</string>
-    <string name="range_4_weeks">4 週（平均）</string>
-    <string name="range_half_year">半年（平均）</string>
-    <string name="range_year">年（平均）</string>
+    <string name="range_4_weeks">4 週</string>
+    <string name="range_half_year">半年</string>
+    <string name="range_year">一年</string>
     <string name="sort_time">時間</string>
     <string name="sort_launches">點擊量</string>
     <string name="sort_name">名稱</string>
@@ -131,4 +131,28 @@
     <string name="only_errors">僅看錯誤與警告</string>
     <string name="logs_empty">暫時沒有紀錄，使用一段時間後再回來看看。</string>
     <string name="logs_loading">正在讀取紀錄…</string>
+    <string name="logs_search_hint">搜尋紀錄（關鍵字）</string>
+    <string name="logs_filter_all">全部</string>
+    <string name="logs_filter_errors">錯誤</string>
+    <string name="logs_filter_touch">觸控</string>
+    <string name="logs_filter_query">查詢</string>
+    <string name="logs_filter_system">系統</string>
+    <string name="logs_auto_refresh">自動更新（3 秒）</string>
+    <string name="logs_mark_hint">手動標記：記下當時的現象</string>
+    <string name="logs_mark">新增標記</string>
+    <string name="logs_mark_done">已記錄標記</string>
+
+    <!-- 長範圍小時 / 點擊量統計 -->
+    <string name="range_total_hours">本範圍累計使用</string>
+    <string name="hours_value">%1$.1f 小時</string>
+    <string name="range_daily_average">日均</string>
+    <string name="range_total_launches">點擊總量</string>
+    <string name="range_days_recorded">已記錄天數</string>
+    <string name="click_backfill_hint">點擊量在本機逐日永久保存，已記錄 %1$d/%2$d 天；更早的歷史可點擊補算，每次最多 31 天。</string>
+    <string name="click_backfill">補算歷史點擊量</string>
+    <string name="click_backfill_running">正在補算…</string>
+    <string name="launch_count_plain">%1$d 次</string>
+    <string name="hourly_distribution_title">時段分佈（按小時）</string>
+    <string name="hourly_peak">峰值時段：%1$d 點（%2$s）</string>
+    <string name="hourly_distribution_hint">時段分佈基於系統仍保留的事件明細統計。</string>
 </resources>

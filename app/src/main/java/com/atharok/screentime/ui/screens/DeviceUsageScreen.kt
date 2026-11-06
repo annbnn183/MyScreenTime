@@ -95,6 +95,8 @@ fun DeviceUsageScreen(
                 Period.DAY -> viewModel.calculateDayDeviceUsage(false)
             }
         },
+        onBackfill = { viewModel.backfillLaunchHistory() },
+        backfillRunning = viewModel.backfillRunning.value,
         modifier = modifier
     )
 }
@@ -112,6 +114,8 @@ private fun StatelessDeviceUsageScreen(
     openSettingsScreen: () -> Unit,
     openLogsScreen: () -> Unit,
     refresh: (Period) -> Unit,
+    onBackfill: (() -> Unit)? = null,
+    backfillRunning: Boolean = false,
     modifier: Modifier = Modifier,
     modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
 ) {
@@ -155,7 +159,9 @@ private fun StatelessDeviceUsageScreen(
                 deviceUsageResource = deviceUsageResource,
                 openApplicationUsageScreen = openApplicationUsageScreen,
                 innerPadding = innerPadding,
-                modelProducer = modelProducer
+                modelProducer = modelProducer,
+                onBackfill = onBackfill,
+                backfillRunning = backfillRunning
             )
         //}
     }
@@ -173,6 +179,8 @@ private fun PortraitDeviceUsageScreen(
     openApplicationUsageScreen: (appPackageName: String) -> Unit,
     innerPadding: PaddingValues,
     modelProducer: CartesianChartModelProducer,
+    onBackfill: (() -> Unit)? = null,
+    backfillRunning: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -253,6 +261,8 @@ private fun PortraitDeviceUsageScreen(
                     AppUsageGridView(
                         deviceUsage = deviceUsage,
                         onAppClick = openApplicationUsageScreen,
+                        onBackfill = onBackfill,
+                        backfillRunning = backfillRunning,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))

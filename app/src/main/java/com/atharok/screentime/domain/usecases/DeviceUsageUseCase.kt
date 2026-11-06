@@ -196,6 +196,15 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
         }
     }
 
+    // ---- Launch history backfill ----
+
+    /** 分批补算历史点击量（每次最多 maxDays 天），返回本次补算天数。 */
+    suspend fun backfillLaunchHistory(
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>,
+        maxDays: Int = 31
+    ): Int = repository.backfillLaunchHistory(maxDays, ignoreSystemApps, ignoredPackages)
+
     // ---- Reset ----
 
     private suspend fun reset(

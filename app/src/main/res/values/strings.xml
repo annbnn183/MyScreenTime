@@ -69,8 +69,9 @@
     <string name="screen_time_calculation_method_part_3_details">When multiple apps are used in the foreground simultaneously (for example, in split-screen mode), the usage time for each app is counted separately.\n\nHowever, for the total screen time, only the actual time spent in front of the screen is counted, regardless of how many apps were active in the foreground at the same time.\n\nFor example, if two apps are used in the foreground simultaneously for 40 minutes, each app will show 40 minutes of usage, but the total screen time will remain 40 minutes, and not 80.</string>
     <string name="language">Language</string>
     <string name="third_party_library">Third-party libraries</string>
-    <string name="website">Website</string>
-    <string name="source_code">Source code</string>
+    <string name="website">My homepage · 美丽的黑莓</string>
+    <string name="source_code">Source code · 美丽的黑莓</string>
+    <string name="maintainer_contact" translatable="false">WeChat cookiebesting · meilideheimei@Outlook.com</string>
     <string name="code_version">Version %1$s</string>
     <string name="unknown">unknown</string>
 
@@ -166,9 +167,9 @@
     <!-- Combined view: long-range ranking grid -->
     <string name="usage_analysis">Usage analysis</string>
     <string name="app_usage_ranking">App ranking</string>
-    <string name="range_4_weeks">4 weeks (avg)</string>
-    <string name="range_half_year">6 months (avg)</string>
-    <string name="range_year">Year (avg)</string>
+    <string name="range_4_weeks">4 weeks</string>
+    <string name="range_half_year">6 months</string>
+    <string name="range_year">Year</string>
     <string name="sort_time">Time</string>
     <string name="sort_launches">Launches</string>
     <string name="sort_name">Name</string>
@@ -190,4 +191,28 @@
     <string name="only_errors">Errors and warnings only</string>
     <string name="logs_empty">No log entries yet. Use the app for a while and come back.</string>
     <string name="logs_loading">Loading logs…</string>
+    <string name="logs_search_hint">Search logs (keyword)</string>
+    <string name="logs_filter_all">All</string>
+    <string name="logs_filter_errors">Errors</string>
+    <string name="logs_filter_touch">Touch</string>
+    <string name="logs_filter_query">Queries</string>
+    <string name="logs_filter_system">System</string>
+    <string name="logs_auto_refresh">Auto refresh (3s)</string>
+    <string name="logs_mark_hint">Add a marker (what happened?)</string>
+    <string name="logs_mark">Add marker</string>
+    <string name="logs_mark_done">Marker saved</string>
+
+    <!-- Long range hour / click statistics -->
+    <string name="range_total_hours">Total screen time</string>
+    <string name="hours_value">%1$.1f h</string>
+    <string name="range_daily_average">Daily average</string>
+    <string name="range_total_launches">Total opens</string>
+    <string name="range_days_recorded">Days recorded</string>
+    <string name="click_backfill_hint">Open counts are stored day by day on this device, permanently. %1$d of %2$d days recorded; older days can be backfilled.</string>
+    <string name="click_backfill">Backfill older opens</string>
+    <string name="click_backfill_running">Backfilling…</string>
+    <string name="launch_count_plain">%1$d opens</string>
+    <string name="hourly_distribution_title">Hours of day</string>
+    <string name="hourly_peak">Peak hour: %1$d:00 (%2$s)</string>
+    <string name="hourly_distribution_hint">Hourly breakdown uses the detailed usage events this device still keeps.</string>
 </resources>

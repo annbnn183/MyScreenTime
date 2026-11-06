@@ -11,7 +11,13 @@ data class AppUsageRange(
     val labelRes: Int,
     val numberOfDays: Int,
     val apps: List<RankedApp>,
-    val totalLaunchCount: Int
+    val totalLaunchCount: Int,
+    /** 这一个范围里累计的屏幕时间（毫秒），用于「总共多少小时」。 */
+    val totalTimeMillis: Long = 0L,
+    /** 该范围内已经保存了逐日点击量记录的天数。 */
+    val clickDaysRecorded: Int = 0,
+    /** 点击量最早记录日；null 表示还没有任何记录。 */
+    val clickSinceDay: Long? = null
 )
 
 data class RankedApp(

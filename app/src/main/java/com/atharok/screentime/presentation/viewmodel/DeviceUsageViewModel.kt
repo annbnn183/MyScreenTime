@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS
 import com.atharok.screentime.domain.entities.CentralTendency
 import com.atharok.screentime.domain.entities.DailyGoalSettings
@@ -44,7 +45,41 @@ class DeviceUsageViewModel(
     /** Daily goal configuration, used by the month view's goal calendar. */
     fun getDailyGoalSettings(): Flow<DailyGoalSettings> = settingsUseCase.getDailyGoalSettings()
 
-    fun calculateMonthDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default) {
+    /** 是否正在补算历史点击量。 */
+    val backfillRunning: MutableState<Boolean> = mutableStateOf(false)
+
+    fun backfillLaunchHistory() = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
+        if (backfillRunning.value) return@launch
+        backfillRunning.value = true
+        try {
+            val ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first()
+            val ignoredPackages = try {
+                settingsUseCase.getIgnoredPackages().first()
+            } catch (_: Exception) {
+                emptyList()
+            }
+            val goalMillis = try {
+                settingsUseCase.getDailyGoalSettings().first().goalMillis
+            } catch (_: Exception) {
+                0L
+            }
+            val done = usageUseCase.backfillLaunchHistory(ignoreSystemApps, ignoredPackages, 31)
+            AppLog.i("DeviceUsageViewModel", "Backfilled $done days of launch history")
+            // 强制重算，让界面立刻读到累加后的点击量。
+            usageUseCase.calculateMonthDeviceUsage(
+                ignoreSystemApps = ignoreSystemApps,
+                ignoredPackages = ignoredPackages,
+                goalMillis = goalMillis,
+                useCache = false
+            )
+        } catch (e: Exception) {
+            AppLog.e("DeviceUsageViewModel", "Launch history backfill failed", e)
+        } finally {
+            backfillRunning.value = false
+        }
+    }
+
+    fun calculateMonthDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
         usageUseCase.calculateMonthDeviceUsage(
             ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
             ignoredPackages = try {
@@ -61,7 +96,7 @@ class DeviceUsageViewModel(
         )
     }
 
-    fun calculateWeekDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default) {
+    fun calculateWeekDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
         usageUseCase.calculateWeekDeviceUsage(
             ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
             ignoredPackages = try {
@@ -73,7 +108,7 @@ class DeviceUsageViewModel(
         )
     }
 
-    fun calculateDayDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default) {
+    fun calculateDayDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default + AppLog.ceh) {
         usageUseCase.calculateDayDeviceUsage(
             ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
             ignoredPackages = try {

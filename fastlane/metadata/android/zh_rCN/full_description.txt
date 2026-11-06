@@ -13,4 +13,4 @@
 - 开源。
 - 使用 Kotlin、Jetpack Compose 和 Material 3 开发。
 
-源代码可在这里获取：https://gitlab.com/Atharok/ScreenTime
+源代码可在这里获取：https://github.com/annbnn183/MyScreenTime

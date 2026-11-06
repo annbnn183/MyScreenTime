@@ -14,4 +14,4 @@ Features:
 - Open Source.
 - Programmiert in Kotlin mit Jetpack Compose und Material 3.
 
-Der Quellcode ist hier verfügbar: https://gitlab.com/Atharok/ScreenTime
+Der Quellcode ist hier verfügbar: https://github.com/annbnn183/MyScreenTime

@@ -11,8 +11,10 @@ const val KOIN_SIMPLE_HOUR_FORMAT = "koinSimpleHourFormat"
 
 const val DATA_STORE_PREFERENCES_SETTINGS_NAME = "dataStoreSettings"
 
-const val SOURCE_CODE_LINK = "https://gitlab.com/Atharok/ScreenTime"
-const val WEB_SITE_LINK = "https://atharok.gitlab.io/site/projects/screen-time/"
+// Project is now maintained by 美丽的黑莓. Keep the original applicationId so users can still
+// install newer builds over older ones without losing their permanently stored runtime logs.
+const val SOURCE_CODE_LINK = "https://github.com/annbnn183/MyScreenTime"
+const val WEB_SITE_LINK = "https://github.com/annbnn183"
 
 const val NUMBER_OF_DAYS = 10
 /** Number of calendar days shown by the "month" period. */

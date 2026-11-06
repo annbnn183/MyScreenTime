@@ -329,6 +329,7 @@ fun SettingsScreen(
             ) {
                 TextNormal(text = stringResource(id = R.string.maintainer_notice_title))
                 TextNormalSecondary(text = stringResource(id = R.string.maintainer_notice_message))
+                TextNormalSecondary(text = stringResource(id = R.string.maintainer_contact))
             }
 
             SettingsText(

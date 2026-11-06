@@ -6,8 +6,11 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
+import com.atharok.screentime.common.utils.AppLog
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,6 +52,16 @@ fun AppNavHost(
     logsScreen: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Page path + dwell time for the runtime log. The listener fires immediately with the current
+    // destination, so the very first screen is recorded too.
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            AppLog.setScreen(destination.route ?: "unknown")
+        }
+        navController.addOnDestinationChangedListener(listener)
+        onDispose { navController.removeOnDestinationChangedListener(listener) }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,

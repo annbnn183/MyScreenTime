@@ -279,6 +279,7 @@ class UsageStatsTracker(
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): MonthlyScanResult {
+        val queryStarted = android.os.SystemClock.uptimeMillis()
         val perPackageByDay = mutableMapOf<String, MutableMap<Long, Long>>()
         val launchCountByPackageByDay = mutableMapOf<String, MutableMap<Long, Int>>()
 
@@ -292,11 +293,21 @@ class UsageStatsTracker(
             AppLog.e("UsageStatsTracker", "queryUsageStats(INTERVAL_DAILY) failed", e)
             null
         }.orEmpty()
-        AppLog.d(
-            "UsageStatsTracker",
-            "INTERVAL_DAILY returned ${usageStatsList.size} buckets for range $startTimestamp..$endTimestamp"
+        AppLog.event(
+            "DEBUG", "UsageStatsTracker", "QUERY",
+            "INTERVAL_DAILY returned ${usageStatsList.size} raw buckets",
+            "interval" to "INTERVAL_DAILY",
+            "begin" to startTimestamp,
+            "end" to endTimestamp,
+            "rangeDays" to ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY),
+            "rawBuckets" to usageStatsList.size,
+            "ignoreSystemApps" to ignoreSystemApps,
+            "ignoredPackages" to ignoredPackages.size,
+            "costMs" to (android.os.SystemClock.uptimeMillis() - queryStarted),
+            "thread" to Thread.currentThread().name
         )
 
+        var keptEntries = 0
         for (stats in usageStatsList) {
             val packageName = stats.packageName ?: continue
             if (packageName.isEmpty() || ignoredPackages.contains(packageName)) continue
@@ -317,6 +328,7 @@ class UsageStatsTracker(
             val clampedDuration = duration.coerceAtMost(MILLIS_IN_A_DAY)
             val byDay = perPackageByDay.getOrPut(packageName) { mutableMapOf() }
             byDay[dayTimestamp] = (byDay[dayTimestamp] ?: 0L) + clampedDuration
+            keptEntries++
 
             // getLaunchCount() is hidden on some ROMs; the repository merges event-based counts
             // for the days where the system reports nothing.
@@ -333,6 +345,19 @@ class UsageStatsTracker(
                 dailyTotals[dayTimestamp] = (dailyTotals[dayTimestamp] ?: 0L) + duration
             }
         }
+
+        AppLog.event(
+            "DEBUG", "UsageStatsTracker", "AGGREGATE_INTERMEDIATE",
+            "Daily buckets reduced to per-package per-day durations",
+            "rawBuckets" to usageStatsList.size,
+            "keptEntries" to keptEntries,
+            "filteredEntries" to (usageStatsList.size - keptEntries).coerceAtLeast(0),
+            "distinctPackages" to perPackageByDay.size,
+            "daysWithData" to dailyTotals.size,
+            "rawTotalMs" to dailyTotals.values.sum(),
+            "timezone" to java.util.TimeZone.getDefault().id,
+            "dayBoundary" to "local midnight (DateTimeUtils.truncateToDay)"
+        )
 
         return MonthlyScanResult(
             perPackageByDay = perPackageByDay,
@@ -354,6 +379,24 @@ class UsageStatsTracker(
         } catch (_: Exception) {
             0
         }
+    }
+
+    /**
+     * Counts foreground intervals for a single day, using exactly the same event rules as
+     * [calculateUsageIntervalsByPackage]. Splitting a long backfill into one-day queries keeps
+     * memory flat and prevents the process from being killed during a months-long scan.
+     */
+    suspend fun countLaunchesByDay(
+        dayStart: Long,
+        dayEnd: Long,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): Map<String, Int> = try {
+        calculateUsageIntervalsByPackage(dayStart, dayEnd, ignoreSystemApps, ignoredPackages)
+            .mapValues { (_, intervals) -> intervals.size }
+    } catch (e: Exception) {
+        AppLog.e("UsageStatsTracker", "countLaunchesByDay failed for $dayStart", e)
+        emptyMap()
     }
 
     // ---- Long-range aggregated stats (weekly / monthly / yearly buckets) ----
@@ -378,6 +421,7 @@ class UsageStatsTracker(
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): Map<String, AggregatedUsage> {
+        val queryStarted = android.os.SystemClock.uptimeMillis()
         val result = mutableMapOf<String, AggregatedUsage>()
         val statsList = try {
             usageStatsManager.queryUsageStats(intervalType, startTimestamp, endTimestamp)
@@ -385,9 +429,19 @@ class UsageStatsTracker(
             AppLog.e("UsageStatsTracker", "queryUsageStats(intervalType=$intervalType) failed", e)
             null
         }.orEmpty()
-        AppLog.d(
-            "UsageStatsTracker",
-            "Aggregated bucket $intervalType returned ${statsList.size} entries for range $startTimestamp..$endTimestamp"
+        AppLog.event(
+            "DEBUG", "UsageStatsTracker", "QUERY_RESULT",
+            "Aggregated bucket $intervalType returned ${statsList.size} entries",
+            "interval" to intervalType,
+            "intervalName" to intervalName(intervalType),
+            "begin" to startTimestamp,
+            "end" to endTimestamp,
+            "rangeDays" to ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY),
+            "rawEntries" to statsList.size,
+            "ignoreSystemApps" to ignoreSystemApps,
+            "ignoredPackages" to ignoredPackages.size,
+            "costMs" to (android.os.SystemClock.uptimeMillis() - queryStarted),
+            "thread" to Thread.currentThread().name
         )
 
         for (stats in statsList) {
@@ -406,6 +460,25 @@ class UsageStatsTracker(
                 launchCount = (previous?.launchCount ?: 0) + launches
             )
         }
+        AppLog.event(
+            "DEBUG", "UsageStatsTracker", "AGGREGATE_INTERMEDIATE",
+            "Long-range aggregate reduced to ${result.size} packages",
+            "interval" to intervalType,
+            "intervalName" to intervalName(intervalType),
+            "rawEntries" to statsList.size,
+            "distinctPackages" to result.size,
+            "totalForegroundMs" to result.values.sumOf { it.totalTimeInForeground },
+            "totalLaunches" to result.values.sumOf { it.launchCount }
+        )
         return result
+    }
+
+    private fun intervalName(intervalType: Int): String = when (intervalType) {
+        UsageStatsManager.INTERVAL_DAILY -> "INTERVAL_DAILY"
+        UsageStatsManager.INTERVAL_WEEKLY -> "INTERVAL_WEEKLY"
+        UsageStatsManager.INTERVAL_MONTHLY -> "INTERVAL_MONTHLY"
+        UsageStatsManager.INTERVAL_YEARLY -> "INTERVAL_YEARLY"
+        UsageStatsManager.INTERVAL_BEST -> "INTERVAL_BEST"
+        else -> "INTERVAL_$intervalType"
     }
 }

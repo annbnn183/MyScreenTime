@@ -5,7 +5,9 @@ import android.content.Context
 import com.atharok.screentime.R
 import com.atharok.screentime.common.extensions.getApplicationIconSafety
 import com.atharok.screentime.common.extensions.getApplicationName
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
+import com.atharok.screentime.data.dataStore.LaunchHistoryStore
 import com.atharok.screentime.data.statsTracker.UsageStatsTracker
 import com.atharok.screentime.domain.entities.usage.AppUsageRange
 import com.atharok.screentime.domain.entities.usage.DailyAppUsage
@@ -34,6 +36,8 @@ class DeviceUsageRepositoryImpl(
     /** Number of app openings per package, split by day, derived from the foreground intervals. */
     private var launchCountCacheByPackageByDay: Map<String, Map<Long, Int>> = mapOf()
     private var dateOfLastRefresh: String = ""
+    /** 永久保存逐日点击量；长周期点击量只能靠它累加。 */
+    private val launchHistory = LaunchHistoryStore(context)
 
     override suspend fun calculateDeviceUsage(
         timeInterval: Pair<Long, Long>,
@@ -67,6 +71,18 @@ class DeviceUsageRepositoryImpl(
         }
 
         dateOfLastRefresh = DateTimeUtils.formatToFullDateTime(timeInterval.second)
+
+        // 事件明细覆盖的每一天都写进永久存档（包括 0 次的天），长周期点击量靠它累加。
+        val startDay = DateTimeUtils.truncateToDay(timeInterval.first)
+        val endDay = DateTimeUtils.truncateToDay(timeInterval.second)
+        var cursor = startDay
+        while (cursor in startDay..endDay) {
+            val counts = launchCountCacheByPackageByDay.mapNotNull { (pkg, byDay) ->
+                byDay[cursor]?.let { pkg to it }
+            }.toMap()
+            launchHistory.mergeDay(cursor, counts)
+            cursor = DateTimeUtils.addDaysToTimestamp(cursor, 1)
+        }
     }
 
     override suspend fun getWeekDeviceUsage(
@@ -196,6 +212,15 @@ class DeviceUsageRepositoryImpl(
         }
         mergeLaunches(scan.launchCountByPackageByDay)
         mergeLaunches(launchCountCacheByPackageByDay)
+
+        // DAILY 桶覆盖的天数通常比事件明细更长，一并写进永久存档。
+        mergedLaunches.values.flatMap { it.keys }.distinct().forEach { day ->
+            val counts = mergedLaunches.mapNotNull { (pkg, byDay) ->
+                byDay[day]?.let { pkg to it }
+            }.toMap()
+            launchHistory.mergeDay(day, counts)
+        }
+
         val launchCountByPackage: Map<String, Int> = mergedLaunches.mapValues { (_, byDay) -> byDay.values.sum() }
         val totalLaunchCount = launchCountByPackage.values.sum()
         // When the system provides no launch counts at all, only the last 10 days are covered.
@@ -218,33 +243,50 @@ class DeviceUsageRepositoryImpl(
             Triple(R.string.range_year, 365, UsageStatsManager.INTERVAL_YEARLY)
         )
         val rangeRankings: List<AppUsageRange> = rangeSpecs.map { (labelRes, days, interval) ->
+            val rangeStart = nowMillis - days.toLong() * dayMillis
             val aggregated = tracker.queryAggregatedUsage(
                 intervalType = interval,
-                startTimestamp = nowMillis - days.toLong() * dayMillis,
+                startTimestamp = rangeStart,
                 endTimestamp = nowMillis,
                 ignoreSystemApps = ignoreSystemApps,
                 ignoredPackages = ignoredPackages
             )
-            val rankedApps = aggregated.values
-                .filter { it.totalTimeInForeground > 0L }
-                .map { item ->
-                    RankedApp(
-                        packageName = item.packageName,
-                        appName = context.packageManager.getApplicationName(item.packageName)
-                            ?: item.packageName,
-                        appIcon = context.packageManager.getApplicationIconSafety(item.packageName),
-                        duration = item.totalTimeInForeground,
-                        launchCount = item.launchCount
-                    )
-                }
+            // 系统长期桶不保存启动次数，逐日存档才是 4 周 / 半年 / 一年点击量的真实来源。
+            val history = launchHistory.sumRange(rangeStart, nowMillis)
+            val packageNames = (aggregated.keys + history.keys).toSet()
+            val rankedApps = packageNames.map { packageName ->
+                val item = aggregated[packageName]
+                RankedApp(
+                    packageName = packageName,
+                    appName = context.packageManager.getApplicationName(packageName) ?: packageName,
+                    appIcon = context.packageManager.getApplicationIconSafety(packageName),
+                    duration = item?.totalTimeInForeground ?: 0L,
+                    launchCount = maxOf(item?.launchCount ?: 0, history[packageName] ?: 0)
+                )
+            }
+                .filter { it.duration > 0L || it.launchCount > 0 }
                 .sortedByDescending { it.duration }
             AppUsageRange(
                 labelRes = labelRes,
                 numberOfDays = days,
                 apps = rankedApps,
-                totalLaunchCount = aggregated.values.sumOf { it.launchCount }
+                totalLaunchCount = rankedApps.sumOf { it.launchCount },
+                totalTimeMillis = rankedApps.sumOf { it.duration },
+                clickDaysRecorded = launchHistory.countScannedInRange(rangeStart, nowMillis),
+                clickSinceDay = launchHistory.earliestScannedDay()
             )
         }
+
+        AppLog.event(
+            "DEBUG", "DeviceUsageRepository", "AGGREGATE_INTERMEDIATE",
+            "Long-range rankings built from system buckets",
+            "ranges" to rangeRankings.size,
+            "apps4w" to rangeRankings[0].apps.size,
+            "appsHalfYear" to rangeRankings[1].apps.size,
+            "appsYear" to rangeRankings[2].apps.size,
+            "totalMs4w" to rangeRankings[0].apps.sumOf { it.duration },
+            "timezone" to java.util.TimeZone.getDefault().id
+        )
 
         // Correct the 30-day headline numbers with the best-fit bucket, so they no longer
         // collapse just because this ROM only kept a handful of DAILY buckets.
@@ -257,6 +299,20 @@ class DeviceUsageRepositoryImpl(
         )
         val aggregatedDeviceTotal: Long = monthlyAggregate.values.sumOf { it.totalTimeInForeground }
         val aggregatedLaunchTotal: Int = monthlyAggregate.values.sumOf { it.launchCount }
+        AppLog.event(
+            "DEBUG", "DeviceUsageRepository", "AGGREGATE_INTERMEDIATE",
+            "30-day headline totals corrected from INTERVAL_BEST",
+            "dailyBucketTotalMs" to dailyTotals.sumOf { it.duration },
+            "aggregatedTotalMs" to aggregatedDeviceTotal,
+            "dailyBucketDays" to dailyTotals.count { it.duration > 0L },
+            "requestedDays" to dayTimestamps.size,
+            "aggregatedLaunchTotal" to aggregatedLaunchTotal,
+            "eventLaunchTotal" to totalLaunchCount,
+            "isDataLimited" to isDataLimited,
+            "timezone" to java.util.TimeZone.getDefault().id,
+            "rangeBegin" to timeInterval.first,
+            "rangeEnd" to timeInterval.second
+        )
 
         val usages: Map<String, MonthlyAppUsage> = mergedPerPackage
             .mapValues { (packageName: String, byDay: Map<Long, Long>) ->
@@ -275,6 +331,14 @@ class DeviceUsageRepositoryImpl(
                 )
             }
 
+        // 24 小时时段分布：把事件明细仍保留的每一天按小时累加。
+        val hourlyTotals = LongArray(24)
+        totalDeviceUsageCacheByDayAndHour.forEach { (day, hours) ->
+            if (day in timeInterval.first..timeInterval.second) {
+                hours.indices.forEach { index -> hourlyTotals[index] += hours[index] }
+            }
+        }
+
         return MonthlyDeviceUsage(
             usages = usages,
             timeInterval = timeInterval,
@@ -286,7 +350,40 @@ class DeviceUsageRepositoryImpl(
             isClickDataLimited = isClickDataLimited,
             rangeRankings = rangeRankings,
             aggregatedTotalTimeMillis = aggregatedDeviceTotal,
-            requestedDays = dayTimestamps.size
+            requestedDays = dayTimestamps.size,
+            hourlyTotals = hourlyTotals
         )
+    }
+
+    override suspend fun backfillLaunchHistory(
+        maxDays: Int,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): Int {
+        val today = DateTimeUtils.truncateToDay(System.currentTimeMillis())
+        val earliest = launchHistory.earliestScannedDay() ?: today
+        val oldestAllowed = DateTimeUtils.addDaysToTimestamp(today, -365)
+        var day = DateTimeUtils.addDaysToTimestamp(earliest, -1)
+        var done = 0
+        while (done < maxDays && day >= oldestAllowed) {
+            if (!launchHistory.isScanned(day)) {
+                val nextDay = DateTimeUtils.addDaysToTimestamp(day, 1)
+                val counts = tracker.countLaunchesByDay(
+                    dayStart = day,
+                    dayEnd = nextDay,
+                    ignoreSystemApps = ignoreSystemApps,
+                    ignoredPackages = ignoredPackages
+                )
+                launchHistory.mergeDay(day, counts)
+                kotlinx.coroutines.yield()
+            }
+            day = DateTimeUtils.addDaysToTimestamp(day, -1)
+            done++
+        }
+        AppLog.i(
+            "DeviceUsageRepository",
+            "Backfilled $done days of launch history (stored days: ${launchHistory.scannedDays()})"
+        )
+        return done
     }
 }
