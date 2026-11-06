@@ -2,6 +2,7 @@ package com.atharok.screentime.ui.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Share
@@ -55,6 +56,19 @@ fun SettingsAction(
         onClick = openSettingsScreen,
         image = Icons.Rounded.Settings,
         contentDescription = stringResource(id = R.string.settings),
+        modifier = modifier
+    )
+}
+
+@Composable
+fun LogsAction(
+    openLogsScreen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBarAction(
+        onClick = openLogsScreen,
+        image = Icons.Rounded.Description,
+        contentDescription = stringResource(id = R.string.runtime_logs),
         modifier = modifier
     )
 }

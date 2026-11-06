@@ -1,5 +1,6 @@
 package com.atharok.screentime.domain.usecases
 
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS_IN_MONTH
@@ -27,11 +28,20 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ) {
-        calculationTimestamp = System.currentTimeMillis()
+        val start = System.currentTimeMillis()
+        calculationTimestamp = start
+        AppLog.i(
+            "DeviceUsageUseCase",
+            "Scanning usage events for $NUMBER_OF_DAYS days (ignoreSystemApps=$ignoreSystemApps, ignored=${ignoredPackages.size})"
+        )
         repository.calculateDeviceUsage(
             timeInterval = DateTimeUtils.computeInterval(calculationTimestamp, NUMBER_OF_DAYS - 1),
             ignoreSystemApps = ignoreSystemApps,
             ignoredPackages = ignoredPackages
+        )
+        AppLog.i(
+            "DeviceUsageUseCase",
+            "Usage event scan finished in ${System.currentTimeMillis() - start} ms"
         )
         isInitialised = true
     }
@@ -79,6 +89,7 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
             }
 
         } catch (e: Exception) {
+            AppLog.e("DeviceUsageUseCase", "Failed to compute WEEK usage", e)
             weeklyDeviceUsageCache = null
             _deviceUsageFlow.value = Resource.failure(e)
         }
@@ -124,6 +135,7 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
             }
 
         } catch (e: Exception) {
+            AppLog.e("DeviceUsageUseCase", "Failed to compute DAY usage (dayIndex=$dayIndex)", e)
             _deviceUsageFlow.value = Resource.failure(e)
         }
     }
@@ -178,6 +190,7 @@ class DeviceUsageUseCase(private val repository: DeviceUsageRepository) {
             }
 
         } catch (e: Exception) {
+            AppLog.e("DeviceUsageUseCase", "Failed to compute MONTH usage", e)
             monthlyDeviceUsageCache = null
             _deviceUsageFlow.value = Resource.failure(e)
         }

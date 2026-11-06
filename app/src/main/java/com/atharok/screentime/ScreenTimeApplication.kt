@@ -6,6 +6,7 @@ import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.atharok.screentime.common.injections.appModules
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DAILY_GOAL_WORK_NAME
 import com.atharok.screentime.presentation.reminder.DailyGoalReminderWorker
 import org.koin.android.ext.koin.androidContext
@@ -15,11 +16,14 @@ import java.util.concurrent.TimeUnit
 class ScreenTimeApplication: Application() {
     override fun onCreate() {
         super.onCreate()
+        // Must run before anything else so crashes during startup are still captured.
+        AppLog.init(this)
         startKoin {
             androidContext(this@ScreenTimeApplication)
             modules(appModules)
         }
         scheduleDailyGoalReminder()
+        AppLog.i("Application", "Koin started; daily goal reminder work scheduled")
     }
 
     /**

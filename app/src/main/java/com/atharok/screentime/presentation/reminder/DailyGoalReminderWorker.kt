@@ -3,6 +3,7 @@ package com.atharok.screentime.presentation.reminder
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.domain.entities.usage.GlanceTodayDeviceUsage
 import com.atharok.screentime.domain.resources.Resource
 import com.atharok.screentime.domain.usecases.GlanceTodayDeviceUsageUseCase
@@ -60,12 +61,17 @@ class DailyGoalReminderWorker(
                 goalMillis = settings.goalMillis
             )
             settingsUseCase.saveLastGoalNotifiedDate(today)
+            AppLog.i(
+                "DailyGoalReminderWorker",
+                "Posted goal warning: used=${totalTimeUsed}ms, threshold=${settings.thresholdMillis}ms, date=$today"
+            )
         }
 
         Result.success()
-    } catch (_: Exception) {
+    } catch (e: Exception) {
         // A transient failure (e.g. usage access temporarily unavailable) should be retried by
         // WorkManager, not silently swallow the reminder for the whole day.
+        AppLog.e("DailyGoalReminderWorker", "Reminder check failed, requesting retry", e)
         Result.retry()
     }
 }

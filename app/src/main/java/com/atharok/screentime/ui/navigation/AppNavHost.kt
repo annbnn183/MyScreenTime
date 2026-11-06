@@ -46,6 +46,7 @@ fun AppNavHost(
     settingsScreen: @Composable () -> Unit,
     ignoredAppsScreen: @Composable () -> Unit,
     thirdLibrariesScreen: @Composable () -> Unit,
+    logsScreen: @Composable () -> Unit,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -120,6 +121,16 @@ fun AppNavHost(
             popExitTransition = popExitTransition
         ) {
             thirdLibrariesScreen()
+        }
+
+        composable(
+            route = AppNavDestination.LogsDestination.route,
+            enterTransition = enterTransition,
+            exitTransition = exitTransition,
+            popEnterTransition = popEnterTransition,
+            popExitTransition = popExitTransition
+        ) {
+            logsScreen()
         }
     }
 }

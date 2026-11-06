@@ -36,7 +36,12 @@ object CsvExporter {
         val chooser = Intent.createChooser(sendIntent, context.getString(R.string.export_report)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { context.startActivity(chooser) }
+        runCatching {
+            context.startActivity(chooser)
+            AppLog.i("CsvExporter", "Exported ${period.name} CSV ${file.name} (${file.length()} bytes)")
+        }.onFailure {
+            AppLog.e("CsvExporter", "Failed to export ${period.name} CSV report", it)
+        }
     }
 
     private fun buildCsv(deviceUsage: DeviceUsage<*>, period: Period): String = buildString {

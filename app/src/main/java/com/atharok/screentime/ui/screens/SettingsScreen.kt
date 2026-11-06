@@ -66,6 +66,7 @@ fun SettingsScreen(
     navigateUp: () -> Unit,
     openIgnoredAppsScreen: () -> Unit,
     openThirdLibrariesScreen: () -> Unit,
+    openLogsScreen: () -> Unit,
     settingsViewModel: SettingsViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -329,6 +330,17 @@ fun SettingsScreen(
                 TextNormal(text = stringResource(id = R.string.maintainer_notice_title))
                 TextNormalSecondary(text = stringResource(id = R.string.maintainer_notice_message))
             }
+
+            SettingsText(
+                text = stringResource(id = R.string.runtime_logs),
+                modifier = Modifier
+                    .clickable { openLogsScreen() }
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
 
             SettingsScreenTimeCalculationMethodModalBottomSheet(
                 title = R.string.screen_time_calculation_method,

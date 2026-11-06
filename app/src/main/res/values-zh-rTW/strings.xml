@@ -117,4 +117,18 @@
     <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
     <string name="aggregate_hint">總量與日均來自系統長期統計；逐日圖表僅顯示系統保留的天數。</string>
     <string name="no_usage_data">暫時沒有用量資料。</string>
+
+    <!-- 執行紀錄 -->
+    <string name="runtime_logs">執行紀錄</string>
+    <string name="logs_title">應用程式執行紀錄</string>
+    <string name="logs_stats">%1$d 個紀錄檔（%2$s ~ %3$s），%4$d 行，%5$s KB</string>
+    <string name="logs_retention">紀錄依天儲存於應用程式私有目錄，永久保存、不會自動刪除；僅解除安裝或清除資料才會清空。</string>
+    <string name="logs_ai_hint">匯出的 TXT 含裝置資訊、權限狀態與「給 AI 的提示」，可直接交給 AI 分析崩潰原因並提出改進建議。</string>
+    <string name="export_logs">匯出 TXT 紀錄</string>
+    <string name="export_logs_subject">MyScreenTime 執行紀錄</string>
+    <string name="copy_logs">複製紀錄</string>
+    <string name="logs_copied">紀錄已複製到剪貼簿</string>
+    <string name="only_errors">僅看錯誤與警告</string>
+    <string name="logs_empty">暫時沒有紀錄，使用一段時間後再回來看看。</string>
+    <string name="logs_loading">正在讀取紀錄…</string>
 </resources>

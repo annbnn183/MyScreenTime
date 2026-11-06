@@ -176,4 +176,18 @@
     <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
     <string name="aggregate_hint">Totals and daily averages come from long-lived system buckets; the daily chart only shows the days this device still keeps.</string>
     <string name="no_usage_data">No usage data available yet.</string>
+
+    <!-- Runtime logs -->
+    <string name="runtime_logs">Runtime logs</string>
+    <string name="logs_title">App runtime log</string>
+    <string name="logs_stats">%1$d log files (%2$s ~ %3$s), %4$d lines, %5$s KB</string>
+    <string name="logs_retention">Logs are saved permanently in the app\'s private storage, one file per day. They are never deleted automatically; only uninstalling the app or clearing its data removes them.</string>
+    <string name="logs_ai_hint">The exported TXT includes device info, permission state and a ready-to-paste prompt. Send it to an AI assistant to diagnose crashes and suggest improvements.</string>
+    <string name="export_logs">Export TXT log</string>
+    <string name="export_logs_subject">MyScreenTime runtime log</string>
+    <string name="copy_logs">Copy log</string>
+    <string name="logs_copied">Log copied to clipboard</string>
+    <string name="only_errors">Errors and warnings only</string>
+    <string name="logs_empty">No log entries yet. Use the app for a while and come back.</string>
+    <string name="logs_loading">Loading logs…</string>
 </resources>

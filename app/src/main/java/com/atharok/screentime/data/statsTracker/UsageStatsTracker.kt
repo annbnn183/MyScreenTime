@@ -6,6 +6,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.common.utils.MILLIS_IN_A_DAY
 
@@ -287,9 +288,14 @@ class UsageStatsTracker(
                 startTimestamp,
                 endTimestamp
             )
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.e("UsageStatsTracker", "queryUsageStats(INTERVAL_DAILY) failed", e)
             null
         }.orEmpty()
+        AppLog.d(
+            "UsageStatsTracker",
+            "INTERVAL_DAILY returned ${usageStatsList.size} buckets for range $startTimestamp..$endTimestamp"
+        )
 
         for (stats in usageStatsList) {
             val packageName = stats.packageName ?: continue
@@ -375,9 +381,14 @@ class UsageStatsTracker(
         val result = mutableMapOf<String, AggregatedUsage>()
         val statsList = try {
             usageStatsManager.queryUsageStats(intervalType, startTimestamp, endTimestamp)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.e("UsageStatsTracker", "queryUsageStats(intervalType=$intervalType) failed", e)
             null
         }.orEmpty()
+        AppLog.d(
+            "UsageStatsTracker",
+            "Aggregated bucket $intervalType returned ${statsList.size} entries for range $startTimestamp..$endTimestamp"
+        )
 
         for (stats in statsList) {
             val packageName = stats.packageName ?: continue

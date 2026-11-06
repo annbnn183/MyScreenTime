@@ -71,6 +71,10 @@ jobs:
           Automated build from commit ${{ github.sha }}.
 
           What's new:
+          - Runtime log viewer: browse the app's own logs, filter errors/warnings, copy to clipboard, and export a TXT ready to hand to an AI assistant (device info + permission state + a built-in prompt + full history + process logcat)
+          - Logs are written to per-day files in private storage and kept FOREVER (never rotated or deleted); uncaught crashes are captured automatically
+          - Entry points: document icon on the main screen and Settings -> About -> Runtime logs
+          - Key scan/query/export paths are now logged so crashes and data issues can be diagnosed from the exported TXT
           - Combined view: Usage Analyzer style 4-column app ranking grid with range switch (4 weeks / 6 months / year) and sort by time, launches or name
           - Long-range totals now come from Android WEEKLY / MONTHLY / YEARLY buckets, so they stay complete even on ROMs that discard DAILY buckets after a few days
           - 30-day totals and daily averages corrected from long-lived system buckets (no more empty first 20 days)

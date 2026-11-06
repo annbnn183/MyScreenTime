@@ -19,6 +19,7 @@ import com.atharok.screentime.ui.navigation.navigateTo
 import com.atharok.screentime.ui.screens.ApplicationUsageScreen
 import com.atharok.screentime.ui.screens.DeviceUsageScreen
 import com.atharok.screentime.ui.screens.IgnoredAppsScreen
+import com.atharok.screentime.ui.screens.LogsScreen
 import com.atharok.screentime.ui.screens.PermissionScreen
 import com.atharok.screentime.ui.screens.SettingsScreen
 import com.atharok.screentime.ui.screens.ThirdLibrariesScreen
@@ -73,6 +74,9 @@ fun ComposeRoot(
                             )
                         },
                         openSettingsScreen = openSettings,
+                        openLogsScreen = {
+                            navController.navigateTo(AppNavDestination.LogsDestination.route)
+                        },
                         modifier = Modifier
                     )
                 },
@@ -100,6 +104,9 @@ fun ComposeRoot(
                         openThirdLibrariesScreen = {
                             navController.navigateTo(AppNavDestination.ThirdLibrariesDestination.route)
                         },
+                        openLogsScreen = {
+                            navController.navigateTo(AppNavDestination.LogsDestination.route)
+                        },
                         settingsViewModel = settingsViewModel,
                         modifier = Modifier
                     )
@@ -115,6 +122,13 @@ fun ComposeRoot(
 
                 thirdLibrariesScreen = {
                     ThirdLibrariesScreen(
+                        navigateUp = { navController.navigateUp() },
+                        modifier = Modifier
+                    )
+                },
+
+                logsScreen = {
+                    LogsScreen(
                         navigateUp = { navController.navigateUp() },
                         modifier = Modifier
                     )

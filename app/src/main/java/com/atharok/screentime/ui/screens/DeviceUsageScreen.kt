@@ -39,6 +39,7 @@ import com.atharok.screentime.ui.components.AppScaffold
 import com.atharok.screentime.ui.components.ApplicationIcon
 import com.atharok.screentime.ui.components.ExportAction
 import com.atharok.screentime.ui.components.LoadingDialog
+import com.atharok.screentime.ui.components.LogsAction
 import com.atharok.screentime.ui.components.RefreshAction
 import com.atharok.screentime.ui.components.SettingsAction
 import com.atharok.screentime.ui.components.TextNormal
@@ -56,6 +57,7 @@ fun DeviceUsageScreen(
     viewModel: DeviceUsageViewModel,
     openApplicationUsageScreen: (appPackageName: String) -> Unit,
     openSettingsScreen: () -> Unit,
+    openLogsScreen: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
@@ -85,6 +87,7 @@ fun DeviceUsageScreen(
         deviceUsageResource = deviceUsageResource,
         openApplicationUsageScreen = openApplicationUsageScreen,
         openSettingsScreen = openSettingsScreen,
+        openLogsScreen = openLogsScreen,
         refresh = {
             when(it) {
                 Period.MONTH -> viewModel.calculateMonthDeviceUsage(false)
@@ -107,6 +110,7 @@ private fun StatelessDeviceUsageScreen(
     deviceUsageResource: Resource<DeviceUsage<*>>,
     openApplicationUsageScreen: (appPackageName: String) -> Unit,
     openSettingsScreen: () -> Unit,
+    openLogsScreen: () -> Unit,
     refresh: (Period) -> Unit,
     modifier: Modifier = Modifier,
     modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
@@ -121,6 +125,7 @@ private fun StatelessDeviceUsageScreen(
                     CsvExporter.export(context, deviceUsageResource.data, period)
                 }
             })
+            LogsAction(openLogsScreen = openLogsScreen)
             RefreshAction(refresh = { refresh(period) })
             SettingsAction(openSettingsScreen = openSettingsScreen)
         }

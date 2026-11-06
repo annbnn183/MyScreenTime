@@ -18,4 +18,5 @@ sealed class AppNavDestination(val route: String) {
     data object SettingsDestination: AppNavDestination(route = "settings_route")
     data object IgnoredAppsDestination: AppNavDestination(route = "ignored_apps_route")
     data object ThirdLibrariesDestination: AppNavDestination(route = "third_libraries_route")
+    data object LogsDestination: AppNavDestination(route = "logs_route")
 }
