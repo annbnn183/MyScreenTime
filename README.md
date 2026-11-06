@@ -1,36 +1,56 @@
-<div align="center"><img src="assets/ic_launcher_round.png" width="192" /></div>
+<div align="center"><img src="assets/ic_launcher_round.png" width="120" /></div>
 
-## <div align="center">Screen Time</div>
-
-<div align="center"><h4>An Android app that allows you to easily track the time you spend on your device and apps.</h4></div>
+# <div align="center">Screen Time · 屏幕使用时间</div>
 
 <div align="center">
-    <a href="https://f-droid.org/packages/com.atharok.screentime/" target="_blank"><img src="assets/get-it-on-f-droid-badge.png" alt="Get it on F-Droid" height="90"></a>
+
+一款查看设备与应用使用时长、点击量和长期趋势的 Android 应用
+
+**由 美丽的黑莓 接手并主导维护 · 代码主要由 AI 辅助编写**
+
 </div>
 
-You may also download the APK directly from [GitLab](https://gitlab.com/Atharok/ScreenTime/-/releases).
+<div align="center">
 
+[![Download](https://img.shields.io/badge/Download-GitHub%20Releases-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue)](https://www.gnu.org/licenses/gpl-3.0)
 
-## Description
+</div>
 
-Screen Time is a simple app that lets you easily track the time you spend on your device and apps.
+## 关于这个项目
 
-Features:
+这个项目现在由我（**美丽的黑莓**）接手。从功能规划、交互取舍到每个版本的发布，都由我推进；具体代码主要借助 AI 编写与迭代。应用内的主界面和「设置 → 关于」里也放了同样的说明。
 
-- Displays total screen time for your device over the past week or for a chosen day.
-- Comparative graph showing screen time across different days of the week.
-- Comparative graph displaying screen time for each hour of the day.
-- Ability to view screen time and comparative graphs for each individual app.
-- Comparative list of screen time for each app, sorted from the most used to the least used during the chosen period.
-- Simple and modern interface.
-- Home screen widget.
-- No ads.
-- No data collection (internet permissions disabled).
-- Open source.
-- Developed in Kotlin with Jetpack Compose and Material 3.
+在原开源项目的基础上，我陆续补上了这些能力：
 
-## Screenshots
+- **日 / 周 / 月** 多周期查看，以及 **4 周、半年、一年（平均）** 的长期趋势视图：读取系统预聚合的长周期统计，历史更完整，也不卡顿。
+- **应用四列网格排行**：可按使用时长 / 点击量 / 名称排序，附细进度条。
+- **点击量与点击率**：统计各应用的打开次数及占比，并写入 CSV 报表。
+- **每日屏幕使用目标提醒**：自定义目标时长与预警比例，每天在达标前提醒一次（Android 13+ 需通知权限）。
+- **月度洞察**：最长使用日、活跃天数，以及 30 天目标日历（绿 = 达标，红 = 超标）。
+- **CSV 导出 / 分享**：从顶部工具栏导出当前周期的每日汇总与应用排行。
+- 单个应用的独立详情页、对比图表、主屏幕小组件。
+
+同时保持原有的原则：**开源、无广告、不联网、不采集数据**。界面为 Material 3，使用 Kotlin + Jetpack Compose + Vico 开发。
+
+## 下载
+
+到 [GitHub Releases](https://github.com/annbnn183/MyScreenTime/releases) 下载最新 APK。
+
+> 从 **v1.0.7** 起，所有构建使用同一份固定签名，新版本可以直接覆盖安装。如果你还在用 v1.0.4–v1.0.6，升级前请先卸载一次旧版本。
+
+## 联系我
+
+提需求、报 bug、聊想法，或者只是想认识一下，都欢迎：
+
+| 方式 | 账号 |
+| --- | --- |
+| 微信 | `cookiebesting` |
+| 邮箱 | [meilideheimei@Outlook.com](mailto:meilideheimei@Outlook.com) |
+
+也可以直接在 [Issues](https://github.com/annbnn183/MyScreenTime/issues) 里留言。如果觉得这个项目有用，给仓库点个 Star 就是对我最大的支持。
+
+## 界面截图
 
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="192" />
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02.png" width="192" />
@@ -41,33 +61,15 @@ Features:
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/07.png" width="192" />
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/08.png" width="192" />
 
-## Donate
+## 自动构建
 
-If you like Screen Time, you can support me via [Liberapay](https://liberapay.com/Atharok/donate) or [Ko-fi](https://ko-fi.com/atharok).
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases（文件名形如 `MyScreenTime-v1.0.<run number>.apk`）。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
-[![Donate](assets/liberapay-badge.png)](https://liberapay.com/Atharok/donate)
-[![Donate](assets/ko-fi-badge.png)](https://ko-fi.com/atharok)
+## 许可证
 
-## Contribution
+代码沿用 [GNU General Public License v3 or later (GPL-3.0-or-later)](https://www.gnu.org/licenses/gpl-3.0)。
 
-If you want to translate the app, please submit a merge request on GitLab.
-If you have any questions regarding contributions or translations, feel free to open an issue or contact me by [e-mail](mailto:atharok@duck.com).
-
-## Checksums
-
-To verify the authenticity and integrity of the APK, compare its signature against the certificate fingerprints shown below:
-
-```
-SHA-256: e6cf1629d462a3686aa4ba2d37e02777257fd0a3bbe5540d8c70f80e12d111cd
-SHA-1: 8d66ed4b5d105f7fecce6ebd07dddc569cab29b9
-MD5: ea0d7434b89110e49386132bb005bb6b
-```
-
-## Licences
-
-The code is licensed under the [GNU General Public License version 3 or later (GPL-3.0-or-later)](https://www.gnu.org/licenses/gpl-3.0).
-
-Dependencies:
+依赖许可证：
 
 - [Core KTX](https://github.com/androidx/androidx) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - [Activity Compose](https://github.com/androidx/androidx) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
@@ -82,69 +84,7 @@ Dependencies:
 - [Koin AndroidX Compose](https://github.com/InsertKoinIO/koin) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - [Vico](https://github.com/patrykandpatrick/vico) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - [Kotlin Serialization](https://github.com/Kotlin/kotlinx.serialization) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-## Daily screen time goal reminder
 
-A new **每日屏幕使用目标** section in *Settings* lets you set a daily screen-time budget and an
-early-warning threshold:
+---
 
-- **Goal reminder** — enable / disable the notification (Android 13+ asks for the notification
-  permission when you turn it on).
-- **Daily goal** — 30 min to 8 h presets (default 2 h).
-- **Warning threshold** — 50–100 % of the goal (default 80 %).
-
-A background WorkManager task (every ~15 min, independent of the home-screen widget) compares
-today's screen time with `goal × threshold` and posts one notification per day when the threshold
-is crossed. The "last notified" date is stored in DataStore so the reminder fires again the next
-day without spamming.
-
-All configuration is persisted through `SettingsDataStore` → `SettingsRepository` →
-`SettingsUseCase` → `SettingsViewModel`, following the existing clean-architecture layers.
-
-
-## Monthly (30-day) view & extras
-
-The period selector now offers **Month / Week / Day**. The 30-day view is built from the system's
-per-day aggregated usage stats (`UsageStatsManager.queryUsageStats(INTERVAL_DAILY, ...)`) instead of
-replaying `queryEvents()` over a whole month, so it stays fast even on devices with a very long
-usage history. The last 10 days are refined with the existing event-based data.
-
-Extras included in this update:
-
-- **Monthly insights** — longest day, active-day count and a 30-cell goal calendar (green = within
-  the configured daily goal, red = over it).
-- **Goal calendar** — reuses the daily goal from Settings; no extra usage query is performed.
-- **CSV export** — the share button in the top bar exports the current period (daily totals and
-  per-app ranking) as a CSV file through a FileProvider.
-- The Month period is also available in each application's detail screen and as the default period
-  in Settings.
-
-If a ROM only returns a few days from `queryUsageStats`, the month view shows a notice and falls
-back to the event-based data for the days it does have.
-
-## Project stewardship
-
-This project is now maintained by **美丽的黑莓**. Most of the code is written and maintained with
-AI assistance. The same note is shown to users as a banner on the main screen and in
-*Settings → About*.
-
-## Fixed signing & upgrades
-
-Starting with **v1.0.7**, CI signs every build with a fixed keystore held in repository Actions
-Secrets (`SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`,
-`SIGNING_KEY_PASSWORD`). The certificate is identical from build to build, so newer releases can be
-installed directly over an existing installation.
-
-Earlier releases (v1.0.4–v1.0.6) used the ephemeral Android debug certificate generated on each
-fresh CI runner, so their signatures differ. **When upgrading from one of those builds, uninstall
-the old version once.** After that, future updates install normally.
-
-The keystore is never committed (see `.gitignore`). Keep a private backup — losing it would make it
-impossible to publish an update that can be installed over existing installs.
-
-## Automated builds
-
-Pushing to `main` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds
-`assembleDefaultDebug` with JDK 17 and publishes the signed debug APK to the **Releases** page as
-`MyScreenTime-v1.0.<run number>.apk`. The workflow needs the `contents: write` permission to
-create the release.
-
+<div align="center">Screen Time · 美丽的黑莓</div>
