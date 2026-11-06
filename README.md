@@ -76,14 +76,15 @@ https://payapp.wechatpay.cn/sjt/qr/AQEp0bAiFO50xLIWNTOrUoZE
 
 ## 界面截图
 
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/02.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/03.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/04.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/05.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/06.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/07.png" width="192" />
-<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/08.png" width="192" />
+以下为 v1.0.15 实机截图（深色主题）。
+
+| 主界面 · 月视图 / 月度概览 | 应用排行 · 累计时长 / 四列网格 | 应用排行 · 加载更多 / 时段分布 |
+| --- | --- | --- |
+| <img src="assets/screenshots/01-overview.jpg" width="200" alt="主界面：接手公告、月视图时长图表与月度概览" /> | <img src="assets/screenshots/02-ranking.jpg" width="200" alt="应用排行：本范围累计使用 238 小时与四列应用网格" /> | <img src="assets/screenshots/03-ranking-more.jpg" width="200" alt="应用排行：分批加载更多应用与按时段分布图" /> |
+
+| 设置 · 外观 / 显示 / 每日目标 | 设置 · 关于 / 运行日志 / 版本 |
+| --- | --- |
+| <img src="assets/screenshots/04-settings.jpg" width="200" alt="设置：主题、纯黑背景、动态取色、默认时间段与每日目标" /> | <img src="assets/screenshots/05-about.jpg" width="200" alt="设置：目标提醒、关于、运行日志、计算方法与版本号" /> |
 
 ## 自动构建
 
