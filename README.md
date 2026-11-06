@@ -50,6 +50,12 @@
 
 也可以直接在 [Issues](https://github.com/annbnn183/MyScreenTime/issues) 里留言。如果觉得这个项目有用，给仓库点个 Star 就是对我最大的支持。
 
+## 打赏 / 支持我
+
+如果你喜欢这个软件，可以给我打赏，支持我继续把它维护下去，谢谢你的鼓励。
+
+**付款**：`广州市白云区棠下顺纺商行(cookiebesting)`
+
 ## 界面截图
 
 <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/01.png" width="192" />
