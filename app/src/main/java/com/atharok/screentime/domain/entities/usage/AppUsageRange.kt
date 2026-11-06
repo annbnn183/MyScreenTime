@@ -17,7 +17,9 @@ data class AppUsageRange(
     /** 该范围内已经保存了逐日点击量记录的天数。 */
     val clickDaysRecorded: Int = 0,
     /** 点击量最早记录日；null 表示还没有任何记录。 */
-    val clickSinceDay: Long? = null
+    val clickSinceDay: Long? = null,
+    /** 系统该聚合桶的理论保留上限（天）：WEEKLY≈28 / MONTHLY≈182 / YEARLY≈730。 */
+    val retentionCapDays: Int = 0
 )
 
 data class RankedApp(

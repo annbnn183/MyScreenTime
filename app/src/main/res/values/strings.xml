@@ -156,7 +156,7 @@
     <string name="goal_calendar_title">Daily goal calendar (last 30 days)</string>
     <string name="goal_calendar_summary">%1$d days within the %3$s goal, %2$d days over it</string>
     <string name="goal_calendar_hint">Set a daily goal in Settings to see the goal calendar.</string>
-    <string name="monthly_data_limited">The daily chart only shows the days this device still keeps. Totals and daily averages are completed from long-lived system buckets.</string>
+    <string name="monthly_data_limited">Real per-day data: %1$d/%2$d days. %3$d days exceed the ~7-day Android DAILY cap (filled by weekly/monthly aggregates); %4$d more are missing inside the cap. Totals use disjoint DAILY+WEEKLY+MONTHLY segments, never INTERVAL_BEST.</string>
     <string name="export_report">Export CSV report</string>
     <string name="export_report_subject">MyScreenTime usage report</string>
 
@@ -175,7 +175,7 @@
     <string name="sort_name">Name</string>
     <string name="sort_label">Sort: %1$s</string>
     <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
-    <string name="aggregate_hint">Totals and daily averages come from long-lived system buckets; the daily chart only shows the days this device still keeps.</string>
+    <string name="aggregate_hint">Screen time = disjoint DAILY (last 7d) + WEEKLY (8-28d) + MONTHLY (29d+) segments; INTERVAL_BEST is not used. Open counts come from the permanent local per-day event history, because system buckets contain none.</string>
     <string name="no_usage_data">No usage data available yet.</string>
 
     <!-- Runtime logs -->
@@ -230,4 +230,5 @@
     <string name="logs_jump_newest">Jump to newest</string>
     <string name="logs_jump_oldest">Jump to oldest</string>
     <string name="logs_copy_filtered">Copy filtered</string>
+    <string name="range_retention_hint">Android keeps about %1$d days of this bucket, so older data cannot be exact. Open counts come from the local per-day history, not from these buckets.</string>
 </resources>

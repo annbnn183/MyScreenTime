@@ -249,6 +249,17 @@ private fun RangeSummaryCard(
                 )
             }
 
+            // v1.0.14: be honest about each bucket's retention ceiling and the source of the
+            // click counts (the system buckets carry no launch counts at all).
+            if (range.retentionCapDays > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(id = R.string.range_retention_hint, range.retentionCapDays),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             if (onBackfill != null && range.clickDaysRecorded < range.numberOfDays) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(

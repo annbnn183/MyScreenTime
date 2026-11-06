@@ -88,16 +88,26 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
-          What's new in v1.0.13:
-          - UNIFIED VERSIONING: removed the "-debug" suffix and the CI run-number tag. Settings -> About
-            and exported log headers now read `1.0.13 (23)`, exactly matching release `v1.0.13` and
-            `MyScreenTime-v1.0.13.apk`. versionCode 23 keeps over-the-top upgrades working.
-          - Log viewer now states how many lines are on screen out of the permanent history, with
-            one-tap "jump to newest / oldest" and "copy filtered lines" (the full TXT export is untouched).
-          - Historical process exit reasons are read after the first frame instead of during
-            Application.onCreate, shortening cold-start frame stalls.
-          - LOGGING POLICY UNCHANGED: every event is still captured, saved forever and never deleted;
-            no event is dropped and the full-history TXT export keeps exactly the same content.
+          What's new in v1.0.14 (statistical accuracy, from exported-log evidence):
+          - REMOVED INTERVAL_BEST from the 30-day headline. BEST auto-picks a bucket and, on real
+            devices, returned exactly the YEARLY figures for a 30-day window (one-year granularity).
+            The headline and per-app totals now come from DISJOINT segments: DAILY (last 7 days) +
+            WEEKLY (days 8-28) + MONTHLY (day 29+). Each segment uses its own bucket and every
+            bucket is credited once, so nothing is double-counted and the range is explainable.
+          - FIXED DAILY filtering: the old rule dropped any bucket whose lastTimeUsed fell outside
+            the exact millisecond window, silently discarding ~71% of DAILY rows (2364 -> 688 in
+            the device log). Now only duration<=0 / own package / ignored / system apps are excluded,
+            buckets are attributed to a calendar DAY, and duplicate (app, day) rows merge by MAX.
+          - DATA COMPLETENESS: isDataLimited is now strictly daysWithData < requestedDays, and both
+            the log and the UI separate the two causes of missing days: the ~7-day Android DAILY
+            retention cap vs filtering/unused days inside that cap. Range cards now state each
+            bucket's retention ceiling (~28 / ~182 / ~730 days).
+          - Launch counts stay in the permanent per-day queryEvents history (system buckets report
+            0 launches); getAppLaunchCount() is still read as a cross-check.
+          - New log events SEGMENT / SEGMENT_TOTALS / DATA_COMPLETENESS and per-cause filter counters
+            make the whole pipeline verifiable from an exported TXT log.
+          - LOGGING POLICY UNCHANGED: every event is still captured, saved forever, never deleted;
+            the full-history TXT export keeps exactly the same content.
 
           Earlier releases:
           - v1.0.12: async icon loading off the main thread, incremental "+40" ranking rendering,

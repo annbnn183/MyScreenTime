@@ -227,9 +227,19 @@ class DeviceUsageRepositoryImpl(
         val systemLaunchTotal: Int = scan.launchCountByPackageByDay.values.flatMap { it.values }.sum()
         val isClickDataLimited = systemLaunchTotal <= 0
 
-        // Some ROMs only expose a few days through queryUsageStats. Warn the user instead of
-        // silently showing an almost empty month.
-        val isDataLimited = scan.dailyTotals.size < dayTimestamps.size / 3
+        // ---- Data completeness (v1.0.14) --------------------------------------------------
+        // Strict rule: fewer days with real per-day data than requested is ALWAYS limited.
+        // Separate the two causes so the UI can explain "10 days of data" honestly:
+        //   systemRetentionDays -> beyond the DAILY bucket cap (~7 days) Android returns nothing
+        //   filteredDays        -> inside that cap but still missing (filtered / no usage / bad ts)
+        val requestedDays = dayTimestamps.size
+        val daysWithData = dailyTotals.count { it.duration > 0L }
+        val dailyRetentionCapDays = 7
+        val systemRetentionDays = (requestedDays - dailyRetentionCapDays).coerceAtLeast(0)
+        val coverableByDaily = minOf(requestedDays, dailyRetentionCapDays)
+        val filteredDays = (coverableByDaily - minOf(daysWithData, coverableByDaily)).coerceAtLeast(0)
+        val isDataLimited = daysWithData < requestedDays
+        val estimatedDays = (requestedDays - daysWithData).coerceAtLeast(0)
 
         // ---- Long-range aggregates -------------------------------------------------------
         // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY
@@ -277,7 +287,14 @@ class DeviceUsageRepositoryImpl(
                 totalLaunchCount = rankedApps.sumOf { it.launchCount },
                 totalTimeMillis = rankedApps.sumOf { it.duration },
                 clickDaysRecorded = launchHistory.countScannedInRange(rangeStart, nowMillis),
-                clickSinceDay = launchHistory.earliestScannedDay()
+                clickSinceDay = launchHistory.earliestScannedDay(),
+                // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY.
+                // surfacing the cap lets the UI explain why very old days cannot be exact.
+                retentionCapDays = when (interval) {
+                    UsageStatsManager.INTERVAL_WEEKLY -> 28
+                    UsageStatsManager.INTERVAL_MONTHLY -> 182
+                    else -> 730
+                }
             )
         }
 
@@ -292,27 +309,33 @@ class DeviceUsageRepositoryImpl(
             "timezone" to java.util.TimeZone.getDefault().id
         )
 
-        // Correct the 30-day headline numbers with the best-fit bucket, so they no longer
-        // collapse just because this ROM only kept a handful of DAILY buckets.
-        val monthlyAggregate = tracker.queryAggregatedUsage(
-            intervalType = UsageStatsManager.INTERVAL_BEST,
+        // ---- 30-day headline (v1.0.14): segmented, NO INTERVAL_BEST -----------------------
+        // INTERVAL_BEST silently picks a bucket (device logs: it returned the YEARLY figures for
+        // a 30-day window), so the old headline was reported at a one-year granularity. Instead,
+        // concatenate three disjoint segments, each served by the bucket whose retention covers it.
+        val segmented = tracker.querySegmentedMonthTotals(
             startTimestamp = timeInterval.first,
             endTimestamp = timeInterval.second,
             ignoreSystemApps = ignoreSystemApps,
             ignoredPackages = ignoredPackages
         )
-        val aggregatedDeviceTotal: Long = monthlyAggregate.values.sumOf { it.totalTimeInForeground }
-        val aggregatedLaunchTotal: Int = monthlyAggregate.values.sumOf { it.launchCount }
+        val aggregatedDeviceTotal: Long = segmented.totalMs
         AppLog.event(
-            "DEBUG", "DeviceUsageRepository", "AGGREGATE_INTERMEDIATE",
-            "30-day headline totals corrected from INTERVAL_BEST",
+            "DEBUG", "DeviceUsageRepository", "DATA_COMPLETENESS",
+            "30-day window explained: real days vs retention cap vs filtering",
             "dailyBucketTotalMs" to dailyTotals.sumOf { it.duration },
-            "aggregatedTotalMs" to aggregatedDeviceTotal,
-            "dailyBucketDays" to dailyTotals.count { it.duration > 0L },
-            "requestedDays" to dayTimestamps.size,
-            "aggregatedLaunchTotal" to aggregatedLaunchTotal,
-            "eventLaunchTotal" to totalLaunchCount,
+            "segmentedTotalMs" to aggregatedDeviceTotal,
+            "headlineSource" to "SEGMENTED DAILY(7d)+WEEKLY(8-28d)+MONTHLY(29d+); INTERVAL_BEST removed",
+            "daysWithData" to daysWithData,
+            "requestedDays" to requestedDays,
+            "dailyRetentionCapDays" to dailyRetentionCapDays,
+            "systemRetentionDays" to systemRetentionDays,
+            "filteredDays" to filteredDays,
+            "estimatedDays" to estimatedDays,
             "isDataLimited" to isDataLimited,
+            "isEstimated" to segmented.isEstimated,
+            "eventLaunchTotal" to totalLaunchCount,
+            "launchSource" to "queryEvents day-by-day permanent store (system buckets report 0 launches)",
             "timezone" to java.util.TimeZone.getDefault().id,
             "rangeBegin" to timeInterval.first,
             "rangeEnd" to timeInterval.second
@@ -320,18 +343,16 @@ class DeviceUsageRepositoryImpl(
 
         val usages: Map<String, MonthlyAppUsage> = mergedPerPackage
             .mapValues { (packageName: String, byDay: Map<Long, Long>) ->
-                val aggregate = monthlyAggregate[packageName]
                 MonthlyAppUsage(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
                     appIcon = context.packageManager.getApplicationIconSafety(packageName),
                     dayTimestamps = dayTimestamps,
                     durations = byDay,
-                    launchCount = maxOf(
-                        launchCountByPackage[packageName] ?: 0,
-                        aggregate?.launchCount ?: 0
-                    ),
-                    aggregatedDuration = aggregate?.totalTimeInForeground ?: 0L
+                    // Launch counts come from the permanent per-day event store; system buckets
+                    // expose 0, so there is nothing to merge from the segmented totals.
+                    launchCount = launchCountByPackage[packageName] ?: 0,
+                    aggregatedDuration = segmented.perPackageMs[packageName] ?: 0L
                 )
             }
 
@@ -350,11 +371,16 @@ class DeviceUsageRepositoryImpl(
             dailyTotals = dailyTotals,
             goalMillis = goalMillis,
             isDataLimited = isDataLimited,
-            totalLaunchCount = maxOf(totalLaunchCount, aggregatedLaunchTotal),
+            totalLaunchCount = totalLaunchCount,
             isClickDataLimited = isClickDataLimited,
             rangeRankings = rangeRankings,
             aggregatedTotalTimeMillis = aggregatedDeviceTotal,
-            requestedDays = dayTimestamps.size,
+            requestedDays = requestedDays,
+            daysWithData = daysWithData,
+            systemRetentionDays = systemRetentionDays,
+            filteredDays = filteredDays,
+            estimatedDays = estimatedDays,
+            isEstimated = segmented.isEstimated,
             hourlyTotals = hourlyTotals
         )
     }

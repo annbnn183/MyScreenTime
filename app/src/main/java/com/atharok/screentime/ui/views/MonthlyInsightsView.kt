@@ -97,7 +97,17 @@ fun MonthlyInsightsView(
             }
 
             if (deviceUsage.isDataLimited) {
-                TextSmall(text = stringResource(id = R.string.monthly_data_limited))
+                // v1.0.14: explain exactly HOW MANY days are real and WHY the rest is missing,
+                // separating the Android DAILY retention cap from filtering/unused days.
+                TextSmall(
+                    text = stringResource(
+                        id = R.string.monthly_data_limited,
+                        deviceUsage.daysWithData,
+                        deviceUsage.requestedDays,
+                        deviceUsage.systemRetentionDays,
+                        deviceUsage.filteredDays
+                    )
+                )
             }
         }
     }

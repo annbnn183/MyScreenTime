@@ -16,16 +16,26 @@ class MonthlyDeviceUsage(
     dateOfLastRefresh: String,
     val dailyTotals: List<DailyDuration>,
     val goalMillis: Long = 0L,
-    /** True when the system only returned a small slice of the requested range. */
+    /** Strict: true whenever fewer days have real per-day data than were requested. */
     val isDataLimited: Boolean = false,
     totalLaunchCount: Int = 0,
     isClickDataLimited: Boolean = false,
     /** Long-range rankings built from WEEKLY / MONTHLY / YEARLY system buckets. */
     val rangeRankings: List<AppUsageRange> = emptyList(),
-    /** Complete period total from the best-fit aggregation bucket. */
+    /** 30-day total from DISJOINT DAILY/WEEKLY/MONTHLY segments (v1.0.14, no INTERVAL_BEST). */
     val aggregatedTotalTimeMillis: Long = 0L,
     /** Calendar days covered by the view; used for an honest daily average. */
     val requestedDays: Int = 0,
+    /** 逐日柱状图里真实有数据的天数。 */
+    val daysWithData: Int = 0,
+    /** 超出 DAILY 桶理论保留上限（约 7 天）、必然由聚合桶补全的天数。 */
+    val systemRetentionDays: Int = 0,
+    /** 在保留上限之内、却因过滤/无时间戳/无使用而缺失的天数。 */
+    val filteredDays: Int = 0,
+    /** 总时长中属于系统聚合估算（而非逐日实测）的天数。 */
+    val estimatedDays: Int = 0,
+    /** 总时长是否含聚合桶估算部分（分段拼接口径）。 */
+    val isEstimated: Boolean = false,
     /** 按一天 24 小时累计的屏幕时间，来自系统仍保留的事件明细。 */
     val hourlyTotals: LongArray = LongArray(24)
 ) : DeviceUsage<MonthlyAppUsage>(
@@ -38,7 +48,9 @@ class MonthlyDeviceUsage(
 
     private val _totalTimeUsed: Long = dailyTotals.fold(0L) { acc, day -> acc + day.duration }
 
-    /** DAILY buckets expire after ~a week on many ROMs; the aggregate covers the whole range. */
+    /** Never lower than the real per-day sum: the segmented total only fills in the days beyond
+     *  the DAILY retention cap. v1.0.14 removed INTERVAL_BEST from this headline entirely
+     *  (disjoint DAILY 7d + WEEKLY 8-28d + MONTHLY 29d+). */
     private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedTotalTimeMillis)
 
     private val effectiveDays: Int =
