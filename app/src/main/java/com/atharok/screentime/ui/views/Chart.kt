@@ -60,6 +60,19 @@ fun Chart(
         data = data,
         average = average,
         bottomAxis = when(period) {
+            Period.MONTH -> {
+                // 30 columns: show a short date every 5 days to keep the axis readable.
+                rememberBottomAxisDefault(
+                    valueFormatter = remember {{ cartesianMeasuringContext, x, _ ->
+                        val xInt: Int = x.toInt()
+                        if(xInt % 5 == 0) {
+                            cartesianMeasuringContext.model.extraStore
+                                .getOrNull(bottomAxisLabelListKey)?.getOrNull(xInt) ?: ""
+                        } else ""
+                    }},
+                    itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = { 5 }, addExtremeLabelPadding = true)
+                )
+            }
             Period.WEEK -> {
                 rememberBottomAxisDefault(
                     valueFormatter = remember {{ cartesianMeasuringContext, x, _ ->

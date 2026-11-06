@@ -208,7 +208,7 @@ private fun UsageView(
                     CentralTendency.AVERAGE -> {
                         DurationView(
                             timestamp = averageTime,
-                            title = stringResource(id = if(period == Period.WEEK) R.string.daily_average else R.string.hourly_average),
+                            title = stringResource(id = if(period != Period.DAY) R.string.daily_average else R.string.hourly_average),
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clickable(
@@ -222,7 +222,7 @@ private fun UsageView(
                     CentralTendency.MEDIAN -> {
                         DurationView(
                             timestamp = medianTime,
-                            title = stringResource(id = if(period == Period.WEEK) R.string.daily_median else R.string.hourly_median),
+                            title = stringResource(id = if(period != Period.DAY) R.string.daily_median else R.string.hourly_median),
                             modifier = Modifier
                                 .fillMaxSize()
                                 .clickable(

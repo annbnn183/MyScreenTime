@@ -100,6 +100,27 @@ day without spamming.
 All configuration is persisted through `SettingsDataStore` → `SettingsRepository` →
 `SettingsUseCase` → `SettingsViewModel`, following the existing clean-architecture layers.
 
+
+## Monthly (30-day) view & extras
+
+The period selector now offers **Month / Week / Day**. The 30-day view is built from the system's
+per-day aggregated usage stats (`UsageStatsManager.queryUsageStats(INTERVAL_DAILY, ...)`) instead of
+replaying `queryEvents()` over a whole month, so it stays fast even on devices with a very long
+usage history. The last 10 days are refined with the existing event-based data.
+
+Extras included in this update:
+
+- **Monthly insights** — longest day, active-day count and a 30-cell goal calendar (green = within
+  the configured daily goal, red = over it).
+- **Goal calendar** — reuses the daily goal from Settings; no extra usage query is performed.
+- **CSV export** — the share button in the top bar exports the current period (daily totals and
+  per-app ranking) as a CSV file through a FileProvider.
+- The Month period is also available in each application's detail screen and as the default period
+  in Settings.
+
+If a ROM only returns a few days from `queryUsageStats`, the month view shows a notice and falls
+back to the event-based data for the days it does have.
+
 ## Automated builds
 
 Pushing to `main` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds

@@ -22,24 +22,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.atharok.screentime.R
+import com.atharok.screentime.common.utils.CsvExporter
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.domain.entities.CentralTendency
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.usage.DeviceUsage
+import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
 import com.atharok.screentime.domain.resources.Resource
 import com.atharok.screentime.presentation.viewmodel.DeviceUsageViewModel
 import com.atharok.screentime.ui.components.AppScaffold
 import com.atharok.screentime.ui.components.ApplicationIcon
+import com.atharok.screentime.ui.components.ExportAction
 import com.atharok.screentime.ui.components.LoadingDialog
 import com.atharok.screentime.ui.components.RefreshAction
 import com.atharok.screentime.ui.components.SettingsAction
 import com.atharok.screentime.ui.components.TextNormal
 import com.atharok.screentime.ui.components.TextNormalSecondary
 import com.atharok.screentime.ui.components.TextSmall
+import com.atharok.screentime.ui.views.MonthlyInsightsView
 import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
@@ -56,6 +61,7 @@ fun DeviceUsageScreen(
 
     LaunchedEffect(viewModel.periodState.value, viewModel.dayIndexState.intValue) {
         when(viewModel.periodState.value) {
+            Period.MONTH -> viewModel.calculateMonthDeviceUsage(true)
             Period.WEEK -> viewModel.calculateWeekDeviceUsage(true)
             Period.DAY -> viewModel.calculateDayDeviceUsage(true)
         }
@@ -79,6 +85,7 @@ fun DeviceUsageScreen(
         openSettingsScreen = openSettingsScreen,
         refresh = {
             when(it) {
+                Period.MONTH -> viewModel.calculateMonthDeviceUsage(false)
                 Period.WEEK -> viewModel.calculateWeekDeviceUsage(false)
                 Period.DAY -> viewModel.calculateDayDeviceUsage(false)
             }
@@ -106,6 +113,12 @@ private fun StatelessDeviceUsageScreen(
         title = stringResource(id = R.string.app_name),
         modifier = modifier,
         topBarActions = {
+            val context = LocalContext.current
+            ExportAction(export = {
+                if (deviceUsageResource is Resource.Success) {
+                    CsvExporter.export(context, deviceUsageResource.data, period)
+                }
+            })
             RefreshAction(refresh = { refresh(period) })
             SettingsAction(openSettingsScreen = openSettingsScreen)
         }
@@ -200,6 +213,20 @@ private fun PortraitDeviceUsageScreen(
                             .fillMaxWidth()
                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
                     )
+                }
+
+                if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
+                    item {
+                        MonthlyInsightsView(
+                            deviceUsage = deviceUsage,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    horizontal = dimensionResource(id = R.dimen.padding_medium),
+                                    vertical = dimensionResource(id = R.dimen.padding_small)
+                                )
+                        )
+                    }
                 }
 
                 items(deviceUsage.appUsageList) { appUsage ->
@@ -320,7 +347,7 @@ private fun TotalUsageView(
     modelProducer: CartesianChartModelProducer,
     modifier: Modifier = Modifier
 ) {
-    if(period == Period.WEEK) {
+    if(period != Period.DAY) {
         TotalUsageView(
             period = period,
             totalTime = deviceUsage.getTotalTimeUsed(),

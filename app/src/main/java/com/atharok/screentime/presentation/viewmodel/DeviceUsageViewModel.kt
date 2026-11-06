@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.atharok.screentime.common.utils.NUMBER_OF_DAYS
 import com.atharok.screentime.domain.entities.CentralTendency
+import com.atharok.screentime.domain.entities.DailyGoalSettings
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.usage.AppUsage
 import com.atharok.screentime.domain.entities.usage.DeviceUsage
@@ -15,6 +16,7 @@ import com.atharok.screentime.domain.resources.Resource
 import com.atharok.screentime.domain.usecases.DeviceUsageUseCase
 import com.atharok.screentime.domain.usecases.SettingsUseCase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -38,6 +40,26 @@ class DeviceUsageViewModel(
     val selectedCentralTendency: MutableState<CentralTendency> = mutableStateOf(CentralTendency.AVERAGE)
 
     fun getDeviceUsageFlow(): StateFlow<Resource<DeviceUsage<out AppUsage>>> = usageUseCase.deviceUsageFlow
+
+    /** Daily goal configuration, used by the month view's goal calendar. */
+    fun getDailyGoalSettings(): Flow<DailyGoalSettings> = settingsUseCase.getDailyGoalSettings()
+
+    fun calculateMonthDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default) {
+        usageUseCase.calculateMonthDeviceUsage(
+            ignoreSystemApps = settingsUseCase.shouldIgnoreSystemApps().first(),
+            ignoredPackages = try {
+                settingsUseCase.getIgnoredPackages().first()
+            } catch (_: Exception) {
+                emptyList()
+            },
+            goalMillis = try {
+                settingsUseCase.getDailyGoalSettings().first().goalMillis
+            } catch (_: Exception) {
+                0L
+            },
+            useCache = useCache
+        )
+    }
 
     fun calculateWeekDeviceUsage(useCache: Boolean = true) = viewModelScope.launch(Dispatchers.Default) {
         usageUseCase.calculateWeekDeviceUsage(

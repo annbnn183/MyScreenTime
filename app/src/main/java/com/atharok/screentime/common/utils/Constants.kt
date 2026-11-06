@@ -15,6 +15,8 @@ const val SOURCE_CODE_LINK = "https://gitlab.com/Atharok/ScreenTime"
 const val WEB_SITE_LINK = "https://atharok.gitlab.io/site/projects/screen-time/"
 
 const val NUMBER_OF_DAYS = 10
+/** Number of calendar days shown by the "month" period. */
+const val NUMBER_OF_DAYS_IN_MONTH = 30
 const val MILLIS_IN_A_DAY = 24L * 60L * 60L * 1000L
 const val MILLIS_IN_A_HOUR = 3600L * 1000L
 

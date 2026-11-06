@@ -9,6 +9,8 @@ import org.koin.core.qualifier.named
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 import kotlin.math.ceil
 
 object DateTimeUtils {
@@ -79,6 +81,16 @@ object DateTimeUtils {
 
     fun convertToHourDouble(timestamp: Long): Double = timestamp / MILLIS_IN_A_HOUR.toDouble()
     fun convertToHourFloat(timestamp: Long): Float = timestamp / MILLIS_IN_A_HOUR.toFloat()
+
+    /**
+     * Short label used on the 30-day chart axis, e.g. "11/06".
+     * A dedicated formatter is kept here instead of creating one SimpleDateFormat per column.
+     */
+    private val shortDateFormatter: SimpleDateFormat by lazy {
+        SimpleDateFormat("MM/dd", Locale.getDefault()).apply { timeZone = koin.get<TimeZone>() }
+    }
+
+    fun formatToShortDate(timestamp: Long): String = shortDateFormatter.format(timestamp)
 
     /**
      * Format example:

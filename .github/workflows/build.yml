@@ -52,7 +52,11 @@ jobs:
         body: |
           Automated build from commit ${{ github.sha }}.
 
-          Includes the daily screen time goal reminder (配置每日使用目标与预警提醒).
+          What's new:
+          - 30-day (Month) period, built on per-day aggregated usage stats instead of a long event scan
+          - Monthly insights (longest day, active days) and a 30-day goal calendar
+          - CSV report export / share from the top bar
+          - Daily screen time goal reminder (from the previous release)
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import com.atharok.screentime.common.utils.DateTimeUtils
+import com.atharok.screentime.common.utils.MILLIS_IN_A_DAY
 
 class UsageStatsTracker(
     private val context: Context,
@@ -255,5 +256,70 @@ class UsageStatsTracker(
         }
 
         return durationsByDayAndHour
+    }
+
+    // ---- Monthly aggregation (system pre-aggregated daily stats) ----
+
+    data class MonthlyScanResult(
+        val perPackageByDay: Map<String, Map<Long, Long>>,
+        val dailyTotals: Map<Long, Long>
+    )
+
+    /**
+     * Reads the system's per-day aggregated usage stats. Unlike queryEvents(), the cost of this
+     * call does not grow with the number of recorded events, so a 30-day range stays fast even on
+     * devices with a very long usage history.
+     */
+    fun queryMonthlyUsageByDay(
+        startTimestamp: Long,
+        endTimestamp: Long,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): MonthlyScanResult {
+        val perPackageByDay = mutableMapOf<String, MutableMap<Long, Long>>()
+
+        val usageStatsList = try {
+            usageStatsManager.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                startTimestamp,
+                endTimestamp
+            )
+        } catch (_: Exception) {
+            null
+        }.orEmpty()
+
+        for (stats in usageStatsList) {
+            val packageName = stats.packageName ?: continue
+            if (packageName.isEmpty() || ignoredPackages.contains(packageName)) continue
+            if (ignoreSystemApps && packageName !in launchableApp) continue
+
+            val duration = stats.totalTimeInForeground
+            if (duration <= 0L) continue
+
+            // INTERVAL_DAILY buckets are day-scoped, but a few ROMs report an interval crossing
+            // midnight. Prefer the last timestamp and fall back to the first one.
+            var timestamp = stats.lastTimeStamp
+            if (timestamp < startTimestamp || timestamp > endTimestamp) {
+                timestamp = stats.firstTimeStamp
+            }
+            if (timestamp < startTimestamp || timestamp > endTimestamp) continue
+
+            val dayTimestamp = DateTimeUtils.truncateToDay(timestamp)
+            val clampedDuration = duration.coerceAtMost(MILLIS_IN_A_DAY)
+            val byDay = perPackageByDay.getOrPut(packageName) { mutableMapOf() }
+            byDay[dayTimestamp] = (byDay[dayTimestamp] ?: 0L) + clampedDuration
+        }
+
+        val dailyTotals = mutableMapOf<Long, Long>()
+        perPackageByDay.values.forEach { byDay ->
+            byDay.forEach { (dayTimestamp, duration) ->
+                dailyTotals[dayTimestamp] = (dailyTotals[dayTimestamp] ?: 0L) + duration
+            }
+        }
+
+        return MonthlyScanResult(
+            perPackageByDay = perPackageByDay,
+            dailyTotals = dailyTotals
+        )
     }
 }

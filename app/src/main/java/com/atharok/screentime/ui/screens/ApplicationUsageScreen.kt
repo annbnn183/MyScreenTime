@@ -46,6 +46,7 @@ fun ApplicationUsageScreen(
 
     LaunchedEffect(viewModel.periodState.value, viewModel.dayIndexState.intValue) {
         when(viewModel.periodState.value) {
+            Period.MONTH -> viewModel.calculateMonthDeviceUsage(true)
             Period.WEEK -> viewModel.calculateWeekDeviceUsage(true)
             Period.DAY -> viewModel.calculateDayDeviceUsage(true)
         }
@@ -70,6 +71,7 @@ fun ApplicationUsageScreen(
         openSettingsScreen = openSettingsScreen,
         refresh = {
             when(it) {
+                Period.MONTH -> viewModel.calculateMonthDeviceUsage(false)
                 Period.WEEK -> viewModel.calculateWeekDeviceUsage(false)
                 Period.DAY -> viewModel.calculateDayDeviceUsage(false)
             }
@@ -170,7 +172,7 @@ private fun TotalUsageView(
     modelProducer: CartesianChartModelProducer,
     modifier: Modifier = Modifier
 ) {
-    if(period == Period.WEEK) {
+    if(period != Period.DAY) {
         TotalUsageView(
             period = period,
             totalTime = appUsage.getTotalTimeUsed(),

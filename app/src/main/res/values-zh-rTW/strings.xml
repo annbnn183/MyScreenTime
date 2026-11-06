@@ -87,4 +87,16 @@
     <string name="daily_goal_notification_channel_name">每日目標提醒</string>
     <string name="daily_goal_notification_channel_description">當每日螢幕使用時間接近或超過目標時發出提醒。</string>
     <string name="daily_goal_notification_permission_info">提醒功能需要通知權限，可在系統設定中開啟。</string>
+
+    <!-- 月視圖與報告匯出 -->
+    <string name="month">一個月</string>
+    <string name="monthly_insights">月度概覽</string>
+    <string name="peak_usage_day">使用最長的一天：%1$s（%2$s）</string>
+    <string name="active_days_count">最近 %2$d 天中有 %1$d 天使用過裝置</string>
+    <string name="goal_calendar_title">每日目標達標日曆（近 30 天）</string>
+    <string name="goal_calendar_summary">%3$s 目標內 %1$d 天，超標 %2$d 天</string>
+    <string name="goal_calendar_hint">在設定中設定每日目標後，可查看達標日曆。</string>
+    <string name="monthly_data_limited">此裝置的系統介面僅提供有限天數的用量資料，更早的日期顯示為 0。</string>
+    <string name="export_report">匯出 CSV 報告</string>
+    <string name="export_report_subject">MyScreenTime 用量報告</string>
 </resources>

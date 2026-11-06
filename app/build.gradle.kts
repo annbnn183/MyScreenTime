@@ -14,8 +14,8 @@ android {
         applicationId = "com.atharok.screentime"
         minSdk = 24
         targetSdk = 37
-        versionCode = 13
-        versionName = "1.4.1"
+        versionCode = 14
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

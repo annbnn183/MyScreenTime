@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
@@ -67,6 +68,19 @@ fun RefreshAction(
         onClick = refresh,
         image = Icons.Rounded.Refresh,
         contentDescription = stringResource(id = R.string.refresh),
+        modifier = modifier
+    )
+}
+
+@Composable
+fun ExportAction(
+    export: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    TopAppBarAction(
+        onClick = export,
+        image = Icons.Rounded.Share,
+        contentDescription = stringResource(id = R.string.export_report),
         modifier = modifier
     )
 }

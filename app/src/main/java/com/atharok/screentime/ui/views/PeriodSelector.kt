@@ -19,14 +19,26 @@ fun PeriodSelector(
 ) {
     MultiChoiceSegmentedButtonRow(modifier = modifier) {
         PeriodSegmentedButton(
-            period = Period.WEEK,
-            isSelected = period == Period.WEEK,
+            period = Period.MONTH,
+            isSelected = period == Period.MONTH,
             onPeriodChange = onPeriodChange,
             shape = RoundedCornerShape(
                 topStartPercent = 50,
                 topEndPercent = 0,
                 bottomEndPercent = 0,
                 bottomStartPercent = 50,
+            )
+        )
+
+        PeriodSegmentedButton(
+            period = Period.WEEK,
+            isSelected = period == Period.WEEK,
+            onPeriodChange = onPeriodChange,
+            shape = RoundedCornerShape(
+                topStartPercent = 0,
+                topEndPercent = 0,
+                bottomEndPercent = 0,
+                bottomStartPercent = 0,
             )
         )
 

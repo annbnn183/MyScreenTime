@@ -146,4 +146,16 @@
     <string name="daily_goal_notification_channel_name">Daily goal reminders</string>
     <string name="daily_goal_notification_channel_description">Warns you when your daily screen time is approaching or exceeding your goal.</string>
     <string name="daily_goal_notification_permission_info">Notification permission is required for the reminder. You can enable it in system settings.</string>
+
+    <!-- Month view & report export -->
+    <string name="month">Month</string>
+    <string name="monthly_insights">Monthly insights</string>
+    <string name="peak_usage_day">Longest day: %1$s (%2$s)</string>
+    <string name="active_days_count">Used on %1$d of the last %2$d days</string>
+    <string name="goal_calendar_title">Daily goal calendar (last 30 days)</string>
+    <string name="goal_calendar_summary">%1$d days within the %3$s goal, %2$d days over it</string>
+    <string name="goal_calendar_hint">Set a daily goal in Settings to see the goal calendar.</string>
+    <string name="monthly_data_limited">This device only exposes a limited number of days through the system usage API. Older days are shown as zero.</string>
+    <string name="export_report">Export CSV report</string>
+    <string name="export_report_subject">MyScreenTime usage report</string>
 </resources>
