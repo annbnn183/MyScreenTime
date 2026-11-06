@@ -1,0 +1,8 @@
+1.3.0
+
+- Added Galician translation (thanks to José M.).
+- Added a home screen widget displaying the current day's screen time.
+- Improved the screen time calculation algorithm.
+- Adjusted duration formatting.
+- Updated some text styles.
+- Updated dependencies.

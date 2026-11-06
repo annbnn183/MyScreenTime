@@ -1,0 +1,4 @@
+1.2.2
+
+- Some adjustments to the German translation (thanks to Nikolas).
+- Updated dependencies.

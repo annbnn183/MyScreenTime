@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">Экранное время</string>
+
+    <string name="close">Закрыть</string>
+    <string name="more">Ещё</string>
+    <string name="back">Назад</string>
+    <string name="help">Помощь</string>
+    <string name="refresh">Обновить</string>
+    <string name="previous">Назад</string>
+    <string name="next">Вперёд</string>
+
+    <string name="total_screen_time">Общее экранное время</string>
+    <string name="daily_average">В среднем за день</string>
+    <string name="hourly_average">В среднем за час</string>
+    <string name="data_updated">Обновлено: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Неделя</string>
+    <string name="day">День</string>
+    <string name="today">Сегодня</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sд</string>
+    <string name="hour_unit">%1$sч</string>
+    <string name="minute_unit">%1$sм</string>
+    <string name="second_unit">%1$sс</string>
+
+    <!-- Error -->
+    <string name="error">Ошибка</string>
+    <string name="error_failed_to_retrieve_usage_data">Не удалось получить информацию об использовании приложений.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Информация по исполбзованию данного приложения не найдена.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Подсчёт</string>
+    <string name="calculating_message">Считаем экранное время…</string>
+
+    <!-- Permission -->
+    <string name="permission">Разрешение</string>
+    <string name="access_to_usage_data">Доступ к данным об использовании приложений</string>
+    <string name="access_to_usage_data_message">Вам необходимо предоставить разрешение чтобы использовать это приложение.</string>
+    <string name="authorize">Разрешить</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Управление игнорируемыми приложениями</string>
+    <string name="apps_to_ignore">Игнорируемые приложения</string>
+
+    <!-- Settings -->
+    <string name="settings">Настройки</string>
+    <string name="appearance">Внешний вид</string>
+    <string name="theme">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_black">Использовать полностью чёрный цвет для тёмной темы</string>
+    <string name="theme_black_oled_info">Потребляет меньше зарядки на OLED экранах</string>
+    <string name="dynamic_colors">Динамические цвета</string>
+    <string name="display">Отображение</string>
+    <string name="default_period">Период по умолчанию</string>
+    <string name="about">О приложении</string>
+    <string name="screen_time_calculation_method">Как происходит расчёт</string>
+    <string name="screen_time_calculation_method_part_1_title">Как рассчитывается экранное время?</string>
+    <string name="screen_time_calculation_method_part_1_details">Это приложение раcсчитывает экранное время основываясь на событиях открытия/закрытия приложений записываемых системой Android. Время считается только для приложений на переднем плане. Приложения запущенные в фоновом режиме не учитываются.</string>
+    <string name="screen_time_calculation_method_part_2_title">Случаи когда экранное время может был не учтено</string>
+    <string name="screen_time_calculation_method_part_2_details">- Если ОС Android не запишет событие открытия или закрытия приложения, время проведённое в приложении не будет учтено.\n\n- Если приложение удалено, Android очищает все события открытия/закрытия для этого приложения. Поэтому время проведённое в этом приложении отображаться не будет.</string>
+    <string name="screen_time_calculation_method_part_3_title">Как рассчитывается экранное время при одновременном использовании нескольких приложений на переднем плане?</string>
+    <string name="screen_time_calculation_method_part_3_details">Если несколько приложений используются одновременно на переднем плане (например, в режиме разделённого экрана), время использования каждого приложения учитывается отдельно.\n\nОднако общее экранное время считается только по фактическому времени, проведённому перед экраном, независимо от количества активных приложений.\n\nНапример, если два приложения используются одновременно в течение 40 минут, каждое из них покажет 40 минут использования, но общее экранное время останется 40 минут, а не 80.</string>
+    <string name="language">Язык</string>
+    <string name="third_party_library">Сторонние библиотеки</string>
+    <string name="website">Сайт</string>
+    <string name="source_code">Исходный код</string>
+    <string name="code_version">Версия %1$s</string>
+    <string name="unknown">неизвестно</string>
+</resources>

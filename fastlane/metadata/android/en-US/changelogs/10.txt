@@ -1,0 +1,5 @@
+1.3.4
+
+- Added Russian translation (thanks to mikinol).
+- Updated Dutch translation (thanks to Stephan Paternotte).
+- Updated dependencies.

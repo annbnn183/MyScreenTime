@@ -1,0 +1,6 @@
+1.2.0
+
+– Spanische Übersetzung hinzugefügt (danke an Nube 云).
+– Die Standardansicht zeigt jetzt den Tag statt der Woche an (dies kann weiterhin in den Einstellungen geändert werden).
+– Auf Android 16 aktualisiert.
+– Abhängigkeiten aktualisiert.

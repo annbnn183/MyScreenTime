@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">Ekran Süresi</string>
+
+    <string name="close">Kapat</string>
+    <string name="more">Daha Fazla</string>
+    <string name="back">Geri</string>
+    <string name="help">Yardım</string>
+    <string name="refresh">Yenile</string>
+    <string name="previous">Önceki</string>
+    <string name="next">Sonraki</string>
+
+    <string name="total_screen_time">Toplam ekran süresi</string>
+    <string name="daily_average">Günlük ortalama</string>
+    <string name="hourly_average">Saatlik ortalama</string>
+    <string name="data_updated">Güncellendi: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Hafta</string>
+    <string name="day">Gün</string>
+    <string name="today">Bugün</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sg</string>
+    <string name="hour_unit">%1$ssa</string>
+    <string name="minute_unit">%1$sdk</string>
+    <string name="second_unit">%1$ssn</string>
+
+    <!-- Error -->
+    <string name="error">Hata</string>
+    <string name="error_failed_to_retrieve_usage_data">Kullanım verisi getirilemedi.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Bu uygulama için kullanım verisi bulunamadı.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Hesaplanıyor</string>
+    <string name="calculating_message">Ekran süresi hesaplanıyor…</string>
+
+    <!-- Permission -->
+    <string name="permission">İzin</string>
+    <string name="access_to_usage_data">Kullanım verisine erişim</string>
+    <string name="access_to_usage_data_message">Bu uygulamayı kullanabilmek için kullanım verisine erişmesine izin vermelisiniz</string>
+    <string name="authorize">İzin ver</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Hariç tutulan uygulamaları yönet</string>
+    <string name="apps_to_ignore">Hariç tutulacak uygulamalar</string>
+
+    <!-- Settings -->
+    <string name="settings">Ayarlar</string>
+    <string name="appearance">Görünüm</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_light">Aydınlık</string>
+    <string name="theme_dark">Karanlık</string>
+    <string name="theme_black">Karanlık tema için gerçek siyah</string>
+    <string name="theme_black_oled_info">OLED ekranlarda daha az enerji tüketir</string>
+    <string name="dynamic_colors">Dinamik renkler</string>
+    <string name="display">Görüntüleme</string>
+    <string name="default_period">Varsayılan aralık</string>
+    <string name="about">Hakkında</string>
+    <string name="screen_time_calculation_method">Ölçme yöntemi</string>
+    <string name="screen_time_calculation_method_part_1_title">Ekran süresi nasıl ölçülüyor?</string>
+    <string name="screen_time_calculation_method_part_1_details">Uygulama, Android sistemi tarafından kaydedilen uygulama açma ve kapatma işlemlerine dayalı olarak ekran sürenizi hesaplar. Yalnızca ön planda kullanılan uygulamalarda geçirilen süre hesaba katılır. Arka planda çalışan uygulamalar hesaplanmaz.</string>
+    <string name="screen_time_calculation_method_part_2_title">Ekran süresinin sayılmayabileceği durumlar</string>
+    <string name="screen_time_calculation_method_part_2_details">- Android sistemi bir uygulamanın açılma veya kapanma olayını kaydetmezse, o oturumda geçirilen süre hesaba katılmayacaktır.\n\n- Bir uygulama kaldırıldığında Android sistemi o uygulamanın kullanımıyla ilgili tüm verileri siler. Bu nedenle o uygulamanın ekran süresi artık hesaplanmayacaktır.</string>
+    <string name="screen_time_calculation_method_part_3_title">Aynı anda birden fazla uygulama ön planda kullanıldığında ekran süresi nasıl hesaplanır?</string>
+    <string name="screen_time_calculation_method_part_3_details">Birden fazla uygulama aynı anda ön planda kullanıldığında (örneğin bölünmüş ekran modunda) her bir uygulamanın kullanım süresi ayrı ayrı hesaplanır.\n\nAncak toplam ekran süresi için aynı anda ön planda kaç uygulama açık olursa olsun yalnızca ekranın önünde geçirilen gerçek süre hesaba katılır.\n\nÖrneğin iki uygulama 40 dakika boyunca aynı anda ön planda kullanılırsa her bir uygulama 40 dakikalık kullanım süresi gösterir ancak toplam ekran süresi 80 dakika değil 40 dakika olarak kalır.</string>
+    <string name="language">Dil</string>
+    <string name="third_party_library">Üçüncü parti kütüphaneler</string>
+    <string name="website">İnternet sitesi</string>
+    <string name="source_code">Kaynak kodu</string>
+</resources>

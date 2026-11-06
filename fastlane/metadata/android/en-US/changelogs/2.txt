@@ -1,0 +1,6 @@
+1.1.0
+
+- Added simplified Chinese translation (thanks to Mike James).
+- Added the ability to ignore specific apps in screen time calculations. This option can be configured via the settings.
+- Minor UI improvements and fixes.
+- Updated dependencies.

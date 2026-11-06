@@ -1,0 +1,6 @@
+1.4.1
+
+- Added Sardinian translation (thanks to l2212).
+- Updated Dutch translation (thanks to Stephan Paternotte).
+- Fixed a bug that could cause the widget to get stuck while refreshing (thanks to Dorian Marchal).
+- Updated dependencies.

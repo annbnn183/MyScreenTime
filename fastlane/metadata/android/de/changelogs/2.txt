@@ -1,0 +1,6 @@
+1.1.0
+
+– Vereinfachte chinesische Übersetzung hinzugefügt (danke an Mike James).
+– Möglichkeit hinzugefügt, bestimmte Apps bei der Berechnung der Bildschirmzeit zu ignorieren. Diese Option kann über die Einstellungen konfiguriert werden.
+– Kleinere Verbesserungen und Korrekturen der Benutzeroberfläche.
+– Abhängigkeiten aktualisiert.

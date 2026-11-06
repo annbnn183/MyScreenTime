@@ -1,0 +1,9 @@
+1.4.0
+
+- Ajout de la traduction Chinois traditionnel (merci à internet-coffee).
+- Ajout de la traduction Arabe (merci à Ahmed Fecih).
+- Mise à jour de la traduction néerlandaise (merci à Stephan Paternotte).
+- Ajout d'une option permettant d'ignorer les applications système.
+- Ajout du calcul de la médiane (appuyez sur la valeur moyenne pour basculer entre les deux valeurs).
+- Amélioration des performances.
+- Mise à jour du SDK Android (API 36 → API 37) et des dépendances.

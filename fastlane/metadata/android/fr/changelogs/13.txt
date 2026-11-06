@@ -1,0 +1,6 @@
+1.4.1
+
+- Ajout de la traduction Sarde (merci à l2212).
+- Mise à jour de la traduction néerlandaise (merci à Stephan Paternotte).
+- Correction d'un bug pouvant bloquer le widget lors de l'actualisation (merci à Dorian Marchal).
+- Mise à jour des dépendances.

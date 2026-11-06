@@ -1,0 +1,16 @@
+Screen Time é unha app simple que che permite coñecer durante canto tempo utilizar o teu dispositivo e aplicacións.
+
+Características:
+
+- Mostra o tempo total na pantalla para o teu dispositivo na última semana ou un día concreto.
+- Gráfico coa comparación de varios días da semana.
+- Gráfico coa comparación do tempo na pantalla para cada hora do día.
+- Posibilidade de ver o tempo en pantalla e gráficas para cada app individual.
+- Lista para ver o tempo na pantalla para cada app individual, ordenada por uso decrecente durante o período seleccionado.
+- Interface limpa e moderna.
+- Sen publicidade.
+- Non recolle datos sobre ti (ten o acceso a internet desactivado).
+- De código aberto.
+- Desenvolta en Kotlin con Jetpack Compose e Material 3.
+
+O código fonte está dipoñible aquí: https://gitlab.com/Atharok/ScreenTime

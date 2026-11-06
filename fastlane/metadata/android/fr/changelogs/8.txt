@@ -1,0 +1,4 @@
+1.3.2
+
+- Quelques ajustements apportés au widget.
+- Mise à jour des dépendances.

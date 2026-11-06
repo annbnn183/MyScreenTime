@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="elevation_2">2dp</dimen>
+    <dimen name="border_width">1dp</dimen>
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="padding_small">4dp</dimen>
+    <dimen name="padding_normal">8dp</dimen>
+    <dimen name="padding_medium">12dp</dimen>
+    <dimen name="padding_large">16dp</dimen>
+    <dimen name="icon_normal_size">24dp</dimen>
+    <dimen name="icon_medium_size">32dp</dimen>
+    <dimen name="icon_large_size">48dp</dimen>
+    <dimen name="linear_progress_indicator_height">6dp</dimen>
+</resources>

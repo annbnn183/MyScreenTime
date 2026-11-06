@@ -1,0 +1,4 @@
+1.3.5
+
+- Ajout de la traduction turc (merci à TURBOKAN).
+- Mise à jour des dépendances.

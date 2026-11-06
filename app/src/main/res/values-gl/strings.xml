@@ -1,0 +1,71 @@
+<resources>
+    <string name="app_name">Screen Time</string>
+
+    <string name="close">Fechar</string>
+    <string name="more">Máis</string>
+    <string name="back">Volver</string>
+    <string name="help">Axuda</string>
+    <string name="refresh">Actualizar</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Seguinte</string>
+
+    <string name="total_screen_time">Tempo total na pantalla</string>
+    <string name="daily_average">Promedio diario</string>
+    <string name="hourly_average">Promedio cada hora</string>
+    <string name="data_updated">Actualizado: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Semana</string>
+    <string name="day">Día</string>
+    <string name="today">Hoxe</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sd</string>
+    <string name="hour_unit">%1$sh</string>
+    <string name="minute_unit">%1$sm</string>
+    <string name="second_unit">%1$ss</string>
+
+    <!-- Error -->
+    <string name="error">Erro</string>
+    <string name="error_failed_to_retrieve_usage_data">Erro ao obter os datos de uso.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Non se atopan datos de uso para esta aplicación.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Calculando</string>
+    <string name="calculating_message">Estase a calcular o Tempo na Pantalla…</string>
+
+    <!-- Permission -->
+    <string name="permission">Permiso</string>
+    <string name="access_to_usage_data">Acceso ao datos de uso</string>
+    <string name="access_to_usage_data_message">Tes que dar permiso para que a aplicación poida calcular os datos de uso</string>
+    <string name="authorize">Autorizar</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Xestión das apps ignoradas</string>
+    <string name="apps_to_ignore">Apps a ignorar</string>
+
+    <!-- Settings -->
+    <string name="settings">Axustes</string>
+    <string name="appearance">Aparencia</string>
+    <string name="theme">Decorado</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Escuro</string>
+    <string name="theme_black">Negro real para decorado escuro</string>
+    <string name="theme_black_oled_info">Utiliza menos enerxía en pantallas OLED</string>
+    <string name="dynamic_colors">Cores dinámicas</string>
+    <string name="display">Datos</string>
+    <string name="default_period">Período por defecto</string>
+    <string name="about">About</string>
+    <string name="screen_time_calculation_method">Método de cálculo</string>
+    <string name="screen_time_calculation_method_part_1_title">Como se calcula o Tempo na Pantalla?</string>
+    <string name="screen_time_calculation_method_part_1_details">A app calcula o teu tempo de uso da pantalla en función dos eventos relacionados con abrir e fechar apps, tal como os grava o sistema Android. Só se conta o tempo de uso cando a app está en primeiro plano. O uso das apps en segundo plano non conta.</string>
+    <string name="screen_time_calculation_method_part_2_title">Casos nos que o tempo na pantalla podería con contar</string>
+    <string name="screen_time_calculation_method_part_2_details">- Se o sistema Android non grava o evento de abrir o fechar a app, o tempo utilizado nesas sesión non se conta.\n\n- Se desinstalas unha app, o sistema Android elimina todos os eventos relacionados co seu uso. Por isto, o tempo na pantalla desta app xa non conta.</string>
+    <string name="screen_time_calculation_method_part_3_title">Como se calcula o tempo na pantalla cando varias apps están en primeiro plano ao mesmo tempo?</string>
+    <string name="screen_time_calculation_method_part_3_details">Cando varias apps están en primeiro plano ao mesmo tempo (ex. con pantalla partida), o tempo de uso para cada app calcúlase de xeito separado.\n\nEmporiso, para o tempo total en pantalla, só se calcula o tempo gastado realmente en fronte á pantalla, independentemente de cantas apps estaban activas en primeiro plano ao mesmo tempo.\n\nPor exemplo, se dúas apps se usan no primeiro plano ao mesmo tempo durante 40 minutos, cada app mostrará 40 minutos de uso, pero o tempo total en pantalla tamén mostrará 40 minutos, non 80.</string>
+    <string name="language">Idioma</string>
+    <string name="third_party_library">Bibliotecas alleas</string>
+    <string name="website">Páxina web</string>
+    <string name="source_code">Código Fonte</string>
+</resources>

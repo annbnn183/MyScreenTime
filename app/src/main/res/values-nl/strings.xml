@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">Screen Time</string>
+
+    <string name="close">Sluiten</string>
+    <string name="more">Meer</string>
+    <string name="back">Terug</string>
+    <string name="help">Hulp</string>
+    <string name="refresh">Vernieuwen</string>
+    <string name="previous">Vorige</string>
+    <string name="next">Volgene</string>
+
+    <string name="total_screen_time">Totale schermtijd</string>
+    <string name="daily_average">Gemiddelde per dag</string>
+    <string name="hourly_average">Gemiddelde per uur</string>
+    <string name="daily_median">Mediaan per dag</string>
+    <string name="hourly_median">Mediaan per uur</string>
+    <string name="data_updated">Bijgewerkt: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Week</string>
+    <string name="day">Dag</string>
+    <string name="today">Vandaag</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sd</string>
+    <string name="hour_unit">%1$su</string>
+    <string name="minute_unit">%1$sm</string>
+    <string name="second_unit">%1$ss</string>
+
+    <!-- Error -->
+    <string name="error">Fout</string>
+    <string name="error_failed_to_retrieve_usage_data">Gebruiksgegevens laden is mislukt.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Geen gebruiksgegevens gevonden voor deze app.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Berekenen</string>
+    <string name="calculating_message">Schermtijd berekenen…</string>
+
+    <!-- Permission -->
+    <string name="permission">Machtiging</string>
+    <string name="access_to_usage_data">Toegang tot gebruiksgegevens</string>
+    <string name="access_to_usage_data_message">Om deze app te kunnen gebruiken moet je toegang tot gebruiksgegevens autoriseren</string>
+    <string name="authorize">Autoriseren</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Te negeren apps beheren</string>
+    <string name="apps_to_ignore">Apps negeren</string>
+
+    <!-- Settings -->
+    <string name="settings">Instellingen</string>
+    <string name="appearance">Uiterlijk</string>
+    <string name="theme">Thema</string>
+    <string name="theme_system">Systeem</string>
+    <string name="theme_light">Licht</string>
+    <string name="theme_dark">Donker</string>
+    <string name="theme_black">Donker thema met echt zwart</string>
+    <string name="theme_black_oled_info">Gebruikt minder energie op OLED-schermen</string>
+    <string name="dynamic_colors">Dynamische kleuren</string>
+    <string name="display">Weergave</string>
+    <string name="default_period">Standaard periode</string>
+    <string name="ignore_system_apps">Systeem-apps negeren</string>
+    <string name="about">Over</string>
+    <string name="screen_time_calculation_method">Berekeningswijze</string>
+    <string name="screen_time_calculation_method_part_1_title">Hoe wordt de schermtijd berekend?</string>
+    <string name="screen_time_calculation_method_part_1_details">De app berekent je schermtijd op basis van gebeurtenissen die verband houden met het openen en sluiten van apps, zoals vastgelegd door het Android-systeem. Alleen de tijd die wordt besteed aan het gebruik van apps op de voorgrond wordt geteld. Apps die op de achtergrond draaien, worden niet in aanmerking genomen.</string>
+    <string name="screen_time_calculation_method_part_2_title">Gevallen waarin de schermtijd mogelijk niet wordt geteld</string>
+    <string name="screen_time_calculation_method_part_2_details">- Als het Android-systeem de gebeurtenis van het openen of sluiten van een app niet registreert, wordt de tijd die tijdens die sessie wordt doorgebracht niet meegeteld.\n\n-Als een app wordt verwijderd, verwijdert het Android-systeem alle gebeurtenissen die verband houden met het gebruik ervan. Daarom wordt de schermtijd voor die app niet meer meegeteld.</string>
+    <string name="screen_time_calculation_method_part_3_title">Hoe wordt de schermtijd berekend wanneer meerdere apps tegelijkertijd op de voorgrond worden gebruikt?</string>
+    <string name="screen_time_calculation_method_part_3_details">Wanneer meerdere apps tegelijkertijd op de voorgrond worden gebruikt (bijvoorbeeld in de modus voor gesplitst scherm), wordt de gebruikstijd voor elke app afzonderlijk geteld.\n\nVoor de totale schermtijd wordt echter alleen de werkelijke tijd voor het scherm geteld, ongeacht hoeveel apps tegelijkertijd op de voorgrond actief waren.\n\nBijvoorbeeld als twee apps tegelijkertijd gedurende 40 minuten op de voorgrond worden gebruikt, wordt in elke app 40 minuten gebruik weergegeven, maar blijft de totale schermtijd 40 minuten, en niet 80.</string>
+    <string name="language">Taal</string>
+    <string name="third_party_library">Bibliotheken van derden</string>
+    <string name="website">Website</string>
+    <string name="source_code">Broncode</string>
+    <string name="code_version">Versie %1$s</string>
+    <string name="unknown">onbekend</string>
+</resources>

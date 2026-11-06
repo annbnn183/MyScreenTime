@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">屏幕时间</string>
+
+    <string name="close">关闭</string>
+    <string name="more">更多</string>
+    <string name="back">返回</string>
+    <string name="help">帮助</string>
+    <string name="refresh">刷新</string>
+    <string name="previous">上一个</string>
+    <string name="next">下一个</string>
+
+    <string name="total_screen_time">总屏幕使用时长</string>
+    <string name="daily_average">每日平均</string>
+    <string name="hourly_average">每小时平均</string>
+    <string name="data_updated">最后更新：%1$s</string>
+
+    <!-- Period -->
+    <string name="week">周</string>
+    <string name="day">日</string>
+    <string name="today">今天</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$s天</string>
+    <string name="hour_unit">%1$s时</string>
+    <string name="minute_unit">%1$s分</string>
+    <string name="second_unit">%1$s秒</string>
+
+    <!-- Error -->
+    <string name="error">错误</string>
+    <string name="error_failed_to_retrieve_usage_data">无法获取使用情况。</string>
+    <string name="error_no_usage_data_was_found_for_this_application">未找到此应用程序的使用情况。</string>
+
+    <!-- Loading -->
+    <string name="calculating">计算中</string>
+    <string name="calculating_message">正在计算屏幕使用时长…</string>
+
+    <!-- Permission -->
+    <string name="permission">权限</string>
+    <string name="access_to_usage_data">访问使用情况</string>
+    <string name="access_to_usage_data_message">您必须授权访问使用情况才能使用此应用</string>
+    <string name="authorize">授权</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">管理忽略的应用</string>
+    <string name="apps_to_ignore">需要忽略的应用</string>
+
+    <!-- Settings -->
+    <string name="settings">设置</string>
+    <string name="appearance">外观</string>
+    <string name="theme">主题</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_light">浅色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_black">深色模式下使用纯黑背景</string>
+    <string name="theme_black_oled_info">在 OLED 屏幕上更省电</string>
+    <string name="dynamic_colors">动态取色</string>
+    <string name="display">显示</string>
+    <string name="default_period">默认显示的时间段</string>
+    <string name="about">关于</string>
+    <string name="screen_time_calculation_method">计算方法</string>
+    <string name="screen_time_calculation_method_part_1_title">屏幕使用时长是如何计算的？</string>
+    <string name="screen_time_calculation_method_part_1_details">该应用根据 Android 系统记录的应用开启和关闭事件来计算您的屏幕使用时长。只有前台使用的时间会被计入，后台运行的应用不会被统计。</string>
+    <string name="screen_time_calculation_method_part_2_title">哪些情况下屏幕使用时长可能不会被计入？</string>
+    <string name="screen_time_calculation_method_part_2_details">- 如果 Android 系统没有记录某个应用的开启或关闭事件，则这段时间将不会被计入。\n\n- 如果卸载了一个应用，Android 系统会删除与其使用相关的所有事件，因此该应用的屏幕使用时长将不再被统计。</string>
+    <string name="screen_time_calculation_method_part_3_title">多个应用同时在前台使用时，屏幕使用时长如何计算？</string>
+    <string name="screen_time_calculation_method_part_3_details">当多个应用同时在前台使用时（例如分屏模式），每个应用的使用时间将分别统计。\n\n但对于总的屏幕使用时长来说，只会计算实际面对屏幕的时间，而不管同时有多少个应用处于前台。\n\n例如，如果有两个应用在同一时间段内同时使用了 40 分钟，每个应用都会显示 40 分钟的使用时间，但总屏幕使用时长仍为 40 分钟，而不是 80 分钟。</string>
+    <string name="language">语言</string>
+    <string name="third_party_library">第三方库</string>
+    <string name="website">网站</string>
+    <string name="source_code">源代码</string>
+    <string name="code_version">版本 %1$s</string>
+    <string name="unknown">未知</string>
+</resources>

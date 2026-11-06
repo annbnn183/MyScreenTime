@@ -1,0 +1,4 @@
+1.2.1
+
+- Ajout de la traduction en allemand (merci à Nikolas).
+- Mise à jour des dépendances.

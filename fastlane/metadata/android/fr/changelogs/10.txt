@@ -1,0 +1,5 @@
+1.3.4
+
+- Ajout de la traduction russe (merci à mikinol).
+- Mise à jour de la traduction néerlandaise (merci à Stephan Paternotte).
+- Mise à jour des dépendances.

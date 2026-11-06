@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">Screen Time</string>
+
+    <string name="close">إغلاق</string>
+    <string name="more">المزيد</string>
+    <string name="back">رجوع</string>
+    <string name="help">مساعدة</string>
+    <string name="refresh">تحديث</string>
+    <string name="previous">السابق</string>
+    <string name="next">التالي</string>
+
+    <string name="total_screen_time">إجمالي وقت الشاشة</string>
+    <string name="daily_average">المتوسط اليومي</string>
+    <string name="hourly_average">المتوسط بالساعة</string>
+    <string name="data_updated">آخر تحديث: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">أسبوع</string>
+    <string name="day">يوم</string>
+    <string name="today">اليوم</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sي</string>
+    <string name="hour_unit">%1$sس</string>
+    <string name="minute_unit">%1$sد</string>
+    <string name="second_unit">%1$sث</string>
+
+    <!-- Error -->
+    <string name="error">خطأ</string>
+    <string name="error_failed_to_retrieve_usage_data">فشل استرداد بيانات الاستخدام.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">لم يتم العثور على بيانات استخدام لهذا التطبيق.</string>
+
+    <!-- Loading -->
+    <string name="calculating">جارٍ الحساب</string>
+    <string name="calculating_message">جارٍ حساب وقت الشاشة…</string>
+
+    <!-- Permission -->
+    <string name="permission">الإذن</string>
+    <string name="access_to_usage_data">الوصول إلى بيانات الاستخدام</string>
+    <string name="access_to_usage_data_message">يجب منح إذن الوصول إلى بيانات الاستخدام لتتمكن من استخدام هذا التطبيق</string>
+    <string name="authorize">منح الإذن</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">إدارة التطبيقات المتجاهلة</string>
+    <string name="apps_to_ignore">التطبيقات المتجاهلة</string>
+
+    <!-- Settings -->
+    <string name="settings">الإعدادات</string>
+    <string name="appearance">المظهر</string>
+    <string name="theme">السمة</string>
+    <string name="theme_system">النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_black">أسود حقيقي للسمة الداكنة</string>
+    <string name="theme_black_oled_info">يستهلك طاقة أقل على شاشات OLED</string>
+    <string name="dynamic_colors">الألوان الديناميكية</string>
+    <string name="display">العرض</string>
+    <string name="default_period">الفترة الافتراضية</string>
+    <string name="about">حول التطبيق</string>
+    <string name="screen_time_calculation_method">طريقة الحساب</string>
+    <string name="screen_time_calculation_method_part_1_title">كيف يتم حساب وقت الشاشة؟</string>
+    <string name="screen_time_calculation_method_part_1_details">يحسب التطبيق وقت الشاشة بناءً على أحداث فتح وإغلاق التطبيقات كما يسجّلها نظام Android. يُحتسب فقط الوقت الذي تقضيه في استخدام التطبيقات في المقدمة، أما التطبيقات التي تعمل في الخلفية فلا تُحتسب.</string>
+    <string name="screen_time_calculation_method_part_2_title">حالات قد لا يُحتسب فيها وقت الشاشة</string>
+    <string name="screen_time_calculation_method_part_2_details">- إذا لم يسجّل نظام Android حدث فتح أو إغلاق أحد التطبيقات، فلن يُحتسب الوقت الذي أُمضي في تلك الجلسة.\n\n- إذا تم إلغاء تثبيت تطبيق، يحذف نظام Android جميع الأحداث المرتبطة باستخدامه، وبالتالي لن يُحتسب وقت الشاشة الخاص به بعد ذلك.</string>
+    <string name="screen_time_calculation_method_part_3_title">كيف يُحسب وقت الشاشة عند استخدام عدة تطبيقات في المقدمة في نفس الوقت؟</string>
+    <string name="screen_time_calculation_method_part_3_details">عند استخدام عدة تطبيقات في المقدمة في آنٍ واحد (مثلاً في وضع الشاشة المنقسمة)، يُحتسب وقت استخدام كل تطبيق بشكل منفصل.\n\nأما بالنسبة لإجمالي وقت الشاشة، فيُحتسب فقط الوقت الفعلي الذي قضيته أمام الشاشة، بصرف النظر عن عدد التطبيقات النشطة في المقدمة.\n\nمثلاً: إذا استخدمت تطبيقَين في المقدمة معاً لمدة 40 دقيقة، فسيظهر لكل منهما 40 دقيقة استخداماً، لكن إجمالي وقت الشاشة سيبقى 40 دقيقة وليس 80.</string>
+    <string name="language">اللغة</string>
+    <string name="third_party_library">مكتبات الطرف الثالث</string>
+    <string name="website">الموقع الإلكتروني</string>
+    <string name="source_code">الكود المصدري</string>
+    <string name="code_version">الإصدار %1$s</string>
+    <string name="unknown">غير معروف</string>
+</resources>

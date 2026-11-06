@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">Tiempo de pantalla</string>
+
+    <string name="close">Cerrar</string>
+    <string name="more">Más</string>
+    <string name="back">Atrás</string>
+    <string name="help">Ayuda</string>
+    <string name="refresh">Actualizar</string>
+    <string name="previous">Anterior</string>
+    <string name="next">Siguiente</string>
+
+    <string name="total_screen_time">Tiempo total de pantalla</string>
+    <string name="daily_average">Promedio diario</string>
+    <string name="hourly_average">Promedio por hora</string>
+    <string name="data_updated">Actualizado: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Semana</string>
+    <string name="day">Día</string>
+    <string name="today">Hoy</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sd</string>
+    <string name="hour_unit">%1$sh</string>
+    <string name="minute_unit">%1$sm</string>
+    <string name="second_unit">%1$ss</string>
+
+    <!-- Error -->
+    <string name="error">Error</string>
+    <string name="error_failed_to_retrieve_usage_data">No se pudieron obtener los datos de uso.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">No se encontraron datos de uso para esta aplicación.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Calculando</string>
+    <string name="calculating_message">Cálculo del tiempo de pantalla en curso…</string>
+
+    <!-- Permission -->
+    <string name="permission">Permiso</string>
+    <string name="access_to_usage_data">Acceso a datos de uso</string>
+    <string name="access_to_usage_data_message">Debes autorizar el acceso a los datos de uso para utilizar esta aplicación</string>
+    <string name="authorize">Autorizar</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Gestionar aplicaciones a ignorar</string>
+    <string name="apps_to_ignore">Aplicaciones a ignorar</string>
+
+    <!-- Settings -->
+    <string name="settings">Ajustes</string>
+    <string name="appearance">Apariencia</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Claro</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_black">Negro verdadero para el tema oscuro</string>
+    <string name="theme_black_oled_info">Consume menos energía en pantallas OLED</string>
+    <string name="dynamic_colors">Colores dinámicos</string>
+    <string name="display">Pantalla</string>
+    <string name="default_period">Período predeterminado</string>
+    <string name="about">Acerca de</string>
+    <string name="screen_time_calculation_method">Método de cálculo</string>
+    <string name="screen_time_calculation_method_part_1_title">¿Cómo se calcula el tiempo de pantalla?</string>
+    <string name="screen_time_calculation_method_part_1_details">La aplicación calcula tu tiempo de pantalla basándose en eventos relacionados con la apertura y cierre de aplicaciones, tal como los registra el sistema Android. Solo se cuenta el tiempo dedicado a usar aplicaciones en primer plano. Las aplicaciones que se ejecutan en segundo plano no se tienen en cuenta.</string>
+    <string name="screen_time_calculation_method_part_2_title">Casos en los que el tiempo de pantalla podría no contarse</string>
+    <string name="screen_time_calculation_method_part_2_details">- Si el sistema Android no registra el evento de abrir o cerrar una aplicación, el tiempo dedicado durante esa sesión no se contabilizará.\n\n- Si una aplicación se desinstala, el sistema Android elimina todos los eventos relacionados con su uso. Por lo tanto, el tiempo de pantalla de esa aplicación ya no se contará.</string>
+    <string name="screen_time_calculation_method_part_3_title">¿Cómo se calcula el tiempo de pantalla cuando se usan varias aplicaciones en primer plano al mismo tiempo?</string>
+    <string name="screen_time_calculation_method_part_3_details">Cuando se utilizan varias aplicaciones en primer plano simultáneamente (por ejemplo, en modo de pantalla dividida), el tiempo de uso de cada aplicación se cuenta por separado.\n\nSin embargo, para el tiempo total de pantalla, solo se cuenta el tiempo real dedicado frente a la pantalla, independientemente de cuántas aplicaciones estuvieran activas en primer plano al mismo tiempo.\n\nPor ejemplo, si se usan dos aplicaciones en primer plano simultáneamente durante 40 minutos, cada aplicación mostrará 40 minutos de uso, pero el tiempo total de pantalla seguirá siendo de 40 minutos, y no de 80.</string>
+    <string name="language">Idioma</string>
+    <string name="third_party_library">Bibliotecas de terceros</string>
+    <string name="website">Sitio web</string>
+    <string name="source_code">Código fuente</string>
+    <string name="code_version">Versión %1$s</string>
+    <string name="unknown">desconocido</string>
+</resources>

@@ -1,0 +1,73 @@
+<resources>
+    <string name="app_name">Tempus de ischermu</string>
+
+    <string name="close">Serra</string>
+    <string name="more">De prus</string>
+    <string name="back">In segus</string>
+    <string name="help">Agiudu</string>
+    <string name="refresh">Annoa</string>
+    <string name="previous">Antepostu</string>
+    <string name="next">Imbeniente</string>
+
+    <string name="total_screen_time">Tempus de ischermu totale</string>
+    <string name="daily_average">Mèdia de sa die</string>
+    <string name="hourly_average">Mèdia orària</string>
+    <string name="data_updated">Atualizadu: %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Chida</string>
+    <string name="day">Die</string>
+    <string name="today">Oe</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sd</string>
+    <string name="hour_unit">%1$sh</string>
+    <string name="minute_unit">%1$sm</string>
+    <string name="second_unit">%1$ss</string>
+
+    <!-- Error -->
+    <string name="error">Faddina</string>
+    <string name="error_failed_to_retrieve_usage_data">Recùperu de sos datos de impreu fallidu.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Perunu datu atzapadu pro custa aplicatzione.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Carculende</string>
+    <string name="calculating_message">Càrculu de su tempus de ichermu in cursu…</string>
+
+    <!-- Permission -->
+    <string name="permission">Permissu</string>
+    <string name="access_to_usage_data">Atzessu a sos datos de impreu</string>
+    <string name="access_to_usage_data_message">Depes autorizare s\'atzessu a sos datos de impreu pro impreare custa aplicatzione</string>
+    <string name="authorize">Autoriza</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Amministra sas aplicatziones de ignorare</string>
+    <string name="apps_to_ignore">Aplicatziones de ignorare</string>
+
+    <!-- Settings -->
+    <string name="settings">Impostatziones</string>
+    <string name="appearance">Aparèntzia</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_light">Craru</string>
+    <string name="theme_dark">Iscuru</string>
+    <string name="theme_black">Nieddu beru pro su tema iscuru</string>
+    <string name="theme_black_oled_info">Impreat prus pagu energia in sos ischermos OLED</string>
+    <string name="dynamic_colors">Colores dinàmicos</string>
+    <string name="display">Ischermu</string>
+    <string name="default_period">Perìodu predefinidu</string>
+    <string name="about">Informatziones</string>
+    <string name="screen_time_calculation_method">Mètodu de càrculu</string>
+    <string name="screen_time_calculation_method_part_1_title">Comente benit carculadu su tempus de ischermu?</string>
+    <string name="screen_time_calculation_method_part_1_details">S\'aplicatzione càrculat su tempus coladu in dae in antis a s\'ischermu in base a sos eventos relativos a s\'abertura e a sa serrada de sas aplicatziones, comente registrados dae su sistema Android. Est contegiadu petzi su tempus coladu impreende sas aplicatziones in primu pranu. Sas aplicatziones traballende in s\'isfundu non benint pigadas in cunsideru.</string>
+    <string name="screen_time_calculation_method_part_2_title">Casos cando su tempus de ischermu diat pòdere no èssere contadu</string>
+    <string name="screen_time_calculation_method_part_2_details">- Si su sistema Android non registrat s\'eventu de abertura o serradura de un\'aplicatzione,  su tempus coladu durante cussa sessione non s\'at a contare.\n\n- Si un\'aplicatzione benit disinstallada, su sistema Android iscantzellat totu sos eventos ligados a s\'impreu suo. Duncas, su tempus de ischermu pro cussa aplicatzione no at a èssere prus contadu.</string>
+    <string name="screen_time_calculation_method_part_3_title">Comente benit carculadu su tempus de ischermu cando prus aplicatziones benint impreadas in primu pranu in su matessi momentu?</string>
+    <string name="screen_time_calculation_method_part_3_details">Cando prus aplicatziones benint impreadas in su matessi momentu (a esèmpiu, in sa modalidade a ischermu partzidu), su tempus de impreu pro cada aplicatzione si contat a bandas s\'unu dae s\'àteru.\n\nNointames custu, però, pro su tempus de ischermu totale, benit contadu petzi su tempus coladu a in antis de s\'ischermu, no importat cantas aplicatziones èsserent ativas in primu pranu in su matessi tempus.\n\nA esèmpiu,  si duas aplicatziones benint impreadas in primu pranu in manera simultànea pro 40 minutos, cada aplicatzione at a ammustrare 40 minutes de impreu, ma su tempus totale de ischermu at a abarrare 40 minutos, e no 80.</string>
+    <string name="language">Limba</string>
+    <string name="third_party_library">Librerias de tertzos</string>
+    <string name="website">Situ web</string>
+    <string name="source_code">Còdighe de orìgine</string>
+    <string name="code_version">Versione %1$s</string>
+    <string name="unknown">disconnotu</string>
+</resources>

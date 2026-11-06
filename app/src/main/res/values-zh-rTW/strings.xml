@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">螢幕時間</string>
+
+    <string name="close">關閉</string>
+    <string name="more">更多</string>
+    <string name="back">返回</string>
+    <string name="help">說明</string>
+    <string name="refresh">重新整理</string>
+    <string name="previous">上一個</string>
+    <string name="next">下一個</string>
+
+    <string name="total_screen_time">總螢幕使用時間</string>
+    <string name="daily_average">每日平均</string>
+    <string name="hourly_average">每小時平均</string>
+    <string name="daily_median">每日中位數</string>
+    <string name="hourly_median">每小時中位數</string>
+    <string name="data_updated">最後更新：%1$s</string>
+
+    <!-- Period -->
+    <string name="week">週</string>
+    <string name="day">日</string>
+    <string name="today">今天</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$s 天</string>
+    <string name="hour_unit">%1$s 小時</string>
+    <string name="minute_unit">%1$s 分鐘</string>
+    <string name="second_unit">%1$s 秒</string>
+
+    <!-- Error -->
+    <string name="error">錯誤</string>
+    <string name="error_failed_to_retrieve_usage_data">無法取得使用情況。</string>
+    <string name="error_no_usage_data_was_found_for_this_application">找不到此應用程式的使用情況。</string>
+
+    <!-- Loading -->
+    <string name="calculating">計算中</string>
+    <string name="calculating_message">正在計算螢幕使用時間…</string>
+
+    <!-- Permission -->
+    <string name="permission">權限</string>
+    <string name="access_to_usage_data">存取使用情形</string>
+    <string name="access_to_usage_data_message">您必須授權存取使用情形才能使用此應用程式</string>
+    <string name="authorize">授權</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">管理忽略的應用程式</string>
+    <string name="apps_to_ignore">忽略的應用程式</string>
+
+    <!-- Settings -->
+    <string name="settings">設定</string>
+    <string name="appearance">外觀</string>
+    <string name="theme">主題</string>
+    <string name="theme_system">跟隨系統</string>
+    <string name="theme_light">淺色</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_black">深色主題使用純黑背景</string>
+    <string name="theme_black_oled_info">在 OLED 螢幕上更省電</string>
+    <string name="dynamic_colors">動態色彩</string>
+    <string name="display">顯示</string>
+    <string name="default_period">預設顯示的時間段</string>
+    <string name="ignore_system_apps">忽略系統應用程式</string>
+    <string name="about">關於</string>
+    <string name="screen_time_calculation_method">計算方式</string>
+    <string name="screen_time_calculation_method_part_1_title">螢幕使用時間是如何計算的？</string>
+    <string name="screen_time_calculation_method_part_1_details">本應用程式是根據 Android 系統所記錄的應用程式開啟與關閉事件來計算您的螢幕時間。只有在前景使用應用程式的時間才會被納入計算，在背景運行的應用程式則不予計算。</string>
+    <string name="screen_time_calculation_method_part_2_title">哪些情況下的螢幕使用時間可能不會被計入？</string>
+    <string name="screen_time_calculation_method_part_2_details">- 如果 Android 系統未記錄到某個應用程式的開啟或關閉事件，則該次使用期間的時間將不予計算。\n\n- 如果應用程式被解除安裝，Android 系統會刪除所有與其使用相關的事件。因此，該應用程式的螢幕時間將不再被計入。</string>
+    <string name="screen_time_calculation_method_part_3_title">同時在前景使用多個應用程式時，螢幕使用時間如何計算？</string>
+    <string name="screen_time_calculation_method_part_3_details">當同時在前景使用多個應用程式時（例如在分屏模式下），每個應用程式的使用時間會分開計算。\n\n然而，但對於總螢幕使用時間而言，無論當時有多少個應用程式在前景處於活動狀態，都只會計算您在螢幕前花費的實際時間。\n\n例如，如果兩個應用程式同時在前景使用了 40 分鐘，每個應用程式都會顯示 40 分鐘的使用時間，但總螢幕時間仍會是 40 分鐘，而不是 80 分鐘。</string>
+    <string name="language">語言</string>
+    <string name="third_party_library">第三方函式庫</string>
+    <string name="website">網站</string>
+    <string name="source_code">原始碼</string>
+    <string name="code_version">版本 %1$s</string>
+    <string name="unknown">未知</string>
+</resources>

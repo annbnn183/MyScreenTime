@@ -1,0 +1,9 @@
+1.4.0
+
+- Added Traditional Chinese translation (thanks to internet-coffee).
+- Added Arabic translation (thanks to Ahmed Fecih).
+- Updated Dutch translation (thanks to Stephan Paternotte).
+- Added option to ignore system apps.
+- Added median calculation (tap the average value to switch between the two values).
+- Performance optimizations.
+- Updated Android SDK (API 36 → API 37) and dependencies. 

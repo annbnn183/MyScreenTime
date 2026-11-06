@@ -1,0 +1,76 @@
+<resources>
+    <string name="app_name">Temps d\'écran</string>
+
+    <string name="close">Fermer</string>
+    <string name="more">Plus</string>
+    <string name="back">Retour</string>
+    <string name="help">Aide</string>
+    <string name="refresh">Actualiser</string>
+    <string name="previous">Précédent</string>
+    <string name="next">Suivant</string>
+
+    <string name="total_screen_time">Temps d\'écran total</string>
+    <string name="daily_average">Moyenne quotidienne</string>
+    <string name="hourly_average">Moyenne horaire</string>
+    <string name="daily_median">Médiane quotidienne</string>
+    <string name="hourly_median">Médiane horaire</string>
+    <string name="data_updated">Actualisé : %1$s</string>
+
+    <!-- Period -->
+    <string name="week">Semaine</string>
+    <string name="day">Jour</string>
+    <string name="today">Aujourd\'hui</string>
+
+    <!-- Date - Time units -->
+    <string name="day_unit">%1$sj</string>
+    <string name="hour_unit">%1$sh</string>
+    <string name="minute_unit">%1$sm</string>
+    <string name="second_unit">%1$ss</string>
+
+    <!-- Error -->
+    <string name="error">Erreur</string>
+    <string name="error_failed_to_retrieve_usage_data">Échec lors de la récupération des données d\'usage.</string>
+    <string name="error_no_usage_data_was_found_for_this_application">Aucune donnée d’utilisation n\'a été trouvée pour cette application.</string>
+
+    <!-- Loading -->
+    <string name="calculating">Calcul</string>
+    <string name="calculating_message">Calcul du temps d\'écran en cours…</string>
+
+    <!-- Permission -->
+    <string name="permission">Permission</string>
+    <string name="access_to_usage_data">Accès aux données d\'utilisation</string>
+    <string name="access_to_usage_data_message">Vous devez autoriser l\'accès aux données d\'utilisation pour pouvoir utiliser cette application</string>
+    <string name="authorize">Autoriser</string>
+
+    <!-- Ignored Apps -->
+    <string name="manage_apps_to_ignore">Gérer les applications à ignorer</string>
+    <string name="apps_to_ignore">Applications à ignorer</string>
+
+    <!-- Settings -->
+    <string name="settings">Paramètres</string>
+    <string name="appearance">Apparence</string>
+    <string name="theme">Thème</string>
+    <string name="theme_system">Système</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_black">Vrai noir pour le thème sombre</string>
+    <string name="theme_black_oled_info">Utilise moins d\'énergie sur les écrans OLED</string>
+    <string name="dynamic_colors">Couleurs dynamiques</string>
+    <string name="display">Affichage</string>
+    <string name="default_period">Période par défaut</string>
+    <string name="ignore_system_apps">Ignorer les applications système</string>
+    <string name="about">À propos</string>
+    <string name="screen_time_calculation_method">Méthode de calcul</string>
+    <string name="screen_time_calculation_method_part_1_title">Comment le temps d\'écran est-il calculé ?</string>
+    <string name="screen_time_calculation_method_part_1_details">L\'application calcule votre temps d\'écran en fonction des événements d\'ouverture et de fermeture des applications, enregistrés par le système Android. Seul le temps d\'utilisation des applications au premier plan est comptabilisé. Les applications en arrière-plan ne sont pas prises en compte.</string>
+    <string name="screen_time_calculation_method_part_2_title">Cas où le temps d\'écran peut ne pas être comptabilisé</string>
+    <string name="screen_time_calculation_method_part_2_details">- Si le système Android n\'a pas enregistré l\'événement d\'ouverture ou de fermeture d\'une application, le temps passé pendant cette session ne sera pas comptabilisé.\n\n- Si une application est désinstallée, le système Android supprime tous les événements liés à son utilisation. Ainsi, le temps d\'écran de cette application ne sera plus comptabilisé.</string>
+    <string name="screen_time_calculation_method_part_3_title">Comment le temps d\'écran est-il calculé lorsque plusieurs applications sont utilisées en même temps au premier plan ?</string>
+    <string name="screen_time_calculation_method_part_3_details">Lorsque plusieurs applications sont utilisées simultanément au premier plan (par exemple en mode écran partagé), le temps d\'utilisation de chaque application est comptabilisé séparément.\n\nEn revanche, pour le temps d\'écran total, seul le temps réellement passé devant l\'écran est pris en compte, quel que soit le nombre d\'applications actives au premier plan en même temps.\n\nPar exemple, si deux applications sont utilisées en même temps au premier plan pendant 40 minutes, chacune affichera 40 minutes d\'utilisation, mais le temps d\'écran total restera de 40 minutes, et non 80.</string>
+    <string name="language">Langue</string>
+    <string name="third_party_library">Bibliothèques tierces</string>
+    <string name="website">Site web</string>
+    <string name="source_code">Code source</string>
+    <string name="code_version">Version %1$s</string>
+    <string name="unknown">inconnu</string>
+</resources>

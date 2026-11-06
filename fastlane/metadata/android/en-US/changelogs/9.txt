@@ -1,0 +1,5 @@
+1.3.3
+
+- Added Dutch translation (thanks to Stephan Paternotte).
+- Added Portuguese (Brazil) translation (thanks to Bruno Pulis).
+- Updated dependencies.

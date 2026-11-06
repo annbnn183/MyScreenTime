@@ -1,0 +1,6 @@
+1.2.0
+
+- Ajout de la traduction en espagnol (merci à Nube 云).
+- La vue par défaut affiche désormais la journée plutôt que la semaine (ce paramètre reste modifiable dans les options).
+- Mise à jour vers Android 16.
+- Mise à jour des dépendances.

@@ -1,0 +1,6 @@
+1.2.0
+
+- Added Spanish translation (thanks to Nube 云).
+- The default view now shows the day instead of the week (this can still be changed in the settings).
+- Updated to Android 16.
+- Updated dependencies.

@@ -1,0 +1,17 @@
+Temps d’écran est une application simple qui vous permet de suivre facilement le temps passé sur votre appareil et vos applications.
+
+Fonctionnalités :
+
+- Affichage du temps d’écran total de votre appareil pour la semaine qui vient de s’écouler ou pour une journée choisie.
+- Graphique comparatif du temps d’écran entre les différents jours de la semaine.
+- Graphique comparatif du temps d’écran pour chaque heure d’une journée.
+- Possibilité d’afficher le temps d’écran et les graphiques comparatifs pour chaque application individuellement.
+- Liste comparative du temps d’écran de chaque application, triée de la plus utilisée à la moins utilisée pour la période choisie.
+- Interface simple et moderne.
+- Widget pour l'écran d'accueil.
+- Aucune publicité.
+- Aucune collecte de données (permission Internet désactivée).
+- Open source.
+- Développée en Kotlin avec Jetpack Compose et Material 3.
+
+Le code source est disponible ici : https://gitlab.com/Atharok/ScreenTime

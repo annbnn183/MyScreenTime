@@ -1,0 +1,59 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+  <group android:scaleX="0.85"
+      android:scaleY="0.85"
+      android:translateX="21.6"
+      android:translateY="21.6">
+    <path
+        android:pathData="M92,120L100,120A4,4 0,0 1,104 124L104,180A4,4 0,0 1,100 184L92,184A4,4 0,0 1,88 180L88,124A4,4 0,0 1,92 120z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M116,88L124,88A4,4 0,0 1,128 92L128,180A4,4 0,0 1,124 184L116,184A4,4 0,0 1,112 180L112,92A4,4 0,0 1,116 88z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M140,104L148,104A4,4 0,0 1,152 108L152,180A4,4 0,0 1,148 184L140,184A4,4 0,0 1,136 180L136,108A4,4 0,0 1,140 104z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M164,136L172,136A4,4 0,0 1,176 140L176,180A4,4 0,0 1,172 184L164,184A4,4 0,0 1,160 180L160,140A4,4 0,0 1,164 136z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M188,120L196,120A4,4 0,0 1,200 124L200,180A4,4 0,0 1,196 184L188,184A4,4 0,0 1,184 180L184,124A4,4 0,0 1,188 120z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M92,192L196,192A4,4 0,0 1,200 196L200,196A4,4 0,0 1,196 200L92,200A4,4 0,0 1,88 196L88,196A4,4 0,0 1,92 192z"
+        android:strokeLineJoin="round"
+        android:strokeWidth="8"
+        android:fillColor="@color/ic_launcher_foreground_color"
+        android:strokeColor="#00000000"
+        android:fillType="evenOdd"
+        android:strokeLineCap="round"/>
+  </group>
+</vector>

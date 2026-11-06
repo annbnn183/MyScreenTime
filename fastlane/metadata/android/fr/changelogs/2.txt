@@ -1,0 +1,6 @@
+1.1.0
+
+- Ajout de la traduction en chinois simplifié (merci à Mike James).
+- Ajout de la possibilité d’ignorer certaines applications dans le calcul du temps d’écran. Cette option est disponible via les paramètres.
+- Améliorations et corrections d’affichage mineures.
+- Mise à jour des dépendances.
