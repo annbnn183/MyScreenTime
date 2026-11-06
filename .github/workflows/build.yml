@@ -3,6 +3,11 @@ name: Build and Release Android APK
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
+
+# Required to create a Release. Without this, action-gh-release fails with HTTP 403.
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -21,15 +26,34 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    # The project has "default" and "gplay" product flavors, so a plain `assembleDebug` puts the
+    # APK under apk/<flavor>/debug/ instead of apk/debug/. Build one flavor explicitly.
     - name: Build debug APK with Gradle
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDefaultDebug
+
+    - name: Locate and rename APK
+      run: |
+        APK=$(find app/build/outputs/apk/default/debug -name "*.apk" -type f | head -n 1)
+        if [ -z "$APK" ]; then
+          echo "No APK was produced. Contents of app/build/outputs/apk:"
+          find app/build/outputs/apk -type f || true
+          exit 1
+        fi
+        echo "Found APK: $APK"
+        mkdir -p artifacts
+        cp "$APK" "artifacts/MyScreenTime-v1.0.${{ github.run_number }}.apk"
+        ls -lh artifacts
 
     - name: Create Release and Upload APK
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v1.0.${{ github.run_number }}
-        name: ScreenTime v1.0.${{ github.run_number }}
-        body: "Automated build from GitHub Actions."
-        files: app/build/outputs/apk/debug/app-debug.apk
+        name: MyScreenTime v1.0.${{ github.run_number }}
+        body: |
+          Automated build from commit ${{ github.sha }}.
+
+          Includes the daily screen time goal reminder (配置每日使用目标与预警提醒).
+        files: artifacts/*.apk
+        fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

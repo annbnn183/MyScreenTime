@@ -70,4 +70,18 @@
     <string name="source_code">源代码</string>
     <string name="code_version">版本 %1$s</string>
     <string name="unknown">未知</string>
+
+    <!-- 每日屏幕使用目标 -->
+    <string name="daily_goal">每日屏幕使用目标</string>
+    <string name="daily_goal_enable">目标提醒</string>
+    <string name="daily_goal_enable_info">当今日屏幕使用时间达到预警阈值时，每天发送一次通知提醒。</string>
+    <string name="daily_goal_target">每日目标时长</string>
+    <string name="daily_goal_target_info">你打算每天使用设备的时长。</string>
+    <string name="daily_goal_warning_threshold">预警阈值</string>
+    <string name="daily_goal_warning_threshold_info">达到每日目标的该比例时提醒一次。</string>
+    <string name="daily_goal_notification_title">屏幕使用时间预警</string>
+    <string name="daily_goal_notification_message">今日屏幕使用时间已达 %1$s，超过每日目标 %2$s 的预警阈值。</string>
+    <string name="daily_goal_notification_channel_name">每日目标提醒</string>
+    <string name="daily_goal_notification_channel_description">当每日屏幕使用时间接近或超过目标时发出提醒。</string>
+    <string name="daily_goal_notification_permission_info">提醒功能需要通知权限，可在系统设置中开启。</string>
 </resources>

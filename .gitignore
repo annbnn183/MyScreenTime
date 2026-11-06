@@ -1,0 +1,21 @@
+# Gradle
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration (SDK path, signing keys) - never commit
+local.properties
+keystore.properties
+*.jks
+*.keystore
+
+# Kotlin / Compose compiler caches
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store

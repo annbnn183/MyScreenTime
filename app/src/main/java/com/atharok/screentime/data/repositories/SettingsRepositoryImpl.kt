@@ -1,6 +1,7 @@
 package com.atharok.screentime.data.repositories
 
 import com.atharok.screentime.data.dataStore.SettingsDataStore
+import com.atharok.screentime.domain.entities.DailyGoalSettings
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.ThemeEntity
 import com.atharok.screentime.domain.repositories.SettingsRepository
@@ -44,5 +45,27 @@ class SettingsRepositoryImpl(
 
     override suspend fun saveIgnoredPackages(ignoredPackages: List<String>) {
         settingsDataStore.saveIgnoredPackages(ignoredPackages)
+    }
+
+    // ---- Daily screen time goal ----
+
+    override fun getDailyGoalSettings(): Flow<DailyGoalSettings> = settingsDataStore.dailyGoalSettingsFlow
+
+    override suspend fun saveDailyGoalEnabled(enabled: Boolean) {
+        settingsDataStore.saveDailyGoalEnabled(enabled)
+    }
+
+    override suspend fun saveDailyGoalMinutes(minutes: Int) {
+        settingsDataStore.saveDailyGoalMinutes(minutes)
+    }
+
+    override suspend fun saveDailyGoalWarningPercent(percent: Int) {
+        settingsDataStore.saveDailyGoalWarningPercent(percent)
+    }
+
+    override fun getLastGoalNotifiedDate(): Flow<String> = settingsDataStore.lastGoalNotifiedDateFlow
+
+    override suspend fun saveLastGoalNotifiedDate(date: String) {
+        settingsDataStore.saveLastGoalNotifiedDate(date)
     }
 }

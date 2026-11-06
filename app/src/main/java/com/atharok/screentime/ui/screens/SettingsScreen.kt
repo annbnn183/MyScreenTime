@@ -1,10 +1,13 @@
 package com.atharok.screentime.ui.screens
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -22,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.rounded.DisplaySettings
 import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -41,9 +45,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.atharok.screentime.R
 import com.atharok.screentime.common.extensions.getAppVersion
+import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.common.utils.SOURCE_CODE_LINK
 import com.atharok.screentime.common.utils.WEB_SITE_LINK
 import com.atharok.screentime.common.utils.isDynamicColorsAvailable
+import com.atharok.screentime.domain.entities.DailyGoalSettings
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.ThemeEntity
 import com.atharok.screentime.presentation.viewmodel.SettingsViewModel
@@ -196,6 +202,95 @@ fun SettingsScreen(
                     .clickable {
                         openIgnoredAppsScreen()
                     }
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = verticalPadding)
+            )
+
+            // ---- Daily screen time goal ----
+
+            val dailyGoalSettings: DailyGoalSettings by settingsViewModel.dailyGoalSettings
+                .collectAsStateWithLifecycle(initialValue = DailyGoalSettings())
+
+            // Android 13+ requires the notification permission at runtime. The reminder is still
+            // saved as enabled when the user denies it; the worker simply skips posting.
+            val requestNotificationPermission = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()
+            ) { _ -> }
+
+            SettingsTitle(
+                text = stringResource(id = R.string.daily_goal),
+                icon = Icons.Rounded.Timer,
+                iconDescription = stringResource(id = R.string.daily_goal),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsSwitch(
+                primaryText = stringResource(id = R.string.daily_goal_enable),
+                secondaryText = stringResource(id = R.string.daily_goal_enable_info),
+                checked = dailyGoalSettings.enabled,
+                onCheckedChange = { enabled ->
+                    settingsViewModel.saveDailyGoalEnabled(enabled)
+                    if(enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsListDialog(
+                title = R.string.daily_goal_target,
+                dialogMessage = stringResource(id = R.string.daily_goal_target_info),
+                value = dailyGoalSettings.goalMinutes,
+                onValueChange = { settingsViewModel.saveDailyGoalMinutes(it) },
+                items = DailyGoalSettings.GOAL_MINUTES_OPTIONS,
+                convertValueToString = { minutes ->
+                    DateTimeUtils.formatToDuration(minutes * 60_000L)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            SettingsListDialog(
+                title = R.string.daily_goal_warning_threshold,
+                dialogMessage = stringResource(id = R.string.daily_goal_warning_threshold_info),
+                value = dailyGoalSettings.warningPercent,
+                onValueChange = { settingsViewModel.saveDailyGoalWarningPercent(it) },
+                items = DailyGoalSettings.WARNING_PERCENT_OPTIONS,
+                convertValueToString = { percent -> "$percent%" },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = horizontalPadding,
+                        vertical = verticalPadding
+                    )
+            )
+
+            TextNormalSecondary(
+                text = stringResource(id = R.string.daily_goal_notification_permission_info),
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(
                         horizontal = horizontalPadding,

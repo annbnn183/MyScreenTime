@@ -1,5 +1,6 @@
 package com.atharok.screentime.domain.usecases
 
+import com.atharok.screentime.domain.entities.DailyGoalSettings
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.ThemeEntity
 import com.atharok.screentime.domain.repositories.SettingsRepository
@@ -35,5 +36,23 @@ class SettingsUseCase(private val repository: SettingsRepository) {
     fun getIgnoredPackages(): Flow<List<String>> = repository.getIgnoredPackages()
     suspend fun saveIgnoredPackages(ignoredPackages: List<String>) {
         repository.saveIgnoredPackages(ignoredPackages)
+    }
+
+    // ---- Daily screen time goal ----
+
+    fun getDailyGoalSettings(): Flow<DailyGoalSettings> = repository.getDailyGoalSettings()
+    suspend fun saveDailyGoalEnabled(enabled: Boolean) {
+        repository.saveDailyGoalEnabled(enabled)
+    }
+    suspend fun saveDailyGoalMinutes(minutes: Int) {
+        repository.saveDailyGoalMinutes(minutes)
+    }
+    suspend fun saveDailyGoalWarningPercent(percent: Int) {
+        repository.saveDailyGoalWarningPercent(percent)
+    }
+
+    fun getLastGoalNotifiedDate(): Flow<String> = repository.getLastGoalNotifiedDate()
+    suspend fun saveLastGoalNotifiedDate(date: String) {
+        repository.saveLastGoalNotifiedDate(date)
     }
 }

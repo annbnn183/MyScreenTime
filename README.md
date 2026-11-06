@@ -82,4 +82,28 @@ Dependencies:
 - [Koin AndroidX Compose](https://github.com/InsertKoinIO/koin) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - [Vico](https://github.com/patrykandpatrick/vico) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 - [Kotlin Serialization](https://github.com/Kotlin/kotlinx.serialization) is licensed under [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-// Feature update: Added daily screen time reminder configuration
+## Daily screen time goal reminder
+
+A new **每日屏幕使用目标** section in *Settings* lets you set a daily screen-time budget and an
+early-warning threshold:
+
+- **Goal reminder** — enable / disable the notification (Android 13+ asks for the notification
+  permission when you turn it on).
+- **Daily goal** — 30 min to 8 h presets (default 2 h).
+- **Warning threshold** — 50–100 % of the goal (default 80 %).
+
+A background WorkManager task (every ~15 min, independent of the home-screen widget) compares
+today's screen time with `goal × threshold` and posts one notification per day when the threshold
+is crossed. The "last notified" date is stored in DataStore so the reminder fires again the next
+day without spamming.
+
+All configuration is persisted through `SettingsDataStore` → `SettingsRepository` →
+`SettingsUseCase` → `SettingsViewModel`, following the existing clean-architecture layers.
+
+## Automated builds
+
+Pushing to `main` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds
+`assembleDefaultDebug` with JDK 17 and publishes the signed debug APK to the **Releases** page as
+`MyScreenTime-v1.0.<run number>.apk`. The workflow needs the `contents: write` permission to
+create the release.
+

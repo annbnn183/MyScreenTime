@@ -132,4 +132,18 @@
     <string name="kotlin_serialization_name" translatable="false">Kotlin Serialization</string>
     <string name="kotlin_serialization_id" translatable="false">org.jetbrains.kotlinx:kotlinx-serialization-json</string>
     <string name="kotlin_serialization_url" translatable="false">https://github.com/Kotlin/kotlinx.serialization</string>
+
+    <!-- Daily screen time goal -->
+    <string name="daily_goal">Daily screen time goal</string>
+    <string name="daily_goal_enable">Goal reminder</string>
+    <string name="daily_goal_enable_info">Send one notification a day when today\'s screen time reaches the warning threshold.</string>
+    <string name="daily_goal_target">Daily goal</string>
+    <string name="daily_goal_target_info">How long you plan to use your device each day.</string>
+    <string name="daily_goal_warning_threshold">Warning threshold</string>
+    <string name="daily_goal_warning_threshold_info">Remind me once this share of the daily goal is reached.</string>
+    <string name="daily_goal_notification_title">Screen time warning</string>
+    <string name="daily_goal_notification_message">Today\'s screen time is %1$s, past the warning threshold of your %2$s daily goal.</string>
+    <string name="daily_goal_notification_channel_name">Daily goal reminders</string>
+    <string name="daily_goal_notification_channel_description">Warns you when your daily screen time is approaching or exceeding your goal.</string>
+    <string name="daily_goal_notification_permission_info">Notification permission is required for the reminder. You can enable it in system settings.</string>
 </resources>

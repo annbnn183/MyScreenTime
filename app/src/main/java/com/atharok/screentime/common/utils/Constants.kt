@@ -26,3 +26,9 @@ const val GLANCE_PREFERENCES_TODAY_DEVICE_USAGE = "today_device_usage"
 const val GLANCE_PREFERENCES_REFRESH_TIMESTAMP = "refresh_timestamp"
 const val GLANCE_TODAY_USAGE_PERIODIC_WORK_NAME = "glance_today_usage_periodic_work"
 const val GLANCE_TODAY_USAGE_ONE_TIME_WORK_NAME = "glance_today_usage_one_time_work"
+
+// Daily screen time goal reminder
+
+const val DAILY_GOAL_WORK_NAME = "daily_goal_reminder_periodic_work"
+const val DAILY_GOAL_NOTIFICATION_CHANNEL_ID = "daily_goal_reminder_channel"
+const val DAILY_GOAL_NOTIFICATION_ID = 1001

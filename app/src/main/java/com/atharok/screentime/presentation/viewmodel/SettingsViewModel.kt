@@ -2,6 +2,7 @@ package com.atharok.screentime.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.atharok.screentime.domain.entities.DailyGoalSettings
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.domain.entities.ThemeEntity
 import com.atharok.screentime.domain.usecases.SettingsUseCase
@@ -40,5 +41,18 @@ class SettingsViewModel(
     val ignoredPackages: Flow<List<String>> get() = useCase.getIgnoredPackages()
     fun saveIgnoredPackages(ignoredPackages: List<String>) = viewModelScope.launch {
         useCase.saveIgnoredPackages(ignoredPackages)
+    }
+
+    // ---- Daily screen time goal ----
+
+    val dailyGoalSettings: Flow<DailyGoalSettings> get() = useCase.getDailyGoalSettings()
+    fun saveDailyGoalEnabled(enabled: Boolean) = viewModelScope.launch {
+        useCase.saveDailyGoalEnabled(enabled)
+    }
+    fun saveDailyGoalMinutes(minutes: Int) = viewModelScope.launch {
+        useCase.saveDailyGoalMinutes(minutes)
+    }
+    fun saveDailyGoalWarningPercent(percent: Int) = viewModelScope.launch {
+        useCase.saveDailyGoalWarningPercent(percent)
     }
 }
