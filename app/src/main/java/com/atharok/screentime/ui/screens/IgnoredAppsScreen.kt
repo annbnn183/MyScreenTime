@@ -143,7 +143,7 @@ private fun InstalledAppsItem(
     ) {
 
         ApplicationIcon(
-            drawable = appIcon,
+            packageName = packageName,
             contentDescription = appName,
             modifier = Modifier.size(dimensionResource(id = R.dimen.icon_large_size))
         )

@@ -71,6 +71,13 @@ jobs:
           Automated build from commit ${{ github.sha }}.
 
           What's new:
+          - v1.0.12 UX: icons now load asynchronously off the main thread (cache hits are instant), removing the ~1s frame stalls seen right after a cold start
+          - All long lists (ranking grid, device usage, ignored apps) render icons through the downscaled 8MB cache instead of decoding a full-size bitmap on every recomposition
+          - "Show 40 more" grows the ranking incrementally instead of composing all 200-300 apps at once
+          - Frame hiccups below 100ms are still recorded, but at DEBUG level, so the WARN/errors filter only shows stalls you can actually feel. No event is dropped
+          - Log viewer shows the newest entries first by default, with a one-tap order toggle
+          - LOGGING POLICY UNCHANGED: every event is captured, saved forever and never deleted; the full-history TXT export is untouched
+          - Measured on v1.0.11 (same devices): PSS peak 1375MB -> 266MB (OnePlus), 694MB -> 330MB (Xiaomi); >500ms frame stalls 26 -> 4 and 46 -> 1
           - PERFORMANCE / UX: app icons are cached once and downscaled to their real display size (8MB LruCache); long-range ranking rows no longer keep ~800 full-size Drawables alive. Removes the 1.1GB PSS peak and the LOW_MEMORY kills seen on ColorOS
           - Ranking grid composes only the top 40 apps initially, with a "Show all N apps" toggle that collapses again when range/sort changes. Removes the 600-2400ms frame stalls when opening the month view
           - Fixed the permission-screen flash: AppOps transiently reports MODE_DEFAULT just after process start on some ROMs, so the start route is decided once and backed by a real UsageStatsManager query; the permission screen also checks immediately instead of waiting for an ON_RESUME that already fired

@@ -40,10 +40,10 @@ fun AppUsageGridView(
     val monthly = deviceUsage as? MonthlyDeviceUsage
     var rangeIndex by remember { mutableIntStateOf(0) }
     var sortIndex by remember { mutableIntStateOf(0) }
-    // Only the top apps are composed at first. Long ranges can hold 200-300 apps; rendering all
-    // of them inside a single LazyColumn item produced multi-hundred-ms frames and huge memory
-    // spikes. Switching range or sort collapses the list again.
-    var expanded by remember(rangeIndex, sortIndex) { mutableStateOf(false) }
+    // Only a few rows are composed at first. Long ranges can hold 200-300 apps; rendering all of
+    // them inside a single LazyColumn item produced multi-hundred-ms frames. "Show 40 more" grows
+    // the window incrementally, and switching range/sort resets it.
+    var shownCount by remember(rangeIndex, sortIndex) { mutableIntStateOf(40) }
 
     val ranges = monthly?.rangeRankings.orEmpty()
     val fallbackApps: List<RankedApp> = remember(deviceUsage) {
@@ -80,7 +80,7 @@ fun AppUsageGridView(
         }.filter { it.duration > 0L || it.launchCount > 0 }
     }
 
-    val visibleApps = if (expanded) apps else apps.take(40)
+    val visibleApps = apps.take(shownCount)
     val sortLabels = listOf(R.string.sort_time, R.string.sort_launches, R.string.sort_name)
 
     Column(
@@ -150,25 +150,36 @@ fun AppUsageGridView(
         }
 
         if (apps.size > 40) {
-            TextButton(
-                onClick = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(
-                        id = if (expanded) R.string.grid_collapse else R.string.grid_show_all,
-                        apps.size
-                    ),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-            if (!expanded) {
+            if (shownCount < apps.size) {
+                TextButton(
+                    onClick = { shownCount = (shownCount + 40).coerceAtMost(apps.size) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.grid_show_more,
+                            shownCount,
+                            apps.size
+                        ),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
                 Text(
                     text = stringResource(id = R.string.grid_lazy_hint),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
+            } else {
+                TextButton(
+                    onClick = { shownCount = 40 },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.grid_collapse),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
 

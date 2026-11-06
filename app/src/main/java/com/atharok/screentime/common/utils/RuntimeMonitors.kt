@@ -34,6 +34,9 @@ object RuntimeMonitors {
 
     private const val SAMPLE_INTERVAL_MS = 60_000L
     private const val JANK_THRESHOLD_MS = 34L
+    // Every gap >= 34ms is still recorded (nothing is dropped), but small hiccups are logged at
+    // DEBUG so the WARN stream only contains stalls a user can actually feel.
+    private const val JANK_WARN_THRESHOLD_MS = 100L
 
     fun install(app: Application) {
         installLifecycle(app)
@@ -46,7 +49,8 @@ object RuntimeMonitors {
             "INFO", "Monitors", "MONITORS_INSTALLED",
             "Lifecycle / system broadcasts / StrictMode / frame monitor / sampling / exit info enabled",
             "sampleIntervalMs" to SAMPLE_INTERVAL_MS,
-            "jankThresholdMs" to JANK_THRESHOLD_MS
+            "jankThresholdMs" to JANK_THRESHOLD_MS,
+            "jankWarnThresholdMs" to JANK_WARN_THRESHOLD_MS
         )
     }
 
@@ -177,7 +181,8 @@ object RuntimeMonitors {
                         val gap = (frameTimeNanos - last) / 1_000_000L
                         if (gap >= JANK_THRESHOLD_MS && AppLog.isForeground) {
                             AppLog.event(
-                                "WARN", "Perf", "JANK", "Frame gap ${gap}ms",
+                                if (gap >= JANK_WARN_THRESHOLD_MS) "WARN" else "DEBUG",
+                                "Perf", "JANK", "Frame gap ${gap}ms",
                                 "gapMs" to gap, "screen" to AppLog.screen
                             )
                         }

@@ -217,7 +217,12 @@
     <string name="hourly_distribution_hint">Hourly breakdown uses the detailed usage events this device still keeps.</string>
 
     <!-- Smooth grid rendering -->
-    <string name="grid_show_all">Show all %1$d apps</string>
+    <string name="grid_show_more">Show 40 more (%1$d/%2$d shown)</string>
     <string name="grid_collapse">Show top 40 only</string>
-    <string name="grid_lazy_hint">Only the top 40 apps are drawn at once to keep scrolling smooth.</string>
+    <string name="grid_lazy_hint">Apps are drawn in batches of 40 to keep the list smooth.</string>
+
+    <!-- Log viewer ordering -->
+    <string name="logs_order">Log order</string>
+    <string name="logs_newest_first">Newest first</string>
+    <string name="logs_oldest_first">Oldest first</string>
 </resources>

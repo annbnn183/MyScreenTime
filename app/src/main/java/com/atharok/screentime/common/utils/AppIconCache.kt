@@ -30,10 +30,17 @@ object AppIconCache {
             (value.byteCount / 1024).coerceAtLeast(1)
     }
 
+    /** Cache-only lookup: cheap and synchronous, safe to call during composition. */
+    @Synchronized
+    fun peek(packageName: String, sizePx: Int): ImageBitmap? =
+        cache.get("$packageName@$sizePx")?.takeIf { !it.isRecycled }?.asImageBitmap()
+
     @Synchronized
     fun get(context: Context, packageName: String, sizePx: Int): ImageBitmap? {
         val key = "$packageName@$sizePx"
         cache.get(key)?.takeIf { !it.isRecycled }?.let { return it.asImageBitmap() }
+        // getApplicationIcon() is a binder call. Callers must invoke this off the main thread
+        // (see ApplicationIcon(packageName)), otherwise a cold list of 40 icons stalls frames.
         val drawable: Drawable =
             context.packageManager.getApplicationIconSafety(packageName) ?: return null
         val bitmap = runCatching { render(drawable, sizePx) }.getOrNull() ?: return null

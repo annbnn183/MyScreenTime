@@ -68,6 +68,9 @@ fun LogsScreen(
     var filter by remember { mutableIntStateOf(0) }
     var autoRefresh by remember { mutableStateOf(false) }
     var markText by remember { mutableStateOf("") }
+    // The newest events matter most when diagnosing a problem; show them right under the info
+    // card instead of forcing a long scroll through the whole permanent history.
+    var newestFirst by remember { mutableStateOf(true) }
 
     val reload: (Boolean) -> Unit = { showLoading ->
         scope.launch {
@@ -118,6 +121,10 @@ fun LogsScreen(
             }
             matchQuery && matchFilter
         }
+    }
+
+    val ordered = remember(shown, newestFirst) {
+        if (newestFirst) shown.asReversed() else shown
     }
 
     AppScaffold(
@@ -173,6 +180,8 @@ fun LogsScreen(
                     onFilterChange = { filter = it },
                     autoRefresh = autoRefresh,
                     onAutoRefreshChange = { autoRefresh = it },
+                    newestFirst = newestFirst,
+                    onOrderChange = { newestFirst = !newestFirst },
                     markText = markText,
                     onMarkTextChange = { markText = it },
                     onMark = {
@@ -205,7 +214,7 @@ fun LogsScreen(
                     )
                 }
             } else {
-                items(shown) { line ->
+                items(ordered) { line ->
                     Text(
                         text = line,
                         fontFamily = FontFamily.Monospace,
@@ -240,6 +249,8 @@ private fun LogsInfoCard(
     onFilterChange: (Int) -> Unit,
     autoRefresh: Boolean,
     onAutoRefreshChange: (Boolean) -> Unit,
+    newestFirst: Boolean,
+    onOrderChange: () -> Unit,
     markText: String,
     onMarkTextChange: (String) -> Unit,
     onMark: () -> Unit,
@@ -314,6 +325,26 @@ private fun LogsInfoCard(
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(id = R.string.logs_order),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                TextButton(onClick = onOrderChange) {
+                    Text(
+                        text = stringResource(
+                            id = if (newestFirst) R.string.logs_newest_first
+                            else R.string.logs_oldest_first
+                        ),
+                        fontSize = 11.sp
+                    )
                 }
             }
 

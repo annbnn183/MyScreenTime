@@ -157,7 +157,12 @@
     <string name="hourly_distribution_hint">時段分佈基於系統仍保留的事件明細統計。</string>
 
     <!-- 網格流暢渲染 -->
-    <string name="grid_show_all">顯示全部 %1$d 個應用</string>
+    <string name="grid_show_more">再顯示 40 個（%1$d/%2$d）</string>
     <string name="grid_collapse">只看前 40 個</string>
-    <string name="grid_lazy_hint">預設只繪製前 40 個應用，避免列表卡頓；點上方按鈕可查看全部。</string>
+    <string name="grid_lazy_hint">應用按每批 40 個繪製，避免列表卡頓；點上方按鈕載入更多。</string>
+
+    <!-- 日誌排序 -->
+    <string name="logs_order">日誌排序</string>
+    <string name="logs_newest_first">最新在上</string>
+    <string name="logs_oldest_first">最早在上</string>
 </resources>
