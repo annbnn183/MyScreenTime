@@ -127,6 +127,20 @@ This project is now maintained by **美丽的黑莓**. Most of the code is writt
 AI assistance. The same note is shown to users as a banner on the main screen and in
 *Settings → About*.
 
+## Fixed signing & upgrades
+
+Starting with **v1.0.7**, CI signs every build with a fixed keystore held in repository Actions
+Secrets (`SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`,
+`SIGNING_KEY_PASSWORD`). The certificate is identical from build to build, so newer releases can be
+installed directly over an existing installation.
+
+Earlier releases (v1.0.4–v1.0.6) used the ephemeral Android debug certificate generated on each
+fresh CI runner, so their signatures differ. **When upgrading from one of those builds, uninstall
+the old version once.** After that, future updates install normally.
+
+The keystore is never committed (see `.gitignore`). Keep a private backup — losing it would make it
+impossible to publish an update that can be installed over existing installs.
+
 ## Automated builds
 
 Pushing to `main` runs [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds

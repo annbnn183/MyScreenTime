@@ -14,26 +14,33 @@ android {
         applicationId = "com.atharok.screentime"
         minSdk = 24
         targetSdk = 37
-        versionCode = 15
-        versionName = "1.5.1"
+        versionCode = 16
+        versionName = "1.5.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        create("release") {
-            System.getenv("ANDROID_KEY_STORE_FILE")?.let { storeFile = file(it) }
-            System.getenv("ANDROID_KEY_STORE_PASSWORD")?.let { storePassword = it }
-            System.getenv("ANDROID_KEY_ALIAS")?.let { keyAlias = it }
-            System.getenv("ANDROID_KEY_PASSWORD")?.let { keyPassword = it }
-        }
+    // A signingConfig on a productFlavor is overridden by the buildType's default debug
+    // signingConfig, which is why earlier CI builds all carried a different ephemeral certificate.
+    // Attach it to the buildTypes instead, and only when a real keystore file is available.
+    val fixedSigning = signingConfigs.create("release") {
+        System.getenv("ANDROID_KEY_STORE_FILE")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { file(it) }
+            ?.takeIf { it.isFile && it.length() > 0 }
+            ?.let { storeFile = it }
+        System.getenv("ANDROID_KEY_STORE_PASSWORD")?.takeIf { it.isNotBlank() }?.let { storePassword = it }
+        System.getenv("ANDROID_KEY_ALIAS")?.takeIf { it.isNotBlank() }?.let { keyAlias = it }
+        System.getenv("ANDROID_KEY_PASSWORD")?.takeIf { it.isNotBlank() }?.let { keyPassword = it }
     }
+    val useFixedSigning = fixedSigning.storeFile != null
 
     buildTypes {
         debug {
             isDebuggable = true
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            if (useFixedSigning) signingConfig = fixedSigning
         }
         release {
             isDebuggable = false
@@ -43,6 +50,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (useFixedSigning) signingConfig = fixedSigning
         }
     }
 
@@ -50,7 +58,6 @@ android {
     productFlavors {
         create("default") {
             dimension = "version"
-            signingConfig = signingConfigs.getByName("release")
         }
         create("gplay") {
             dimension = "version"

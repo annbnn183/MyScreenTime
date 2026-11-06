@@ -26,9 +26,27 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    # A fixed keystore keeps the signing certificate identical across every CI run, so users can
+    # install newer builds directly over older ones instead of being forced to uninstall first.
+    - name: Decode the fixed signing keystore
+      id: keystore
+      run: |
+        if [ -n "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" ]; then
+          echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/myscreentime.jks"
+          echo "path=$RUNNER_TEMP/myscreentime.jks" >> "$GITHUB_OUTPUT"
+          echo "Fixed signing keystore decoded."
+        else
+          echo "No keystore secret configured; falling back to the default debug certificate."
+        fi
+
     # The project has "default" and "gplay" product flavors, so a plain `assembleDebug` puts the
     # APK under apk/<flavor>/debug/ instead of apk/debug/. Build one flavor explicitly.
     - name: Build debug APK with Gradle
+      env:
+        ANDROID_KEY_STORE_FILE: ${{ steps.keystore.outputs.path }}
+        ANDROID_KEY_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
       run: ./gradlew assembleDefaultDebug
 
     - name: Locate and rename APK
@@ -58,6 +76,8 @@ jobs:
           - CSV report export / share from the top bar
           - Daily screen time goal reminder (from the previous release)
           - In-app maintainer notice: now maintained by 美丽的黑莓, primarily written with AI assistance
+          - Fixed APK signing via a repository keystore secret: from this release on, newer builds can be installed directly over this one (no uninstall needed)
+          - Fix: month-view chart crash (Vico IllegalStateException caused by blank axis labels)
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

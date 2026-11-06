@@ -61,14 +61,18 @@ fun Chart(
         average = average,
         bottomAxis = when(period) {
             Period.MONTH -> {
-                // 30 columns: show a short date every 5 days to keep the axis readable.
+                // Vico (3.x) throws when a CartesianValueFormatter returns a blank string.
+                // Label spacing is controlled exclusively by ItemPlacer below, so the formatter
+                // must ALWAYS return a non-blank label — including the first frames where the
+                // extras containing the date strings have not been published yet.
                 rememberBottomAxisDefault(
                     valueFormatter = remember {{ cartesianMeasuringContext, x, _ ->
                         val xInt: Int = x.toInt()
-                        if(xInt % 5 == 0) {
-                            cartesianMeasuringContext.model.extraStore
-                                .getOrNull(bottomAxisLabelListKey)?.getOrNull(xInt) ?: ""
-                        } else ""
+                        cartesianMeasuringContext.model.extraStore
+                            .getOrNull(bottomAxisLabelListKey)
+                            ?.getOrNull(xInt)
+                            ?.takeIf { it.isNotBlank() }
+                            ?: xInt.toString()
                     }},
                     itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = { 5 }, addExtremeLabelPadding = true)
                 )
