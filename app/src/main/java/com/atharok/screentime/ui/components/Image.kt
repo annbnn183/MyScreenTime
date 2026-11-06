@@ -9,8 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.QuestionMark
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,22 +97,24 @@ fun ApplicationIcon(
     val sizePx = remember(density, sizeDp) {
         with(density) { sizeDp.toPx() }.roundToInt()
     }
-    // A cache hit is instant and needs no coroutine. Only a miss performs the (binder) icon
-    // fetch, and it does so on IO so a cold list of 40 icons never blocks the first frames.
-    val cached = remember(packageName, sizePx) { AppIconCache.peek(packageName, sizePx) }
-    val bitmap by produceState<ImageBitmap?>(
-        initialValue = cached,
-        key1 = packageName,
-        key2 = sizePx
-    ) {
-        if (value == null) {
-            value = withContext(Dispatchers.IO) {
+    // The icon state MUST be keyed by packageName. produceState keeps its result State in a plain
+    // remember {} (no keys), so re-running the producer for a different app still holds the OLD
+    // app's bitmap; combined with an "if (value == null)" guard it never reloaded, which is why
+    // sorting the ranking left the previous app's icon in that cell. Re-creating the state for
+    // every packageName makes a cache hit show the correct icon immediately and a miss fall back
+    // to the placeholder until the IO load finishes.
+    val iconState = remember(packageName, sizePx) {
+        mutableStateOf<ImageBitmap?>(AppIconCache.peek(packageName, sizePx))
+    }
+    LaunchedEffect(packageName, sizePx) {
+        if (iconState.value == null) {
+            val loaded = withContext(Dispatchers.IO) {
                 AppIconCache.get(context, packageName, sizePx)
             }
+            iconState.value = loaded
         }
     }
-    // A delegated property cannot be smart-cast, so capture it into a local val first.
-    val resolved = bitmap
+    val resolved = iconState.value
     if (resolved != null) {
         androidx.compose.foundation.Image(
             bitmap = resolved,

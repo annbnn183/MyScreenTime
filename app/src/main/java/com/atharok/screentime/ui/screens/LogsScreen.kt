@@ -88,7 +88,10 @@ fun LogsScreen(
     }
 
     LaunchedEffect(Unit) {
-        AppLog.i("LogsScreen", "Runtime log screen opened; ${AppLog.logFiles().size} log files on disk")
+        // Enumerating files on the main thread tripped StrictMode DiskReadViolation every time the
+        // log screen opened. Do the directory walk on IO; the full reload below is already on IO.
+        val fileCount = withContext(Dispatchers.IO) { AppLog.logFiles().size }
+        AppLog.i("LogsScreen", "Runtime log screen opened; $fileCount log files on disk")
         reload(true)
     }
 

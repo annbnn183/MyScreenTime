@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -82,6 +84,9 @@ fun AppUsageGridView(
 
     val visibleApps = apps.take(shownCount)
     val sortLabels = listOf(R.string.sort_time, R.string.sort_launches, R.string.sort_name)
+    // A direct picker is clearer than cycling through options: one tap shows all three sort modes
+    // with the active one checked, so users never have to guess how many taps reach "Launches".
+    var sortMenuExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -94,14 +99,39 @@ fun AppUsageGridView(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.weight(1f)
             )
-            TextButton(onClick = { sortIndex = (sortIndex + 1) % sortLabels.size }) {
-                Text(
-                    text = stringResource(
-                        id = R.string.sort_label,
-                        stringResource(id = sortLabels[sortIndex])
-                    ),
-                    style = MaterialTheme.typography.bodySmall
-                )
+            Box {
+                TextButton(onClick = { sortMenuExpanded = true }) {
+                    Text(
+                        text = stringResource(
+                            id = R.string.sort_label,
+                            stringResource(id = sortLabels[sortIndex])
+                        ),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                DropdownMenu(
+                    expanded = sortMenuExpanded,
+                    onDismissRequest = { sortMenuExpanded = false }
+                ) {
+                    sortLabels.forEachIndexed { index, labelRes ->
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(id = labelRes)) },
+                            onClick = {
+                                sortIndex = index
+                                sortMenuExpanded = false
+                            },
+                            leadingIcon = {
+                                if (index == sortIndex) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
             }
         }
 
@@ -135,12 +165,17 @@ fun AppUsageGridView(
             Row(modifier = Modifier.fillMaxWidth()) {
                 rowApps.forEach { app ->
                     Box(modifier = Modifier.weight(1f)) {
-                        GridAppItem(
-                            app = app,
-                            totalLaunches = totalLaunches,
-                            maxDuration = maxDuration,
-                            onAppClick = onAppClick
-                        )
+                        // Bind the composable identity to the app, not to its slot in the row.
+                        // After a re-sort the same position now holds a different package; without
+                        // this key Compose reuses the old cell's remembered state (icons included).
+                        key(app.packageName) {
+                            GridAppItem(
+                                app = app,
+                                totalLaunches = totalLaunches,
+                                maxDuration = maxDuration,
+                                onAppClick = onAppClick
+                            )
+                        }
                     }
                 }
                 repeat(4 - rowApps.size) {
