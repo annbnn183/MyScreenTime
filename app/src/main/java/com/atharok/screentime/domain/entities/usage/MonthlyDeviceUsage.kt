@@ -17,13 +17,32 @@ class MonthlyDeviceUsage(
     val dailyTotals: List<DailyDuration>,
     val goalMillis: Long = 0L,
     /** True when the system only returned a small slice of the requested range. */
-    val isDataLimited: Boolean = false
-) : DeviceUsage<MonthlyAppUsage>(usages, timeInterval, dateOfLastRefresh) {
+    val isDataLimited: Boolean = false,
+    totalLaunchCount: Int = 0,
+    isClickDataLimited: Boolean = false,
+    /** Long-range rankings built from WEEKLY / MONTHLY / YEARLY system buckets. */
+    val rangeRankings: List<AppUsageRange> = emptyList(),
+    /** Complete period total from the best-fit aggregation bucket. */
+    val aggregatedTotalTimeMillis: Long = 0L,
+    /** Calendar days covered by the view; used for an honest daily average. */
+    val requestedDays: Int = 0
+) : DeviceUsage<MonthlyAppUsage>(
+    usages = usages,
+    timeInterval = timeInterval,
+    dateOfLastRefresh = dateOfLastRefresh,
+    totalLaunchCount = totalLaunchCount,
+    isClickDataLimited = isClickDataLimited
+) {
 
     private val _totalTimeUsed: Long = dailyTotals.fold(0L) { acc, day -> acc + day.duration }
 
-    private val _averageTimeUsed: Long =
-        if (dailyTotals.isEmpty()) 0L else _totalTimeUsed / dailyTotals.size
+    /** DAILY buckets expire after ~a week on many ROMs; the aggregate covers the whole range. */
+    private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedTotalTimeMillis)
+
+    private val effectiveDays: Int =
+        if (requestedDays > 0) requestedDays else dailyTotals.size.coerceAtLeast(1)
+
+    private val _averageTimeUsed: Long = effectiveTotal / effectiveDays
 
     private val _medianTimeUsed: Long by lazy {
         dailyTotals.map { it.duration }.toLongArray().median()
@@ -53,7 +72,7 @@ class MonthlyDeviceUsage(
         if (goalMillis <= 0L) 0 else dailyTotals.count { it.duration > goalMillis }
     }
 
-    override fun getTotalTimeUsed(): Long = _totalTimeUsed
+    override fun getTotalTimeUsed(): Long = effectiveTotal
 
     override fun getAverageTimeUsed(): Long = _averageTimeUsed
 

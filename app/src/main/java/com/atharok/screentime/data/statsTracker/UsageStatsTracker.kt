@@ -262,7 +262,9 @@ class UsageStatsTracker(
 
     data class MonthlyScanResult(
         val perPackageByDay: Map<String, Map<Long, Long>>,
-        val dailyTotals: Map<Long, Long>
+        val dailyTotals: Map<Long, Long>,
+        /** Launch (open) counts reported by the system, per package and day. */
+        val launchCountByPackageByDay: Map<String, Map<Long, Int>>
     )
 
     /**
@@ -277,6 +279,7 @@ class UsageStatsTracker(
         ignoredPackages: List<String>
     ): MonthlyScanResult {
         val perPackageByDay = mutableMapOf<String, MutableMap<Long, Long>>()
+        val launchCountByPackageByDay = mutableMapOf<String, MutableMap<Long, Int>>()
 
         val usageStatsList = try {
             usageStatsManager.queryUsageStats(
@@ -308,6 +311,14 @@ class UsageStatsTracker(
             val clampedDuration = duration.coerceAtMost(MILLIS_IN_A_DAY)
             val byDay = perPackageByDay.getOrPut(packageName) { mutableMapOf() }
             byDay[dayTimestamp] = (byDay[dayTimestamp] ?: 0L) + clampedDuration
+
+            // getLaunchCount() is hidden on some ROMs; the repository merges event-based counts
+            // for the days where the system reports nothing.
+            val launchCount = readLaunchCount(stats)
+            if (launchCount > 0) {
+                val byDayClicks = launchCountByPackageByDay.getOrPut(packageName) { mutableMapOf() }
+                byDayClicks[dayTimestamp] = (byDayClicks[dayTimestamp] ?: 0) + launchCount
+            }
         }
 
         val dailyTotals = mutableMapOf<Long, Long>()
@@ -319,7 +330,71 @@ class UsageStatsTracker(
 
         return MonthlyScanResult(
             perPackageByDay = perPackageByDay,
-            dailyTotals = dailyTotals
+            dailyTotals = dailyTotals,
+            launchCountByPackageByDay = launchCountByPackageByDay
         )
+    }
+
+    /**
+     * UsageStats.getLaunchCount() is hidden in current SDK stubs and absent on some ROMs, so read
+     * it reflectively and return 0 when it is unavailable. The repository merges the event-based
+     * launch counts for the days the system does not report.
+     */
+    private fun readLaunchCount(stats: android.app.usage.UsageStats): Int {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) return 0
+        return try {
+            val method = stats.javaClass.getMethod("getLaunchCount")
+            (method.invoke(stats) as? Int)?.coerceAtLeast(0) ?: 0
+        } catch (_: Exception) {
+            0
+        }
+    }
+
+    // ---- Long-range aggregated stats (weekly / monthly / yearly buckets) ----
+
+    data class AggregatedUsage(
+        val packageName: String,
+        val totalTimeInForeground: Long,
+        val launchCount: Int
+    )
+
+    /**
+     * Reads one of the system's long-lived aggregation buckets. Android keeps roughly 4 weeks of
+     * WEEKLY, 6 months of MONTHLY and 2 years of YEARLY stats, while DAILY buckets expire after
+     * about a week. Using the matching bucket for a long range therefore returns COMPLETE totals
+     * without scanning any usage events (and without the stall of a long queryEvents pass).
+     * A package can appear in several buckets, so every entry is accumulated.
+     */
+    fun queryAggregatedUsage(
+        intervalType: Int,
+        startTimestamp: Long,
+        endTimestamp: Long,
+        ignoreSystemApps: Boolean,
+        ignoredPackages: List<String>
+    ): Map<String, AggregatedUsage> {
+        val result = mutableMapOf<String, AggregatedUsage>()
+        val statsList = try {
+            usageStatsManager.queryUsageStats(intervalType, startTimestamp, endTimestamp)
+        } catch (_: Exception) {
+            null
+        }.orEmpty()
+
+        for (stats in statsList) {
+            val packageName = stats.packageName ?: continue
+            if (packageName.isEmpty() || ignoredPackages.contains(packageName)) continue
+            if (ignoreSystemApps && packageName !in launchableApp) continue
+
+            val duration = stats.totalTimeInForeground.coerceAtLeast(0L)
+            val launches = readLaunchCount(stats)
+            if (duration <= 0L && launches <= 0) continue
+
+            val previous = result[packageName]
+            result[packageName] = AggregatedUsage(
+                packageName = packageName,
+                totalTimeInForeground = (previous?.totalTimeInForeground ?: 0L) + duration,
+                launchCount = (previous?.launchCount ?: 0) + launches
+            )
+        }
+        return result
     }
 }

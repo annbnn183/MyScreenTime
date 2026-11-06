@@ -9,8 +9,16 @@ class DailyDeviceUsage(
     usages: Map<String, DailyAppUsage>,
     timeInterval: Pair<Long, Long>,
     dateOfLastRefresh: String,
-    totalDeviceUsageByHour: LongArray
-) : DeviceUsage<DailyAppUsage>(usages, timeInterval, dateOfLastRefresh) {
+    totalDeviceUsageByHour: LongArray,
+    totalLaunchCount: Int = 0,
+    isClickDataLimited: Boolean = false
+) : DeviceUsage<DailyAppUsage>(
+    usages = usages,
+    timeInterval = timeInterval,
+    dateOfLastRefresh = dateOfLastRefresh,
+    totalLaunchCount = totalLaunchCount,
+    isClickDataLimited = isClickDataLimited
+) {
 
     private val _totalTimeUsed: Long = totalDeviceUsageByHour.sum()
 

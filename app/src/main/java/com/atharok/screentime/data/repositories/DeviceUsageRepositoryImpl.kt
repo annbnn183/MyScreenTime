@@ -1,15 +1,19 @@
 package com.atharok.screentime.data.repositories
 
+import android.app.usage.UsageStatsManager
 import android.content.Context
+import com.atharok.screentime.R
 import com.atharok.screentime.common.extensions.getApplicationIconSafety
 import com.atharok.screentime.common.extensions.getApplicationName
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.data.statsTracker.UsageStatsTracker
+import com.atharok.screentime.domain.entities.usage.AppUsageRange
 import com.atharok.screentime.domain.entities.usage.DailyAppUsage
 import com.atharok.screentime.domain.entities.usage.DailyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.DailyDuration
 import com.atharok.screentime.domain.entities.usage.MonthlyAppUsage
 import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
+import com.atharok.screentime.domain.entities.usage.RankedApp
 import com.atharok.screentime.domain.entities.usage.WeeklyAppUsage
 import com.atharok.screentime.domain.entities.usage.WeeklyDeviceUsage
 import com.atharok.screentime.domain.repositories.DeviceUsageRepository
@@ -27,6 +31,8 @@ class DeviceUsageRepositoryImpl(
 
     private var deviceUsageCacheByDayAndHour: Map<String, Map<Long, LongArray>>? = null
     private var totalDeviceUsageCacheByDayAndHour: Map<Long, LongArray> = mapOf()
+    /** Number of app openings per package, split by day, derived from the foreground intervals. */
+    private var launchCountCacheByPackageByDay: Map<String, Map<Long, Int>> = mapOf()
     private var dateOfLastRefresh: String = ""
 
     override suspend fun calculateDeviceUsage(
@@ -54,6 +60,12 @@ class DeviceUsageRepositoryImpl(
             usageIntervalsByPackage = usageIntervalsByPackage
         )
 
+        // Each foreground interval is one "open" of the app, so counting intervals per day gives
+        // the click/launch counts with zero extra usage-events queries.
+        launchCountCacheByPackageByDay = usageIntervalsByPackage.mapValues { (_, intervals) ->
+            intervals.groupingBy { DateTimeUtils.truncateToDay(it.first) }.eachCount()
+        }
+
         dateOfLastRefresh = DateTimeUtils.formatToFullDateTime(timeInterval.second)
     }
 
@@ -64,6 +76,11 @@ class DeviceUsageRepositoryImpl(
         val deviceUsageCacheByDayAndHourNotNull = deviceUsageCacheByDayAndHour
             ?: throw Exception("DeviceUsageRepositoryImpl.calculateDeviceUsage() not called.")
 
+        val startDay = DateTimeUtils.truncateToDay(timeInterval.first)
+        val launchCountByPackage: Map<String, Int> = launchCountCacheByPackageByDay.mapValues { (_, byDay) ->
+            byDay.filterKeys { day -> day >= startDay && day <= timeInterval.second }.values.sum()
+        }
+
         return WeeklyDeviceUsage(
             usages = deviceUsageCacheByDayAndHourNotNull.mapValues { (key: String, value: Map<Long, LongArray>) ->
                 WeeklyAppUsage(
@@ -73,14 +90,16 @@ class DeviceUsageRepositoryImpl(
                     durations = value
                         .filterKeys { timestamp ->
                             timestamp in timeInterval.first..timeInterval.second
-                        }
+                        },
+                    launchCount = launchCountByPackage[key] ?: 0
                 )
             },
             timeInterval = timeInterval,
             dateOfLastRefresh = dateOfLastRefresh,
             totalDeviceUsageByDayAndHour = totalDeviceUsageCacheByDayAndHour.filterKeys { timestamp ->
                 timestamp in timeInterval.first..timeInterval.second
-            }
+            },
+            totalLaunchCount = launchCountByPackage.values.sum()
         )
     }
 
@@ -92,18 +111,24 @@ class DeviceUsageRepositoryImpl(
         val deviceUsageCacheByDayAndHourNotNull = deviceUsageCacheByDayAndHour
             ?: throw Exception("DeviceUsageRepositoryImpl.calculateDeviceUsage() not called.")
 
+        val launchCountByPackage: Map<String, Int> = launchCountCacheByPackageByDay.mapValues { (_, byDay) ->
+            byDay[dayTimestamp] ?: 0
+        }
+
         return DailyDeviceUsage(
             usages = deviceUsageCacheByDayAndHourNotNull.mapValues { (key: String, value: Map<Long, LongArray>) ->
                 DailyAppUsage(
                     packageName = key,
                     appName = context.packageManager.getApplicationName(key) ?: "",
                     appIcon = context.packageManager.getApplicationIconSafety(key),
-                    durations = value[dayTimestamp] ?: LongArray(24)
+                    durations = value[dayTimestamp] ?: LongArray(24),
+                    launchCount = launchCountByPackage[key] ?: 0
                 )
             },
             timeInterval = timeInterval,
             dateOfLastRefresh = dateOfLastRefresh,
-            totalDeviceUsageByHour = totalDeviceUsageCacheByDayAndHour[dayTimestamp] ?: LongArray(24)
+            totalDeviceUsageByHour = totalDeviceUsageCacheByDayAndHour[dayTimestamp] ?: LongArray(24),
+            totalLaunchCount = launchCountByPackage.values.sum()
         )
     }
 
@@ -157,18 +182,96 @@ class DeviceUsageRepositoryImpl(
             )
         }
 
+        // Launch counts: system pre-aggregated counts (API 28+) merged with the event-based
+        // counts for the last 10 days. Take the larger value per (package, day) so a ROM that
+        // reports both does not double-count.
+        val mergedLaunches = mutableMapOf<String, MutableMap<Long, Int>>()
+        fun mergeLaunches(source: Map<String, Map<Long, Int>>) {
+            source.forEach { (packageName: String, byDay: Map<Long, Int>) ->
+                val target = mergedLaunches.getOrPut(packageName) { mutableMapOf() }
+                byDay.forEach { (day: Long, count: Int) ->
+                    target[day] = maxOf(target[day] ?: 0, count)
+                }
+            }
+        }
+        mergeLaunches(scan.launchCountByPackageByDay)
+        mergeLaunches(launchCountCacheByPackageByDay)
+        val launchCountByPackage: Map<String, Int> = mergedLaunches.mapValues { (_, byDay) -> byDay.values.sum() }
+        val totalLaunchCount = launchCountByPackage.values.sum()
+        // When the system provides no launch counts at all, only the last 10 days are covered.
+        val systemLaunchTotal: Int = scan.launchCountByPackageByDay.values.flatMap { it.values }.sum()
+        val isClickDataLimited = systemLaunchTotal <= 0
+
         // Some ROMs only expose a few days through queryUsageStats. Warn the user instead of
         // silently showing an almost empty month.
         val isDataLimited = scan.dailyTotals.size < dayTimestamps.size / 3
 
+        // ---- Long-range aggregates -------------------------------------------------------
+        // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY
+        // pre-aggregated stats, while DAILY buckets expire after about a week. Reading the
+        // matching bucket gives COMPLETE totals for a long range without scanning events.
+        val dayMillis = 24L * 60L * 60L * 1000L
+        val nowMillis = timeInterval.second
+        val rangeSpecs = listOf(
+            Triple(R.string.range_4_weeks, 28, UsageStatsManager.INTERVAL_WEEKLY),
+            Triple(R.string.range_half_year, 182, UsageStatsManager.INTERVAL_MONTHLY),
+            Triple(R.string.range_year, 365, UsageStatsManager.INTERVAL_YEARLY)
+        )
+        val rangeRankings: List<AppUsageRange> = rangeSpecs.map { (labelRes, days, interval) ->
+            val aggregated = tracker.queryAggregatedUsage(
+                intervalType = interval,
+                startTimestamp = nowMillis - days.toLong() * dayMillis,
+                endTimestamp = nowMillis,
+                ignoreSystemApps = ignoreSystemApps,
+                ignoredPackages = ignoredPackages
+            )
+            val rankedApps = aggregated.values
+                .filter { it.totalTimeInForeground > 0L }
+                .map { item ->
+                    RankedApp(
+                        packageName = item.packageName,
+                        appName = context.packageManager.getApplicationName(item.packageName)
+                            ?: item.packageName,
+                        appIcon = context.packageManager.getApplicationIconSafety(item.packageName),
+                        duration = item.totalTimeInForeground,
+                        launchCount = item.launchCount
+                    )
+                }
+                .sortedByDescending { it.duration }
+            AppUsageRange(
+                labelRes = labelRes,
+                numberOfDays = days,
+                apps = rankedApps,
+                totalLaunchCount = aggregated.values.sumOf { it.launchCount }
+            )
+        }
+
+        // Correct the 30-day headline numbers with the best-fit bucket, so they no longer
+        // collapse just because this ROM only kept a handful of DAILY buckets.
+        val monthlyAggregate = tracker.queryAggregatedUsage(
+            intervalType = UsageStatsManager.INTERVAL_BEST,
+            startTimestamp = timeInterval.first,
+            endTimestamp = timeInterval.second,
+            ignoreSystemApps = ignoreSystemApps,
+            ignoredPackages = ignoredPackages
+        )
+        val aggregatedDeviceTotal: Long = monthlyAggregate.values.sumOf { it.totalTimeInForeground }
+        val aggregatedLaunchTotal: Int = monthlyAggregate.values.sumOf { it.launchCount }
+
         val usages: Map<String, MonthlyAppUsage> = mergedPerPackage
             .mapValues { (packageName: String, byDay: Map<Long, Long>) ->
+                val aggregate = monthlyAggregate[packageName]
                 MonthlyAppUsage(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
                     appIcon = context.packageManager.getApplicationIconSafety(packageName),
                     dayTimestamps = dayTimestamps,
-                    durations = byDay
+                    durations = byDay,
+                    launchCount = maxOf(
+                        launchCountByPackage[packageName] ?: 0,
+                        aggregate?.launchCount ?: 0
+                    ),
+                    aggregatedDuration = aggregate?.totalTimeInForeground ?: 0L
                 )
             }
 
@@ -178,7 +281,12 @@ class DeviceUsageRepositoryImpl(
             dateOfLastRefresh = DateTimeUtils.formatToFullDateTime(timeInterval.second),
             dailyTotals = dailyTotals,
             goalMillis = goalMillis,
-            isDataLimited = isDataLimited
+            isDataLimited = isDataLimited,
+            totalLaunchCount = maxOf(totalLaunchCount, aggregatedLaunchTotal),
+            isClickDataLimited = isClickDataLimited,
+            rangeRankings = rangeRankings,
+            aggregatedTotalTimeMillis = aggregatedDeviceTotal,
+            requestedDays = dayTimestamps.size
         )
     }
 }

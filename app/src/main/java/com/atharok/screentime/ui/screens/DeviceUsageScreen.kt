@@ -44,6 +44,7 @@ import com.atharok.screentime.ui.components.SettingsAction
 import com.atharok.screentime.ui.components.TextNormal
 import com.atharok.screentime.ui.components.TextNormalSecondary
 import com.atharok.screentime.ui.components.TextSmall
+import com.atharok.screentime.ui.views.AppUsageGridView
 import com.atharok.screentime.ui.views.MaintainerNotice
 import com.atharok.screentime.ui.views.MonthlyInsightsView
 import com.atharok.screentime.ui.views.PeriodSelector
@@ -111,7 +112,7 @@ private fun StatelessDeviceUsageScreen(
     modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
 ) {
     AppScaffold(
-        title = stringResource(id = R.string.app_name),
+        title = stringResource(id = R.string.usage_analysis),
         modifier = modifier,
         topBarActions = {
             val context = LocalContext.current
@@ -242,19 +243,14 @@ private fun PortraitDeviceUsageScreen(
                     }
                 }
 
-                items(deviceUsage.appUsageList) { appUsage ->
-                    ApplicationUsageItem(
-                        packageName = appUsage.packageName,
-                        appName = appUsage.appName,
-                        appIcon = appUsage.appIcon,
-                        timeUsed = appUsage.getTotalTimeUsed(),
-                        percentUsed = appUsage.getPercentUsed(deviceUsage.getTotalTimeUsed()),
+                // Four-column app ranking (Usage Analyzer style) with switchable long ranges.
+                item {
+                    AppUsageGridView(
+                        deviceUsage = deviceUsage,
+                        onAppClick = openApplicationUsageScreen,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .clickable {
-                                openApplicationUsageScreen(appUsage.packageName)
-                            }
-                            .padding(dimensionResource(id = R.dimen.padding_large))
+                            .fillMaxWidth()
+                            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
                     )
                 }
             }

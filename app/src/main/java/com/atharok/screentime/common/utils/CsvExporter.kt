@@ -50,7 +50,8 @@ object CsvExporter {
         append("To,").append(dateFormat.format(Date(deviceUsage.timeIntervalEnd))).append('\n')
         append("Updated,").append(cell(deviceUsage.dateOfLastRefresh)).append('\n')
         append("Total minutes,").append(deviceUsage.getTotalTimeUsed() / 60_000L).append('\n')
-        append("Daily average minutes,").append(deviceUsage.getAverageTimeUsed() / 60_000L).append("\n\n")
+        append("Daily average minutes,").append(deviceUsage.getAverageTimeUsed() / 60_000L).append('\n')
+        append("Total launches,").append(deviceUsage.totalLaunchCount).append("\n\n")
 
         if (deviceUsage is MonthlyDeviceUsage) {
             append("Date,Daily minutes\n")
@@ -63,13 +64,17 @@ object CsvExporter {
             append('\n')
         }
 
-        append("App,Package,Minutes,Percent\n")
+        append("App,Package,Minutes,Percent,Launches,LaunchRate\n")
         val total = deviceUsage.getTotalTimeUsed().coerceAtLeast(1L)
         deviceUsage.appUsageList.forEach { app ->
             append(cell(app.appName)).append(',')
             append(cell(app.packageName)).append(',')
             append(app.getTotalTimeUsed() / 60_000L).append(',')
             append(String.format(Locale.US, "%.1f", app.getTotalTimeUsed() * 100.0 / total))
+                .append(',')
+                .append(app.launchCount)
+                .append(',')
+                .append(String.format(Locale.US, "%.1f", app.getLaunchRate(deviceUsage.totalLaunchCount) * 100.0))
             append('\n')
         }
     }

@@ -71,13 +71,14 @@ jobs:
           Automated build from commit ${{ github.sha }}.
 
           What's new:
-          - 30-day (Month) period, built on per-day aggregated usage stats instead of a long event scan
-          - Monthly insights (longest day, active days) and a 30-day goal calendar
-          - CSV report export / share from the top bar
-          - Daily screen time goal reminder (from the previous release)
+          - Combined view: Usage Analyzer style 4-column app ranking grid with range switch (4 weeks / 6 months / year) and sort by time, launches or name
+          - Long-range totals now come from Android WEEKLY / MONTHLY / YEARLY buckets, so they stay complete even on ROMs that discard DAILY buckets after a few days
+          - 30-day totals and daily averages corrected from long-lived system buckets (no more empty first 20 days)
+          - App launch counts and launch rate, shown per app and included in the CSV report
+          - Month view, monthly insights, 30-day goal calendar, CSV export, daily goal reminder
           - In-app maintainer notice: now maintained by 美丽的黑莓, primarily written with AI assistance
-          - Fixed APK signing via a repository keystore secret: from this release on, newer builds can be installed directly over this one (no uninstall needed)
-          - Fix: month-view chart crash (Vico IllegalStateException caused by blank axis labels)
+          - Fixed APK signing: newer builds can be installed directly over this one (no uninstall needed)
+          - Vico blank-label crash hardening on every chart axis
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

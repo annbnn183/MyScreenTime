@@ -155,11 +155,25 @@
     <string name="goal_calendar_title">Daily goal calendar (last 30 days)</string>
     <string name="goal_calendar_summary">%1$d days within the %3$s goal, %2$d days over it</string>
     <string name="goal_calendar_hint">Set a daily goal in Settings to see the goal calendar.</string>
-    <string name="monthly_data_limited">This device only exposes a limited number of days through the system usage API. Older days are shown as zero.</string>
+    <string name="monthly_data_limited">The daily chart only shows the days this device still keeps. Totals and daily averages are completed from long-lived system buckets.</string>
     <string name="export_report">Export CSV report</string>
     <string name="export_report_subject">MyScreenTime usage report</string>
 
     <!-- Maintainer notice -->
     <string name="maintainer_notice_title">Now maintained by 美丽的黑莓</string>
     <string name="maintainer_notice_message">This project is now primarily written and maintained with AI assistance.</string>
+
+    <!-- Combined view: long-range ranking grid -->
+    <string name="usage_analysis">Usage analysis</string>
+    <string name="app_usage_ranking">App ranking</string>
+    <string name="range_4_weeks">4 weeks (avg)</string>
+    <string name="range_half_year">6 months (avg)</string>
+    <string name="range_year">Year (avg)</string>
+    <string name="sort_time">Time</string>
+    <string name="sort_launches">Launches</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_label">Sort: %1$s</string>
+    <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
+    <string name="aggregate_hint">Totals and daily averages come from long-lived system buckets; the daily chart only shows the days this device still keeps.</string>
+    <string name="no_usage_data">No usage data available yet.</string>
 </resources>

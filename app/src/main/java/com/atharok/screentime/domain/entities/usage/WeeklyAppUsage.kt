@@ -10,8 +10,9 @@ class WeeklyAppUsage(
     packageName: String,
     appName: String,
     appIcon: Drawable?,
-    val durations: Map<Long, LongArray>
-) : AppUsage(packageName, appName, appIcon) {
+    val durations: Map<Long, LongArray>,
+    launchCount: Int = 0
+) : AppUsage(packageName, appName, appIcon, launchCount) {
 
     private val totalDurationByDay: Map<Long, Long> = durations.mapValues { (_, durations) -> durations.sum() }
 

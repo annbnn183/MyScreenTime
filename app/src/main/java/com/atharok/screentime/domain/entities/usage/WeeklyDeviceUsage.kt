@@ -9,8 +9,16 @@ class WeeklyDeviceUsage(
     usages: Map<String, WeeklyAppUsage>,
     timeInterval: Pair<Long, Long>,
     dateOfLastRefresh: String,
-    totalDeviceUsageByDayAndHour: Map<Long, LongArray>
-) : DeviceUsage<WeeklyAppUsage>(usages, timeInterval, dateOfLastRefresh) {
+    totalDeviceUsageByDayAndHour: Map<Long, LongArray>,
+    totalLaunchCount: Int = 0,
+    isClickDataLimited: Boolean = false
+) : DeviceUsage<WeeklyAppUsage>(
+    usages = usages,
+    timeInterval = timeInterval,
+    dateOfLastRefresh = dateOfLastRefresh,
+    totalLaunchCount = totalLaunchCount,
+    isClickDataLimited = isClickDataLimited
+) {
 
     private val totalDurationByDay: Map<Long, Long> = totalDeviceUsageByDayAndHour.mapValues { (_, durations) -> durations.sum() }
 

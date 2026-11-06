@@ -13,13 +13,19 @@ class MonthlyAppUsage(
     appName: String,
     appIcon: Drawable?,
     private val dayTimestamps: List<Long>,
-    private val durations: Map<Long, Long>
-) : AppUsage(packageName, appName, appIcon) {
+    private val durations: Map<Long, Long>,
+    launchCount: Int = 0,
+    /** Full-period total read from the system's long-lived aggregation bucket. */
+    private val aggregatedDuration: Long = 0L
+) : AppUsage(packageName, appName, appIcon, launchCount) {
 
     private val _totalTimeUsed: Long = durations.values.fold(0L) { acc, value -> acc + value }
 
+    /** Daily buckets expire quickly on many ROMs; the aggregated total fills the missing days. */
+    private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedDuration)
+
     private val _averageTimeUsed: Long =
-        if (dayTimestamps.isEmpty()) 0L else _totalTimeUsed / dayTimestamps.size
+        if (dayTimestamps.isEmpty()) 0L else effectiveTotal / dayTimestamps.size
 
     private val _medianTimeUsed: Long by lazy {
         dayTimestamps.map { timestamp -> durations[timestamp] ?: 0L }.toLongArray().median()
@@ -33,7 +39,7 @@ class MonthlyAppUsage(
         }
     }
 
-    override fun getTotalTimeUsed(): Long = _totalTimeUsed
+    override fun getTotalTimeUsed(): Long = effectiveTotal
 
     override fun getAverageTimeUsed(): Long = _averageTimeUsed
 

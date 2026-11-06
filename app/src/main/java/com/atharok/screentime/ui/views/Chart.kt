@@ -51,7 +51,12 @@ fun Chart(
         modelProducer.runTransaction {
             columnModel { series(data.values) }
             extras {
-                it[bottomAxisLabelListKey] = data.keys.toList()
+                // Never store a blank label: Vico 3.x throws IllegalStateException when a
+                // CartesianValueFormatter returns one (it also measures labels before extras
+                // are published, hence the index fallback here and in the formatter).
+                it[bottomAxisLabelListKey] = data.keys.mapIndexed { index, label ->
+                    label.ifBlank { index.toString() }
+                }
             }
         }
     }
@@ -81,16 +86,24 @@ fun Chart(
                 rememberBottomAxisDefault(
                     valueFormatter = remember {{ cartesianMeasuringContext, x, _ ->
                         val xInt: Int = x.toInt()
-                        cartesianMeasuringContext.model.extraStore.getOrNull(bottomAxisLabelListKey)?.getOrNull(xInt) ?: "$xInt"
+                        cartesianMeasuringContext.model.extraStore
+                            .getOrNull(bottomAxisLabelListKey)
+                            ?.getOrNull(xInt)
+                            ?.takeIf { it.isNotBlank() }
+                            ?: xInt.toString()
                     }},
                     itemPlacer = HorizontalAxis.ItemPlacer.aligned(addExtremeLabelPadding = true)
                 )
             }
             Period.DAY -> {
                 rememberBottomAxisDefault(
-                    valueFormatter = remember{{ cartesianMeasuringContext, x, _  ->
+                    valueFormatter = remember {{ cartesianMeasuringContext, x, _ ->
                         val xInt: Int = x.toInt()
-                        if(xInt % 4 == 0) cartesianMeasuringContext.model.extraStore.getOrNull(bottomAxisLabelListKey)?.getOrNull(xInt) ?: "$xInt" else "$xInt"
+                        cartesianMeasuringContext.model.extraStore
+                            .getOrNull(bottomAxisLabelListKey)
+                            ?.getOrNull(xInt)
+                            ?.takeIf { it.isNotBlank() }
+                            ?: xInt.toString()
                     }},
                     itemPlacer = HorizontalAxis.ItemPlacer.aligned(spacing = { 4 }, addExtremeLabelPadding = true)
                 )
@@ -130,7 +143,7 @@ private fun StatelessChart(
                     guideline = rememberAxisGuidelineComponentDefault(),
                     valueFormatter = remember {
                         { _, y: Double, _ ->
-                            DateTimeUtils.formatToHoursMinutes(y.toFloat())
+                            DateTimeUtils.formatToHoursMinutes(y.toFloat()).ifBlank { "0" }
                         }
                     },
                     itemPlacer = VerticalAxis.ItemPlacer.step(

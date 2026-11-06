@@ -93,11 +93,25 @@
     <string name="goal_calendar_title">每日目标达标日历（近 30 天）</string>
     <string name="goal_calendar_summary">%3$s 目标内 %1$d 天，超标 %2$d 天</string>
     <string name="goal_calendar_hint">在设置中设定每日目标后，可查看达标日历。</string>
-    <string name="monthly_data_limited">该设备的系统接口仅提供有限天数的用量数据，更早的日期显示为 0。</string>
+    <string name="monthly_data_limited">逐日柱状图仅显示系统保留的最近天数；总时长与每日平均已由系统长期统计补全。</string>
     <string name="export_report">导出 CSV 报告</string>
     <string name="export_report_subject">MyScreenTime 用量报告</string>
 
     <!-- 项目接手公告 -->
     <string name="maintainer_notice_title">本项目现由「美丽的黑莓」接手</string>
     <string name="maintainer_notice_message">代码主要由 AI 编写与维护</string>
+
+    <!-- 合体版：长期排行网格 -->
+    <string name="usage_analysis">用量分析</string>
+    <string name="app_usage_ranking">应用排行</string>
+    <string name="range_4_weeks">4周（平均）</string>
+    <string name="range_half_year">半年（平均）</string>
+    <string name="range_year">年（平均）</string>
+    <string name="sort_time">时间</string>
+    <string name="sort_launches">点击量</string>
+    <string name="sort_name">名称</string>
+    <string name="sort_label">排序：%1$s</string>
+    <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
+    <string name="aggregate_hint">总量与日均来自系统长期统计；逐日柱状图仅显示系统保留的最近天数。</string>
+    <string name="no_usage_data">暂时没有用量数据。</string>
 </resources>
