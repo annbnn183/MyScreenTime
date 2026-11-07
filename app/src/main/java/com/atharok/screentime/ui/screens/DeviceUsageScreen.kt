@@ -3,6 +3,8 @@ package com.atharok.screentime.ui.screens
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Arrangement
@@ -229,6 +231,11 @@ private fun PortraitDeviceUsageScreen(
 
         VerticalPager(
             state = pagerState,
+            flingBehavior = PagerDefaults.flingBehavior(
+                state = pagerState,
+                pagerSnapDistance = PagerSnapDistance.atMost(1),
+                snapPositionalThreshold = 0.12f
+            ),
             modifier = Modifier.weight(1f)
         ) { page ->
             when (page) {
