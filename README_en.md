@@ -28,19 +28,22 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ---
 
-## ✅ Current release: v1.0.29 (swipe between time periods)
+## ✅ Current release: v1.0.29 (animated period navigation)
 
-v1.0.29 adds horizontal swipe navigation to the Year / Month / Week / Day selector while preserving direct taps. The statistics calculations and data sources are unchanged. It keeps the existing application ID and fixed signing certificate, so it **installs directly over v1.0.7 and later**. No database schema, backup format or user data is changed.
+v1.0.29 turns the statistics area into four horizontal pages. Swipe left or right anywhere in the statistics content to move between Year / Month / Week / Day, with a native page-slide and snap animation. The period selector stays synchronized, and direct taps remain available. The existing vertical swipe between Overview and App Ranking is preserved.
+
+This release changes navigation only: usage sources, calculations, history, database schema and backup format remain unchanged. The existing application ID and fixed signing certificate are retained; GitHub Actions verifies the package, version and certificate fingerprint before publishing. **Direct overwrite installation is confirmed only after that signature check passes.**
 
 Back up important data regularly via **Settings → Data Management**. Please report any issue through Issues.
 
-## 🆕 v1.0.29: swipe navigation for time periods\n\n- **Swipe left / right** on the Year / Month / Week / Day selector to move to the adjacent period.\n- **Direct selection remains:** tap any segment as before.\n- **Short gesture:** approximately 40 dp of horizontal movement triggers a switch.\n- **Safe boundaries:** the selector never moves beyond Year or Day, and one gesture changes only one period.\n- **Statistics are untouched:** this is an interaction-only change; no query logic, history, database schema or backup format is modified.\n\n## 🆕 v1.0.24: two-page layout with responsive vertical swipes
+## 🆕 v1.0.29: swipe across the statistics content
 
-- **Two vertical chapters:** page one groups the period selector, total usage and period comparison; page two contains monthly insights and the app ranking.
-- **Lighter swipes:** a lower page-switch threshold makes short upward or downward swipes easier to trigger.
-- **Reliable snapping:** when the gesture ends, the pager settles on a full page rather than stopping halfway; one gesture advances at most one page.
-- **Existing tools remain:** period statistics, app ranking, export, logs, refresh, settings and app details are retained.
-- **Upgrade compatibility:** v1.0.24 keeps the existing application ID and fixed signing certificate, so it can update v1.0.7 and later directly. No database schema, backup format or user data is changed.
+- **Swipe the whole content area:** move between adjacent periods from either the Overview or App Ranking page; the gesture is no longer limited to the selector.
+- **Smooth page animation:** native horizontal paging settles on a full page instead of stopping halfway.
+- **Short, controlled gestures:** a lighter swipe switches one adjacent period at most, preventing accidental multi-period jumps.
+- **Synchronized selector:** Year / Month / Week / Day selection follows the visible page; tapping any segment still jumps directly.
+- **Vertical navigation retained:** vertical swipes still switch between Overview and App Ranking; horizontal and vertical gestures remain separate.
+- **Data safety:** no changes to usage calculations, history, database schema, backup format or user data.
 
 ## 🧪 v1.0.22: diagnostic summaries that guide the next release
 
