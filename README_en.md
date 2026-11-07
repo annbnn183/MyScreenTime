@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -376,7 +376,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultRelease`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.20.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultRelease`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.22.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 
