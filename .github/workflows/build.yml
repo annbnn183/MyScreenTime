@@ -120,11 +120,10 @@ jobs:
           The version shown inside the app, the APK filename and this release tag are all read
           from `versionName` in `app/build.gradle.kts`, so they cannot drift apart.
 
-          ### v1.0.27 - statistics restored to v1.0.24
-          - Time statistics, app ranking and UI are restored exactly as in v1.0.24; later changes
-            to the statistics logic are reverted.
-          - The version number is higher only because Android cannot update over a higher version
-            code. No database schema, backup format or user data change.
+          ### v1.0.28 - memory-pressure handling
+          - Evict rebuildable app-icon bitmaps when Android reports UI-hidden or stronger memory pressure.
+          - Coalesce repeated same-level TRIM_MEMORY callbacks within five seconds and retain the suppressed count.
+          - Preserve usage history, settings, backup format and statistics logic.
 
           Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7 and
           later with no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.

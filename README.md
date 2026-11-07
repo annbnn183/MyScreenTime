@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.27-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.28-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,9 +28,9 @@
 
 ---
 
-## ✅ 当前版本：v1.0.27（统计逻辑回到 v1.0.24）
+## ✅ 当前版本：v1.0.28（内存压力响应优化）
 
-v1.0.27 把时间统计、应用排行和界面**完整恢复为 v1.0.24 的实现**，撤销了之后对统计算法的改动。版本号提高到 1.0.27 只是因为 Android 不允许用更低的版本号覆盖安装；沿用原有包名与固定签名，**可直接覆盖安装 v1.0.7 及之后的任意版本**，不修改数据库结构、备份格式或用户数据。
+v1.0.28 在 v1.0.27 恢复统计逻辑的基础上，进一步优化系统内存压力响应与诊断日志。沿用原有包名与固定签名，**可直接覆盖安装 v1.0.7 及之后的任意版本**，不修改数据库结构、备份格式或用户数据。
 
 建议定期通过「设置 → 数据管理」备份重要数据；遇到异常欢迎通过 Issues 反馈。
 
