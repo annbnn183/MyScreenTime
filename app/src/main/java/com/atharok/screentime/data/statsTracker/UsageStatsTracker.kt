@@ -471,6 +471,8 @@ class UsageStatsTracker(
     ): AggregatedUsageQuery {
         val queryStarted = android.os.SystemClock.uptimeMillis()
         val result = mutableMapOf<String, AggregatedUsage>()
+        val packageBucketDurations = mutableMapOf<Pair<String, Pair<Long, Long>>, Long>()
+        val packageBucketLaunches = mutableMapOf<Pair<String, Pair<Long, Long>>, Int>()
         val coveredRanges = mutableSetOf<Pair<Long, Long>>()
         val statsList = try {
             usageStatsManager.queryUsageStats(intervalType, startTimestamp, endTimestamp)
@@ -512,23 +514,28 @@ class UsageStatsTracker(
                 continue
             }
             val launches = readLaunchCount(stats)
-            coveredRanges.add(bucketBegin to bucketEnd)
-            val previous = result[packageName]
-            result[packageName] = AggregatedUsage(
-                packageName = packageName,
-                totalTimeInForeground = (previous?.totalTimeInForeground ?: 0L) + duration,
-                launchCount = (previous?.launchCount ?: 0) + launches
-            )
-            keptBuckets++
+            val range = bucketBegin to bucketEnd
+            val key = packageName to range
+            coveredRanges.add(range)
+            packageBucketDurations[key] = maxOf(packageBucketDurations[key] ?: 0L, duration)
+            packageBucketLaunches[key] = maxOf(packageBucketLaunches[key] ?: 0, launches)
         }
 
+        packageBucketDurations.forEach { (key, duration) ->
+            val previous = result[key.first]
+            result[key.first] = AggregatedUsage(
+                packageName = key.first,
+                totalTimeInForeground = (previous?.totalTimeInForeground ?: 0L) + duration,
+                launchCount = (previous?.launchCount ?: 0) + (packageBucketLaunches[key] ?: 0)
+            )
+        }
         val query = AggregatedUsageQuery(
             apps = result,
             coveredDays = coveredRanges.sumOf { (begin, end) ->
                 ((end - begin) / MILLIS_IN_A_DAY).toInt().coerceAtLeast(0)
             },
             rawEntries = statsList.size,
-            keptBuckets = keptBuckets,
+            keptBuckets = packageBucketDurations.size,
             droppedPartialBuckets = droppedPartialBuckets,
             droppedOutsideWindow = droppedOutsideWindow,
             zeroDurationBuckets = zeroDurationBuckets,
