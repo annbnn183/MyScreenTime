@@ -355,7 +355,7 @@ class DeviceUsageRepositoryImpl(
             "dailyBucketTotalMs" to dailyTotals.sumOf { it.duration },
             "segmentedTotalMs" to aggregatedDeviceTotal,
             "systemBucketCoveredDays" to segmented.coveredDays,
-            "headlineSource" to "SEGMENTED DAILY(7d)+WEEKLY(8-28d)+MONTHLY(29d+); INTERVAL_BEST removed",
+            "headlineSource" to "complete non-overlapping DAILY > WEEKLY > MONTHLY intervals; INTERVAL_BEST removed",
             "daysWithData" to daysWithData,
             "requestedDays" to requestedDays,
             "dailyRetentionCapDays" to dailyRetentionCapDays,
