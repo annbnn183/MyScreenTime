@@ -251,8 +251,6 @@ class DeviceUsageRepositoryImpl(
         val coverableByDaily = minOf(requestedDays, dailyRetentionCapDays)
         val filteredDays = (coverableByDaily - minOf(daysWithData, coverableByDaily)).coerceAtLeast(0)
         val isDataLimited = daysWithData < requestedDays
-        val estimatedDays = (requestedDays - daysWithData).coerceAtLeast(0)
-
         // ---- Long-range aggregates -------------------------------------------------------
         // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY
         // pre-aggregated stats, while DAILY buckets expire after about a week. Reading the
@@ -350,6 +348,7 @@ class DeviceUsageRepositoryImpl(
             ignoredPackages = ignoredPackages
         )
         val aggregatedDeviceTotal: Long = segmented.totalMs
+        val estimatedDays = segmented.aggregatedDaysCovered
         AppLog.event(
             "DEBUG", "DeviceUsageRepository", "DATA_COMPLETENESS",
             "30-day window explained: real days vs retention cap vs filtering",
