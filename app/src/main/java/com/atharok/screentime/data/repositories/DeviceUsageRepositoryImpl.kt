@@ -478,22 +478,16 @@ class DeviceUsageRepositoryImpl(
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): IntervalTotal {
-        // 按窗口长度选择能完整覆盖该区间的系统聚合桶：
-        // 周级窗口用 WEEKLY（约 4 周保留），月级用 MONTHLY（约 6 月保留），更长用 YEARLY（约 2 年保留）。
-        val windowDays = ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY).toInt()
-        val interval = when {
-            windowDays <= 9 -> UsageStatsManager.INTERVAL_WEEKLY
-            windowDays <= 33 -> UsageStatsManager.INTERVAL_MONTHLY
-            else -> UsageStatsManager.INTERVAL_YEARLY
-        }
-        val aggregated = tracker.queryAggregatedUsage(
-            intervalType = interval,
+        // Use the same disjoint DAILY > WEEKLY > MONTHLY selection as the main monthly total.
+        // Choosing a single WEEKLY/MONTHLY bucket for a short rolling window often returns zero
+        // because its calendar interval crosses the requested boundaries.
+        val segmented = tracker.querySegmentedMonthTotals(
             startTimestamp = startTimestamp,
             endTimestamp = endTimestamp,
             ignoreSystemApps = ignoreSystemApps,
             ignoredPackages = ignoredPackages
         )
-        val totalDurationMs = aggregated.apps.values.sumOf { it.totalTimeInForeground }
+        val totalDurationMs = segmented.totalMs
         // 系统聚合桶不含启动次数，逐日历史才是真实来源（仅覆盖已记录的那些天）。
         val totalLaunches = launchHistory.sumRange(startTimestamp, endTimestamp).values.sum()
         return IntervalTotal(
