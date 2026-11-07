@@ -599,7 +599,8 @@ object AppLog {
 
     /** 用户主动退出、装包、改权限导致的进程结束，不算故障。 */
     private val benignExitReasons = setOf(
-        "USER_REQUESTED", "APP_REQUESTED", "EXIT_SELF", "USER_STOPPED", "PERMISSION_CHANGE"
+        "USER_REQUESTED", "APP_REQUESTED", "EXIT_SELF", "USER_STOPPED", "PERMISSION_CHANGE",
+        "PACKAGE_UPDATED", "PACKAGE_STATE_CHANGE"
     )
 
     private val digestTimeFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
