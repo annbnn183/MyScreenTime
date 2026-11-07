@@ -120,6 +120,11 @@ jobs:
           The version shown inside the app, the APK filename and this release tag are all read
           from `versionName` in `app/build.gradle.kts`, so they cannot drift apart.
 
+          ### v1.0.29 - swipe period navigation
+          - Swipe left or right on the Year / Month / Week / Day selector to move one period.
+          - Keep direct segment taps, with a short gesture threshold and boundary protection.
+          - Preserve statistics calculations, usage history, settings and backup format.
+
           ### v1.0.28 - memory-pressure handling
           - Evict rebuildable app-icon bitmaps when Android reports UI-hidden or stronger memory pressure.
           - Coalesce repeated same-level TRIM_MEMORY callbacks within five seconds and retain the suppressed count.
