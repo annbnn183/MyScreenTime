@@ -96,18 +96,39 @@ fun MonthlyInsightsView(
                 TextSmall(text = stringResource(id = R.string.goal_calendar_hint))
             }
 
-            if (deviceUsage.isDataLimited) {
-                // v1.0.14: explain exactly HOW MANY days are real and WHY the rest is missing,
-                // separating the Android DAILY retention cap from filtering/unused days.
-                TextSmall(
-                    text = stringResource(
-                        id = R.string.monthly_data_limited,
-                        deviceUsage.daysWithData,
-                        deviceUsage.requestedDays,
-                        deviceUsage.systemRetentionDays,
-                        deviceUsage.filteredDays
-                    )
+
+        }
+    }
+}
+
+
+/** A compact explanation shown above the main chart when the requested range is not fully exact. */
+@Composable
+fun MonthlyDataQualityBanner(
+    deviceUsage: MonthlyDeviceUsage,
+    modifier: Modifier = Modifier
+) {
+    if (!deviceUsage.isDataLimited && !deviceUsage.isEstimated) return
+
+    OutlinedCard(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(dimensionResource(id = R.dimen.padding_medium)),
+            verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.padding_small))
+        ) {
+            TextMedium(text = stringResource(id = R.string.usage_data_quality_title))
+            TextSmall(
+                text = stringResource(
+                    id = R.string.monthly_data_limited,
+                    deviceUsage.daysWithData,
+                    deviceUsage.requestedDays,
+                    deviceUsage.systemRetentionDays,
+                    deviceUsage.filteredDays
                 )
+            )
+            if (deviceUsage.isEstimated) {
+                TextSmall(text = stringResource(id = R.string.monthly_aggregate_quality))
             }
         }
     }
