@@ -614,14 +614,16 @@ class UsageStatsTracker(
         startTimestamp: Long,
         endTimestamp: Long,
         ignoreSystemApps: Boolean,
-        ignoredPackages: List<String>
+        ignoredPackages: List<String>,
+        includeYearly: Boolean = false
     ): SegmentedMonthTotals {
         val requestedDays = ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY).toInt().coerceAtLeast(1)
-        val specs = listOf(
-            Triple(UsageStatsManager.INTERVAL_DAILY, "INTERVAL_DAILY", 7),
-            Triple(UsageStatsManager.INTERVAL_WEEKLY, "INTERVAL_WEEKLY", 28),
-            Triple(UsageStatsManager.INTERVAL_MONTHLY, "INTERVAL_MONTHLY", 180)
-        )
+        val specs = buildList {
+            add(Triple(UsageStatsManager.INTERVAL_DAILY, "INTERVAL_DAILY", 7))
+            add(Triple(UsageStatsManager.INTERVAL_WEEKLY, "INTERVAL_WEEKLY", 28))
+            add(Triple(UsageStatsManager.INTERVAL_MONTHLY, "INTERVAL_MONTHLY", 180))
+            if (includeYearly) add(Triple(UsageStatsManager.INTERVAL_YEARLY, "INTERVAL_YEARLY", 730))
+        }
         val rawByInterval = specs.associate { (interval, _, _) ->
             interval to try {
                 usageStatsManager.queryUsageStats(interval, startTimestamp, endTimestamp).orEmpty()
