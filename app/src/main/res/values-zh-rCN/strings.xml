@@ -135,7 +135,7 @@
     <string name="export_logs_subject">MyScreenTime 运行日志</string>
     <string name="logs_export_choice_title">导出日志</string>
     <string name="logs_export_digest">精简摘要</string>
-    <string name="logs_export_digest_desc">约 600 字，只含错误与设备信息，最适合直接粘进聊天框</string>
+    <string name="logs_export_digest_desc">最近 24 小时诊断：故障、掉帧、慢查询、内存峰值与页面线索；适合直接发给 AI</string>
     <string name="logs_export_recent">最近 500 行</string>
     <string name="logs_export_recent_desc">约 60 KB 的 TXT，可以直接当文件发出去</string>
     <string name="logs_export_full">完整日志</string>
