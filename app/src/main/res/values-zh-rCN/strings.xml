@@ -247,5 +247,5 @@
     <string name="no_comparison_data">上一周期暂无数据</string>
     <string name="range_bucket_coverage">系统聚合桶：返回 %2$d 条，完整入窗 %1$d 条，覆盖 %3$d 天；排除部分越界 %4$d 条、完全越界 %5$d 条、零时长 %6$d 条、时间戳无效 %7$d 条。不会按比例拆分不完整桶。</string>
     <string name="usage_data_quality_title">数据完整性说明</string>
-    <string name="monthly_aggregate_quality">总时长包含系统周/月聚合桶。它们只能提供区间总量，不能还原每一天的精确分布；没有完整桶的历史会保持缺失。</string>
+    <string name="monthly_aggregate_quality">其中 %1$d 天的总量来自周/月聚合桶；它们只能提供区间总量，不能还原每一天的精确分布。</string>
 </resources>
