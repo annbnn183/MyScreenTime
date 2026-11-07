@@ -24,6 +24,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -225,6 +226,9 @@ private fun PortraitDeviceUsageScreen(
         }
     }
 
+    // Keep the selected vertical chapter when the user changes the period.
+    val selectedChapter = remember { mutableIntStateOf(0) }
+
     HorizontalPager(
         state = periodPagerState,
         flingBehavior = PagerDefaults.flingBehavior(
@@ -241,7 +245,18 @@ private fun PortraitDeviceUsageScreen(
         // coexist during animation and must never race over one shared Vico model producer.
         val pageModelProducer = remember(pagePeriod) { CartesianChartModelProducer() }
         // Overview first, app ranking second. Each chapter keeps a LazyColumn for long lists.
-        val chapterPagerState = rememberPagerState(pageCount = { 2 })
+        val chapterPagerState = rememberPagerState(
+            initialPage = selectedChapter.intValue,
+            pageCount = { 2 }
+        )
+        LaunchedEffect(chapterPagerState.settledPage) {
+            selectedChapter.intValue = chapterPagerState.settledPage
+        }
+        LaunchedEffect(selectedChapter.intValue) {
+            if (chapterPagerState.currentPage != selectedChapter.intValue) {
+                chapterPagerState.animateScrollToPage(selectedChapter.intValue)
+            }
+        }
 
         Column(modifier = Modifier.fillMaxSize()) {
             TextSmall(
