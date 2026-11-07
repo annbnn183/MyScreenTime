@@ -198,7 +198,7 @@
     <string name="export_logs_subject">MyScreenTime runtime log</string>
     <string name="logs_export_choice_title">Export log</string>
     <string name="logs_export_digest">Short summary</string>
-    <string name="logs_export_digest_desc">About 600 characters, errors + device info. Best for pasting into a chat.</string>
+    <string name="logs_export_digest_desc">Last 24 hours: faults, jank, slow queries, memory peaks and screen clues. Ready to paste into AI.</string>
     <string name="logs_export_recent">Recent 500 lines</string>
     <string name="logs_export_recent_desc">About 60 KB TXT, small enough to send as a file.</string>
     <string name="logs_export_full">Full log</string>
