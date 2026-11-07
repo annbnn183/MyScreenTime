@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.30-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,15 +28,15 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ---
 
-## ✅ Current release: v1.0.29 (animated period navigation)
+## ✅ Current release: v1.0.30 (animated period navigation)
 
-v1.0.29 turns the statistics area into four horizontal pages. Swipe left or right anywhere in the statistics content to move between Year / Month / Week / Day, with a native page-slide and snap animation. The period selector stays synchronized, and direct taps remain available. The existing vertical swipe between Overview and App Ranking is preserved.
+v1.0.30 turns the statistics area into four horizontal pages. Swipe left or right anywhere in the statistics content to move between Year / Month / Week / Day, with a native page-slide and snap animation. The period selector stays synchronized, and direct taps remain available. The existing vertical swipe between Overview and App Ranking is preserved.
 
 This release changes navigation only: usage sources, calculations, history, database schema and backup format remain unchanged. The existing application ID and fixed signing certificate are retained; GitHub Actions verifies the package, version and certificate fingerprint before publishing. **Direct overwrite installation is confirmed only after that signature check passes.**
 
 Back up important data regularly via **Settings → Data Management**. Please report any issue through Issues.
 
-## 🆕 v1.0.29: swipe across the statistics content
+## 🆕 v1.0.30: swipe across the statistics content
 
 - **Swipe the whole content area:** move between adjacent periods from either the Overview or App Ranking page; the gesture is no longer limited to the selector.
 - **Smooth page animation:** native horizontal paging settles on a full page instead of stopping halfway.
