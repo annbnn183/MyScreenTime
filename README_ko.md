@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.24-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -30,9 +30,17 @@
 
 ## ✅ 현재 버전: 안정적이고 부드러운 일상 사용
 
-최근 실제 사용과 성능 관찰 결과, v1.0.22는 일상적인 조작이 원활하며 현재 긴급 대응이 필요한 충돌이나 지속적인 끊김은 확인되지 않았습니다. **안심하고 다운로드하여 사용하셔도 좋습니다.**
+v1.0.24는 빌드와 고정 서명 인증서 검증을 완료하고 공개되었습니다. 최근 실제 사용에서 일상 조작과 위아래 스와이프 페이지 전환이 의도한 대로 동작하는 것을 확인했습니다. 기기별 문제가 있다면 Issues로 알려 주세요. **최신 버전을 사용해 보세요.**
 
 앱은 계속 유지·관리할 예정입니다. 기록을 보호하려면 **설정 → 데이터 관리**에서 중요한 데이터를 정기적으로 백업하는 것을 권장합니다. 문제를 발견하면 Issues로 알려 주세요.
+
+## 🆕 v1.0.24: 두 페이지 구성과 가벼운 세로 스와이프
+
+- **두 개의 세로 페이지:** 첫 페이지에는 기간 선택, 총 사용 시간, 기간 비교를 배치하고 두 번째 페이지에는 월간 인사이트와 앱 순위를 배치합니다.
+- **가벼운 스와이프로 전환:** 페이지 전환 임계값을 낮춰 짧은 위·아래 스와이프도 더 쉽게 인식합니다.
+- **페이지 자동 정렬:** 손을 떼면 페이지가 완전히 맞춰지며 중간 위치에 멈추지 않습니다. 한 번의 동작으로 최대 한 페이지만 이동합니다.
+- **기존 기능 유지:** 기간 통계, 앱 순위, 내보내기, 로그, 새로고침, 설정 및 앱 상세 진입 기능을 유지합니다.
+- **업데이트 호환성:** 기존 application ID와 고정 서명을 유지하므로 v1.0.7 이상에서 바로 덮어쓰기 업데이트할 수 있습니다. 데이터베이스 구조, 백업 형식 및 사용자 데이터는 변경하지 않습니다.
 
 ## 🧪 v1.0.22: 다음 버전 개발에 도움이 되는 진단 요약
 
