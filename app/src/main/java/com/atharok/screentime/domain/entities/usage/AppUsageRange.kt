@@ -3,9 +3,9 @@ package com.atharok.screentime.domain.entities.usage
 import android.graphics.drawable.Drawable
 
 /**
- * A long-range ranking built from one of Android's aggregation buckets (WEEKLY / MONTHLY /
- * YEARLY). Unlike the per-day buckets, these survive for weeks to years, so the totals are
- * complete even for a whole year, without ever scanning usage events.
+ * A long-range ranking built from Android aggregation buckets (WEEKLY / MONTHLY / YEARLY).
+ * Only buckets whose full represented time range fits inside the requested window contribute;
+ * partial boundary buckets are excluded because their durations cannot be split safely.
  */
 data class AppUsageRange(
     val labelRes: Int,
@@ -22,6 +22,8 @@ data class AppUsageRange(
     val backfillLimitDays: Int = 0,
     /** 系统该聚合桶的理论保留上限（天）：WEEKLY≈28 / MONTHLY≈182 / YEARLY≈730。 */
     val retentionCapDays: Int = 0,
+    /** Number of calendar days covered by accepted, non-overlapping aggregate intervals. */
+    val screenTimeDaysCovered: Int = 0,
     /** Raw system entries returned before validating their represented time range. */
     val rawBucketCount: Int = 0,
     /** Buckets whose full represented time range is inside the requested window. */
