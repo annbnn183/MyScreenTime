@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.24-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -30,9 +30,17 @@
 
 ## ✅ 当前版本：稳定流畅，适合日常使用
 
-经过近期的实际使用与性能观察，v1.0.22 的日常操作体验流畅，目前没有发现需要紧急处理的崩溃或持续卡顿问题。**欢迎放心下载和使用。**
+v1.0.24 已完成构建、固定签名验证并发布。近期实测中，日常操作与上下滑动体验符合预期；若遇到设备差异或异常，欢迎通过 Issues 反馈。**欢迎下载体验。**
 
 软件仍会持续维护；为保护自己的历史记录，建议定期使用「设置 → 数据管理」备份重要数据。若遇到异常，欢迎通过 Issues 反馈。
+
+## 🆕 v1.0.24：双页纵向轻扫体验
+
+- **首页改为双页章节布局：** 第一页集中展示周期选择、总使用量与周期比较；第二页展示月度洞察和应用排行。
+- **轻扫即可切换：** 降低翻页触发阈值，让上下轻扫更容易切换页面。
+- **松手自动吸附：** 页面完整停靠，不以半屏状态作为最终位置；单次手势最多切换一页。
+- **保留原有能力：** 周期统计、应用排行、导出、日志、刷新、设置和应用详情入口继续保留。
+- **升级兼容：** v1.0.24 使用原有包名与固定签名，可直接覆盖安装 v1.0.7 及之后的版本；不修改数据库结构、备份格式或用户数据。
 
 ## 🧪 v1.0.22：让诊断摘要真正指导下一版
 
