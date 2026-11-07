@@ -298,6 +298,7 @@ class DeviceUsageRepositoryImpl(
                 apps = rankedApps,
                 totalLaunchCount = rankedApps.sumOf { it.launchCount },
                 totalTimeMillis = rankedApps.sumOf { it.duration },
+                screenTimeDaysCovered = aggregated.coveredDays,
                 // Older v1.0.17 backfills marked days outside Android's event retention as
                 // scanned empty days. Do not present those placeholders as verified records.
                 clickDaysRecorded = launchHistory.countScannedInRange(
