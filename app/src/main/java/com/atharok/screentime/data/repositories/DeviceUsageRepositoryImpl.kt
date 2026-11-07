@@ -252,44 +252,42 @@ class DeviceUsageRepositoryImpl(
         val filteredDays = (coverableByDaily - minOf(daysWithData, coverableByDaily)).coerceAtLeast(0)
         val isDataLimited = daysWithData < requestedDays
         // ---- Long-range aggregates -------------------------------------------------------
-        // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY
-        // pre-aggregated stats, while DAILY buckets expire after about a week. Reading the
-        // matching bucket gives COMPLETE totals for a long range without scanning events.
+        // Long-range rankings must not select a single coarse interval for a rolling window.
+        // Compose complete, non-overlapping buckets at increasing resolutions instead. In
+        // particular, a rolling 365-day window almost never contains a whole YEARLY bucket;
+        // MONTHLY buckets are therefore essential to keep the one-year ranking populated.
         val dayMillis = 24L * 60L * 60L * 1000L
         val nowMillis = timeInterval.second
         val rangeSpecs = listOf(
-            Triple(R.string.range_4_weeks, 28, UsageStatsManager.INTERVAL_WEEKLY),
-            Triple(R.string.range_half_year, 182, UsageStatsManager.INTERVAL_MONTHLY),
-            Triple(R.string.range_year, 365, UsageStatsManager.INTERVAL_YEARLY)
+            Triple(R.string.range_4_weeks, 28, false),
+            Triple(R.string.range_half_year, 182, false),
+            Triple(R.string.range_year, 365, true)
         )
-        val rangeRankings: List<AppUsageRange> = rangeSpecs.map { (labelRes, days, interval) ->
+        val rangeRankings: List<AppUsageRange> = rangeSpecs.map { (labelRes, days, includeYearly) ->
             val rangeStart = nowMillis - days.toLong() * dayMillis
-            val aggregated = tracker.queryAggregatedUsage(
-                intervalType = interval,
+            val aggregated = tracker.querySegmentedMonthTotals(
                 startTimestamp = rangeStart,
                 endTimestamp = nowMillis,
                 ignoreSystemApps = ignoreSystemApps,
-                ignoredPackages = ignoredPackages
+                ignoredPackages = ignoredPackages,
+                includeYearly = includeYearly
             )
             // 系统长期桶不保存启动次数，逐日存档才是 4 周 / 半年 / 一年点击量的真实来源。
             val history = launchHistory.sumRange(rangeStart, nowMillis)
-            val packageNames = (aggregated.apps.keys + history.keys).toSet()
+            val packageNames = (aggregated.perPackageMs.keys + history.keys).toSet()
             val rankedApps = packageNames.map { packageName ->
-                val item = aggregated.apps[packageName]
                 RankedApp(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
-                    // Keep only the package name here. Holding a full-size Drawable for every
-                    // app in all 3 long ranges used to keep ~800 large objects alive and required
-                    // hundreds of binder calls on every refresh. Icons are now resolved lazily
-                    // and downscaled by AppIconCache only for the cells actually on screen.
+                    // Resolve icons lazily for only the cells actually on screen.
                     appIcon = null,
-                    duration = item?.totalTimeInForeground ?: 0L,
-                    launchCount = maxOf(item?.launchCount ?: 0, history[packageName] ?: 0)
+                    duration = aggregated.perPackageMs[packageName] ?: 0L,
+                    launchCount = history[packageName] ?: 0
                 )
             }
                 .filter { it.duration > 0L || it.launchCount > 0 }
                 .sortedByDescending { it.duration }
+            val evidence = aggregated.segments
             AppUsageRange(
                 labelRes = labelRes,
                 numberOfDays = days,
@@ -297,8 +295,8 @@ class DeviceUsageRepositoryImpl(
                 totalLaunchCount = rankedApps.sumOf { it.launchCount },
                 totalTimeMillis = rankedApps.sumOf { it.duration },
                 screenTimeDaysCovered = aggregated.coveredDays,
-                // Older v1.0.17 backfills marked days outside Android's event retention as
-                // scanned empty days. Do not present those placeholders as verified records.
+                // Older backfills may have marked expired event history as scanned-empty.
+                // Count only dates still inside Android's finite event-history horizon.
                 clickDaysRecorded = launchHistory.countScannedInRange(
                     maxOf(rangeStart, DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)),
                     nowMillis
@@ -307,19 +305,13 @@ class DeviceUsageRepositoryImpl(
                     it >= DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)
                 },
                 backfillLimitDays = minOf(days, EVENT_DETAIL_HORIZON_DAYS + 1),
-                // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY.
-                // surfacing the cap lets the UI explain why very old days cannot be exact.
-                retentionCapDays = when (interval) {
-                    UsageStatsManager.INTERVAL_WEEKLY -> 28
-                    UsageStatsManager.INTERVAL_MONTHLY -> 182
-                    else -> 730
-                },
-                rawBucketCount = aggregated.rawEntries,
-                keptBucketCount = aggregated.keptBuckets,
-                droppedPartialBucketCount = aggregated.droppedPartialBuckets,
-                droppedOutsideWindowBucketCount = aggregated.droppedOutsideWindow,
-                zeroDurationBucketCount = aggregated.zeroDurationBuckets,
-                invalidTimestampBucketCount = aggregated.invalidTimestampBuckets
+                retentionCapDays = if (includeYearly) 730 else if (days > 28) 182 else 28,
+                rawBucketCount = evidence.sumOf { it.rawEntries },
+                keptBucketCount = evidence.sumOf { it.keptBuckets },
+                droppedPartialBucketCount = evidence.sumOf { it.droppedPartialBucket },
+                droppedOutsideWindowBucketCount = evidence.sumOf { it.droppedOutsideWindow },
+                zeroDurationBucketCount = evidence.sumOf { it.zeroDurationBuckets },
+                invalidTimestampBucketCount = evidence.sumOf { it.invalidTimestampBuckets }
             )
         }
 
