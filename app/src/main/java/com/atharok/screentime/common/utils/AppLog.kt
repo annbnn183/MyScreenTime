@@ -318,7 +318,14 @@ object AppLog {
             val am = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return
             val reasons = am.getHistoricalProcessExitReasons(null, 0, 8)
             i("ExitInfo", "Historical process exit reasons found: ${reasons.size}")
+            // 系统每次启动都返回同一批历史。若不去重，一次被杀会在日志里出现 8 次，
+            // 摘要里就会变成「109 次 LOW_MEMORY」，把结论彻底带偏。
+            val prefs = context.getSharedPreferences("applog_exit_seen", Context.MODE_PRIVATE)
+            val seen = prefs.getStringSet("ts", emptySet()).orEmpty().toMutableSet()
+            var added = 0
             reasons.forEach { info ->
+                if (!seen.add(info.timestamp.toString())) return@forEach
+                added++
                 val name = exitReasonName(info.reason)
                 event(
                     "INFO", "ExitInfo", "EXIT_INFO",
@@ -342,6 +349,11 @@ object AppLog {
                         event("ERROR", "ExitInfo", "EXIT_TRACE", "System trace for $name", "trace" to trace)
                     }
                 }
+            }
+            if (added > 0) {
+                // 只保留最近 200 条，避免这个集合无限增长。
+                val kept = seen.sortedByDescending { it.toLongOrNull() ?: 0L }.take(200).toSet()
+                prefs.edit().putStringSet("ts", kept).apply()
             }
         }.onFailure { e("ExitInfo", "Failed to read historical exit reasons", it) }
     }
@@ -583,6 +595,219 @@ object AppLog {
         }
     }
 
+    // ---- Digest: short, paste-into-a-chat version ---------------------------
+
+    /** 用户主动退出、装包、改权限导致的进程结束，不算故障。 */
+    private val benignExitReasons = setOf(
+        "USER_REQUESTED", "APP_REQUESTED", "EXIT_SELF", "USER_STOPPED", "PERMISSION_CHANGE"
+    )
+
+    private val digestTimeFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
+
+    private fun shortTime(ts: Long): String =
+        if (ts <= 0) "--:--:--" else digestTimeFormat.format(Date(ts))
+
+    private fun clip(s: String, max: Int): String {
+        val one = s.replace('\n', ' ').trim()
+        return if (one.length > max) one.take(max) + "…" else one
+    }
+
+    /**
+     * 精简摘要：只保留「错误 + 设备基础信息 + 最慢的几个操作」，目标是一屏内看完、
+     * 能直接粘进微信/ChatGPT 的输入框（默认上限 1500 字，实测一般 500~800 字）。
+     *
+     * 只扫最近两个日志文件，避免历史越久越慢；不影响磁盘上的完整日志，一条都不删。
+     */
+    fun digest(maxChars: Int = 1500): String {
+        val errors = mutableListOf<String>()
+        val exits = mutableListOf<Pair<Long, String>>()
+        val exitKeys = mutableSetOf<Pair<String, Long>>()
+        val slowClicks = mutableListOf<Pair<Long, String>>()
+        val slowQueries = mutableListOf<Pair<Long, String>>()
+        var errTotal = 0
+        var jank = 0
+        var jankMax = 0L
+        var clicks = 0
+        var clickSum = 0L
+        var clickMax = 0L
+        var queries = 0
+        var querySum = 0L
+        var queryMax = 0L
+        var trims = 0
+        var total = 0
+        var firstTs = Long.MAX_VALUE
+        var lastTs = 0L
+
+        logFiles().takeLast(2).forEach { file ->
+            runCatching {
+                file.useLines(Charsets.UTF_8) { seq ->
+                    seq.forEach { raw ->
+                        val o = runCatching { JSONObject(raw) }.getOrNull() ?: return@forEach
+                        total++
+                        val ts = o.optLong("ts", 0L)
+                        if (ts > 0) {
+                            if (ts < firstTs) firstTs = ts
+                            if (ts > lastTs) lastTs = ts
+                        }
+                        val lv = o.optString("lv", "")
+                        val ev = o.optString("ev", "")
+                        val mod = o.optString("mod", "")
+                        val x = o.optJSONObject("x")
+
+                        if (lv == "ERROR" || lv == "FATAL") {
+                            errTotal++
+                            if (errors.size >= 6) errors.removeAt(0)
+                            errors.add("${shortTime(ts)} [$lv] $mod/${ev}: ${clip(o.optString("msg"), 80)}")
+                        }
+
+                        when (ev) {
+                            "EXIT_INFO" -> {
+                                val reason = x?.optString("reasonName", "") ?: ""
+                                val at = x?.optLong("timestamp", ts) ?: ts
+                                // 每次启动都会重读系统历史，同一次退出会被重复写入；
+                                // 摘要按 (原因, 时间) 去重，避免把 1 次被杀说成 100 次。
+                                if (reason.isNotEmpty() && reason !in benignExitReasons &&
+                                    exitKeys.add(reason to at)
+                                ) {
+                                    val pss = x?.optInt("pssKb", 0) ?: 0
+                                    exits.add(
+                                        at to ("${shortTime(at)} $reason" +
+                                            if (pss > 0) " · PSS ${pss / 1024}MB" else "")
+                                    )
+                                    if (exits.size > 12) exits.removeAt(0)
+                                }
+                            }
+                            "JANK" -> {
+                                jank++
+                                val g = x?.optLong("gapMs", 0L) ?: 0L
+                                if (g > jankMax) jankMax = g
+                            }
+                            "CLICK_TO_FRAME" -> {
+                                val c = x?.optLong("costMs", 0L) ?: 0L
+                                clicks++
+                                clickSum += c
+                                if (c > clickMax) clickMax = c
+                                if (c >= 120) {
+                                    if (slowClicks.size >= 3) slowClicks.removeAt(0)
+                                    slowClicks.add(c to "${shortTime(ts)} ${x?.optString("screen", "")}")
+                                }
+                            }
+                            "QUERY_RESULT" -> {
+                                val c = x?.optLong("costMs", 0L) ?: 0L
+                                queries++
+                                querySum += c
+                                if (c > queryMax) queryMax = c
+                                if (c >= 80) {
+                                    if (slowQueries.size >= 2) slowQueries.removeAt(0)
+                                    slowQueries.add(c to "${shortTime(ts)} ${clip(o.optString("msg"), 48)}")
+                                }
+                            }
+                            "TRIM_MEMORY" -> trims++
+                        }
+                    }
+                }
+            }
+        }
+
+        val version = runCatching { context.getAppVersion() }.getOrDefault("?")
+        val head = buildString {
+            append("MyScreenTime 诊断摘要 · v").append(version).append(" · ")
+            append(lineFormat.format(Date())).append('\n')
+            append("设备: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
+                .append(" · Android ").append(Build.VERSION.RELEASE)
+                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")")
+                .append(" · ").append(Build.SUPPORTED_ABIS.firstOrNull() ?: "?")
+                .append('\n')
+            append("权限: 使用情况访问 ").append(if (usageAccess() == "GRANTED") "已授权" else "未授权")
+            append(" · 包名 ").append(context.packageName).append('\n')
+            append("日志: ").append(total).append(" 条 · ")
+            append(if (firstTs == Long.MAX_VALUE) "-" else lineFormat.format(Date(firstTs)))
+            append(" ~ ").append(if (lastTs == 0L) "-" else lineFormat.format(Date(lastTs)))
+            append("（仅摘要，完整日志留在本机）")
+        }
+
+        val errorBlock = buildString {
+            append("【错误】")
+            if (errTotal == 0) {
+                append("无 ERROR / FATAL / 崩溃 / ANR\n")
+            } else {
+                append("共 ").append(errTotal).append(" 条，最近 ")
+                    .append(minOf(errTotal, errors.size)).append(" 条：\n")
+                errors.forEach { append("  · ").append(it).append('\n') }
+            }
+            if (exits.isNotEmpty()) {
+                append("【异常退出】最近 ")
+                    .append(minOf(exits.size, 3)).append(" 次（已按原因+时间去重）：\n")
+                exits.takeLast(3).forEach { append("  · ").append(it.second).append('\n') }
+            }
+        }
+
+        val metrics = buildString {
+            append("【关键指标】\n")
+            append("  点击响应: ").append(clicks).append(" 次")
+            if (clicks > 0) {
+                append("，平均 ").append(clickSum / clicks).append("ms，最差 ").append(clickMax).append("ms")
+            }
+            append('\n')
+            append("  掉帧: ").append(jank).append(" 次")
+            if (jank > 0) append("，最长 ").append(jankMax).append("ms")
+            append('\n')
+            append("  查询: ").append(queries).append(" 次")
+            if (queries > 0) {
+                append("，平均 ").append(querySum / queries).append("ms，最差 ").append(queryMax).append("ms")
+            }
+            append('\n')
+            if (trims > 0) append("  内存回收: ").append(trims).append(" 次\n")
+        }
+
+        val slowest = buildString {
+            if (slowClicks.isNotEmpty() || slowQueries.isNotEmpty()) {
+                append("【最慢操作】\n")
+                slowClicks.sortedByDescending { it.first }.take(3).forEach {
+                    append("  点击 ").append(it.first).append("ms · ").append(it.second).append('\n')
+                }
+                slowQueries.sortedByDescending { it.first }.take(2).forEach {
+                    append("  查询 ").append(it.first).append("ms · ").append(it.second).append('\n')
+                }
+            }
+        }
+
+        // 按优先级拼装：超长先丢「最慢操作」，再丢「关键指标」，错误与设备信息永不丢。
+        var text = listOf(head, errorBlock, metrics, slowest).joinToString("\n")
+        if (text.length > maxChars) {
+            text = listOf(head, errorBlock, metrics).joinToString("\n")
+            if (text.length > maxChars) {
+                text = listOf(head, errorBlock).joinToString("\n")
+            }
+        }
+        if (text.length > maxChars) {
+            text = text.take(maxChars - 12) + "\n…（已截断）"
+        }
+        return text.trimEnd()
+    }
+
+    /** 直接把摘要文本交给系统分享面板（微信/ChatGPT 等），不经过文件。 */
+    fun shareDigest(): Boolean = try {
+        val text = digest()
+        event(
+            "INFO", "AppLog", "EXPORT_DIGEST", "Shared compact digest",
+            "chars" to text.length
+        )
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.export_logs_subject))
+        }
+        context.startActivity(
+            Intent.createChooser(send, context.getString(R.string.logs_digest_share))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        true
+    } catch (e: Exception) {
+        event("ERROR", "AppLog", "EXPORT_DIGEST", "Share digest failed", "err" to e.javaClass.simpleName)
+        false
+    }
+
     // ---- Export -------------------------------------------------------------
 
     private val aiPrompt = """
@@ -731,4 +956,45 @@ object AppLog {
     /** Short version for the clipboard: header + summary + the most recent lines. */
     fun clipboardText(): String =
         header() + "\n===== 最近日志 / RECENT LOG (last 500 lines) =====\n" + readRecent(500)
+
+    /**
+     * 只导出最近 [maxLines] 行：文件几十 KB，能直接发微信/邮件，
+     * 不必把几 MB 的完整历史一股脑塞给对方。
+     */
+    fun exportRecent(maxLines: Int = 500): Boolean = try {
+        val dir = File(context.cacheDir, EXPORT_DIR).apply { mkdirs() }
+        val file = File(dir, "MyScreenTime-recent-${fileStampFormat.format(Date())}.txt")
+        file.bufferedWriter(Charsets.UTF_8).use { writer ->
+            writer.write("================================================================\n")
+            writer.write(" MyScreenTime — 最近 ${maxLines} 行日志 (Recent Runtime Log)\n")
+            writer.write(" 导出时间: ${lineFormat.format(Date())}\n")
+            writer.write("================================================================\n\n")
+            writer.write("【应用与设备信息】\n")
+            writer.write(environment())
+            writer.write("\n【采集统计】\n")
+            writer.write(summary())
+            writer.write("\n===== 最近 ${maxLines} 行 / RECENT $maxLines LINES =====\n")
+            writer.write(readRecent(maxLines))
+            writer.newLine()
+        }
+        event(
+            "INFO", "AppLog", "EXPORT_RECENT", "Exported recent lines",
+            "lines" to maxLines, "bytes" to file.length()
+        )
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.export_logs_subject))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(
+            Intent.createChooser(send, context.getString(R.string.export_logs))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+        true
+    } catch (e: Exception) {
+        e("AppLog", "Failed to export recent log", e)
+        false
+    }
 }

@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
@@ -42,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.atharok.screentime.R
 import com.atharok.screentime.common.utils.AppLog
@@ -72,6 +77,10 @@ fun LogsScreen(
     // The newest events matter most when diagnosing a problem; show them right under the info
     // card instead of forcing a long scroll through the whole permanent history.
     var newestFirst by remember { mutableStateOf(true) }
+    // 精简摘要对话框内容；null 表示未打开。
+    var digestText by remember { mutableStateOf<String?>(null) }
+    var digestBusy by remember { mutableStateOf(false) }
+    var showExportChoice by remember { mutableStateOf(false) }
 
     val reload: (Boolean) -> Unit = { showLoading ->
         scope.launch {
@@ -161,27 +170,33 @@ fun LogsScreen(
             NavigateUpAction(navigateUp)
         },
         topBarActions = {
-            IconButton(onClick = {
-                scope.launch {
-                    val text = withContext(Dispatchers.IO) { AppLog.clipboardText() }
-                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("MyScreenTime logs", text))
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.logs_copied),
-                        Toast.LENGTH_SHORT
-                    ).show()
+            // 一键复制的是「精简摘要」（几百字），不是几 MB 全文，这样能直接粘进微信。
+            IconButton(
+                enabled = !digestBusy,
+                onClick = {
+                    digestBusy = true
+                    scope.launch {
+                        val text = withContext(Dispatchers.IO) { AppLog.digest() }
+                        val clipboard =
+                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("MyScreenTime digest", text))
+                        digestBusy = false
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.logs_digest_copied),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-            }) {
+            ) {
                 Icon(
                     imageVector = Icons.Rounded.ContentCopy,
-                    contentDescription = stringResource(id = R.string.copy_logs)
+                    contentDescription = stringResource(id = R.string.logs_digest)
                 )
             }
 
-            IconButton(onClick = {
-                scope.launch { withContext(Dispatchers.IO) { AppLog.export() } }
-            }) {
+            // 分享前先选范围，避免每次都被迫导出完整历史。
+            IconButton(onClick = { showExportChoice = true }) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
                     contentDescription = stringResource(id = R.string.export_logs)
@@ -269,7 +284,94 @@ fun LogsScreen(
             }
         }
     }
+    // 分享前先选粒度：摘要 / 最近 500 行 / 完整历史。
+    if (showExportChoice) {
+        AlertDialog(
+            onDismissRequest = { showExportChoice = false },
+            title = { Text(text = stringResource(id = R.string.logs_export_choice_title)) },
+            text = {
+                Column {
+                    ExportOption(
+                        title = stringResource(id = R.string.logs_export_digest),
+                        desc = stringResource(id = R.string.logs_export_digest_desc)
+                    ) {
+                        showExportChoice = false
+                        scope.launch {
+                            digestText = withContext(Dispatchers.IO) { AppLog.digest() }
+                        }
+                    }
+                    ExportOption(
+                        title = stringResource(id = R.string.logs_export_recent),
+                        desc = stringResource(id = R.string.logs_export_recent_desc)
+                    ) {
+                        showExportChoice = false
+                        scope.launch { withContext(Dispatchers.IO) { AppLog.exportRecent(500) } }
+                    }
+                    ExportOption(
+                        title = stringResource(id = R.string.logs_export_full),
+                        desc = stringResource(id = R.string.logs_export_full_desc)
+                    ) {
+                        showExportChoice = false
+                        scope.launch { withContext(Dispatchers.IO) { AppLog.export() } }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showExportChoice = false }) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+
+    digestText?.let { text ->
+        AlertDialog(
+            onDismissRequest = { digestText = null },
+            title = { Text(text = stringResource(id = R.string.logs_digest_title)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.logs_digest_hint, text.length),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.padding_small)))
+                    Text(
+                        text = text,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .heightIn(max = 340.dp)
+                            .verticalScroll(rememberScrollState())
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val clipboard =
+                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboard.setPrimaryClip(ClipData.newPlainText("MyScreenTime digest", text))
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.logs_digest_copied),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    digestText = null
+                }) {
+                    Text(text = stringResource(id = R.string.logs_digest_copy))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    AppLog.shareDigest()
+                    digestText = null
+                }) {
+                    Text(text = stringResource(id = R.string.logs_digest_share))
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 private fun LogsInfoCard(
@@ -453,6 +555,28 @@ private fun LogsInfoCard(
                     Text(text = stringResource(id = R.string.export_logs))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ExportOption(
+    title: String,
+    desc: String,
+    onClick: () -> Unit
+) {
+    TextButton(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = desc,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }
