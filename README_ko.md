@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -27,6 +27,14 @@
 </div>
 
 ---
+
+## 🛠 v1.0.21: 성능 및 덮어쓰기 업데이트 호환성
+
+- **메모리 사용량 감소:** 일간 / 주간 / 월간 결과가 모든 앱의 전체 크기 `Drawable`을 보유하지 않습니다. 아이콘은 제한된 축소 LRU 캐시에서 필요할 때만 불러오며, 앱 상세 화면 제목 아이콘도 지연 로딩합니다.
+- **프레임 측정 개선:** 백그라운드 또는 유휴 상태에서 Choreographer 콜백이 중단되고 최근 상호작용 없이 10초를 초과한 간격은 `JANK`가 아닌 `FRAME_MONITOR_GAP`으로 기록합니다.
+- **바로 덮어쓰기 설치:** 디버그 불가·최적화된 Release APK를 만들되, 기존 v1.0.20 패키지와 호환되도록 `com.atharok.screentime.debug` application ID를 유지합니다.
+- **서명 보호:** 공개 전에 Actions가 패키지 ID, 버전, 고정 인증서 SHA-256을 검증합니다. 고정 키 저장소가 없으면 임시 Debug 서명으로 대체하지 않고 빌드를 실패시킵니다.
+- 데이터베이스 구조, 백업 형식 및 사용자 데이터는 변경하지 않습니다.
 
 ## 📑 목차
 
@@ -355,7 +363,7 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 
 ## ⚙️ 자동 빌드
 
-`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.20.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultRelease`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.20.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
 
 ---
 

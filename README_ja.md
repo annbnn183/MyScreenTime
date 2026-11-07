@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -27,6 +27,14 @@
 </div>
 
 ---
+
+## 🛠 v1.0.21：パフォーマンスと上書き更新の互換性
+
+- **メモリ使用量を削減：** 日・週・月の結果で、すべてのアプリのフルサイズ `Drawable` を保持しません。アイコンは上限付きの縮小 LRU キャッシュから必要なときだけ読み込み、アプリ詳細画面のタイトルも同様に遅延読み込みします。
+- **フレーム計測を改善：** バックグラウンド／アイドル中に Choreographer のコールバックが停止し、操作がないまま 10 秒を超えた間隔は `JANK` ではなく `FRAME_MONITOR_GAP` として記録します。
+- **そのまま上書き更新：** デバッグ不可・最適化済みの Release APK を作成しつつ、既存 v1.0.20 と一致する `com.atharok.screentime.debug` のアプリ ID を維持します。
+- **署名の検証：** 公開前に Actions がパッケージ ID・バージョン・固定証明書 SHA-256 を確認します。固定キーストアがない場合は一時的な Debug 署名にフォールバックせず、ビルドを失敗させます。
+- データベース構造、バックアップ形式、ユーザーデータは変更しません。
 
 ## 📑 目次
 
@@ -355,7 +363,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.20.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultRelease` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.20.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

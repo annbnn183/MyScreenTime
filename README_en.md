@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -27,6 +27,14 @@ An Android app for viewing device and app usage time, open counts, and long-term
 </div>
 
 ---
+
+## 🛠 v1.0.21: Performance and upgrade compatibility
+
+- **Lower memory use:** daily / weekly / monthly results no longer retain full-size app `Drawable` objects for every installed app. Icons load on demand through the bounded downscaled LRU cache, including the app-detail title.
+- **More trustworthy frame metrics:** when Choreographer pauses during background/idle periods, a gap over 10 seconds without recent interaction is recorded as `FRAME_MONITOR_GAP`, not `JANK`.
+- **Direct in-place upgrade:** the APK is a non-debuggable, minified Release build, while intentionally retaining application ID `com.atharok.screentime.debug` to match the installed v1.0.20 package.
+- **Signing guardrails:** GitHub Actions verifies package ID, version and the pinned certificate SHA-256 before publishing. If the fixed keystore is missing, the build fails instead of falling back to a temporary debug key.
+- No database schema, backup format or user data is changed.
 
 ## 📑 Table of Contents
 
@@ -355,7 +363,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.20.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultRelease`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.20.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -27,6 +27,14 @@
 </div>
 
 ---
+
+## 🛠 v1.0.21：效能與直接升級相容性
+
+- **降低記憶體使用：** 日／週／月結果不再為所有應用程式長期保留完整 Drawable；圖示改為需要時才載入，並共用有容量上限的縮小版 LRU 快取。應用程式詳細頁標題圖示也改為延遲載入。
+- **改善掉幀判讀：** 背景或閒置期間 Choreographer 可能暫停回呼；超過 10 秒且沒有近期互動的長間隔改記為 `FRAME_MONITOR_GAP`，不再誤判為 `JANK`。
+- **可直接覆蓋安裝：** 使用不可偵錯、已最佳化的 Release APK，同時刻意保留 `com.atharok.screentime.debug` 套件 ID，以相容目前安裝的 v1.0.20。
+- **簽章防護：** GitHub Actions 發佈前會驗證套件 ID、版本與固定憑證 SHA-256；若缺少固定金鑰，建置會直接失敗，不會退回臨時 Debug 簽章。
+- 不變更資料庫結構、備份格式或使用者資料。
 
 ## 📑 目錄
 
@@ -355,7 +363,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.20.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultRelease`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.20.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 
