@@ -28,6 +28,19 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ---
 
+## 🧪 v1.0.22: diagnostic summaries that guide the next release
+
+This release focuses on making exported diagnostics more useful, not simply collecting more logs:
+
+- **A fixed rolling 24-hour window** keeps historical cumulative clicks, jank and query timings out of the current-period metrics. The report shows its exact start and end.
+- **Faults first**: ERROR/FATAL, main-thread stalls/ANRs and system-reported process exits are highlighted.
+- **Actionable performance metrics**: click-to-frame latency, interactive frame gaps, monitor discontinuities and query latency.
+- **Memory evidence**: average/peak PSS, peak heap, minimum available system memory and sample count.
+- **Screen-level clues**: the slowest clicks and queries include timestamps and screen names to help prioritize the next fix.
+- **Original logs are untouched**: only the digest analysis and export description change. Full local history remains available, including recent 500 lines and full export.
+
+Note: Android may report an older process exit only when the app starts again. The report calls this out so an old-version exit is not mistaken for a new-version failure.
+
 ## 🛠 v1.0.21: Performance and upgrade compatibility
 
 - **Lower memory use:** daily / weekly / monthly results no longer retain full-size app `Drawable` objects for every installed app. Icons load on demand through the bounded downscaled LRU cache, including the app-detail title.
