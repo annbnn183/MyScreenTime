@@ -307,7 +307,7 @@ class DeviceUsageRepositoryImpl(
                 clickSinceDay = launchHistory.earliestScannedDay()?.takeIf {
                     it >= DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)
                 },
-                backfillLimitDays = minOf(days, EVENT_DETAIL_HORIZON_DAYS),
+                backfillLimitDays = minOf(days, EVENT_DETAIL_HORIZON_DAYS + 1),
                 // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY.
                 // surfacing the cap lets the UI explain why very old days cannot be exact.
                 retentionCapDays = when (interval) {
