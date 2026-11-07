@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.28-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,13 +28,13 @@
 
 ---
 
-## ✅ 当前版本：v1.0.28（内存压力响应优化）
+## ✅ 当前版本：v1.0.29（周期切换轻扫交互）
 
-v1.0.28 在 v1.0.27 恢复统计逻辑的基础上，进一步优化系统内存压力响应与诊断日志。沿用原有包名与固定签名，**可直接覆盖安装 v1.0.7 及之后的任意版本**，不修改数据库结构、备份格式或用户数据。
+v1.0.29 在 v1.0.28 内存压力响应优化的基础上，为「年 / 月 / 周 / 日」周期选择增加左右轻扫切换。原有分段按钮点击方式完整保留，周期统计口径与数据逻辑不变。沿用原有包名与固定签名，**可直接覆盖安装 v1.0.7 及之后的任意版本**，不修改数据库结构、备份格式或用户数据。
 
 建议定期通过「设置 → 数据管理」备份重要数据；遇到异常欢迎通过 Issues 反馈。
 
-## 🧠 v1.0.28：内存压力响应与诊断日志降噪
+## 🆕 v1.0.29：周期选择支持左右轻扫\n\n- **轻扫切换周期：** 在「年 / 月 / 周 / 日」周期选择条上向左轻扫进入下一个周期，向右轻扫返回上一个周期。\n- **点击方式保留：** 仍可直接点击任意周期，不改变原来的操作习惯。\n- **轻量手势阈值：** 达到约 40 dp 的横向移动即可触发，避免需要大幅度拖动。\n- **边界保护：** 到达「年」或「日」边界时不会越界；一次手势最多切换一个周期。\n- **统计逻辑不变：** 只增加周期选择交互，不改系统统计来源、历史数据、数据库结构或备份格式。\n\n## 🧠 v1.0.28：内存压力响应与诊断日志降噪
 
 根据真实设备日志优化内存回收路径：
 
