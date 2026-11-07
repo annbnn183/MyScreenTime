@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
@@ -28,9 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,7 +59,6 @@ import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
 import com.atharok.screentime.ui.views.ComparisonView
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
-import kotlin.math.abs
 
 @Composable
 fun DeviceUsageScreen(
@@ -212,172 +210,174 @@ private fun PortraitDeviceUsageScreen(
     comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier
 ) {
-    // Two full-screen chapters: overview first, app ranking second.
-    // Each chapter owns a LazyColumn, preserving efficient rendering for long content.
-    val pagerState = rememberPagerState(pageCount = { 2 })
-    // A short horizontal swipe anywhere in the statistics content changes one period.
-    // Keep this on the pager container (not the segmented selector) so charts and cards
-    // share one consistent gesture target while the vertical page swipe remains available.
-    val periodSwipeThreshold = with(LocalDensity.current) { 32.dp.toPx() }
+    // Four horizontal period pages; each page keeps the existing two vertical chapters.
+    // Pager snapping supplies the slide animation and limits a fling to one adjacent period.
+    val periodPagerState = rememberPagerState(
+        initialPage = period.ordinal,
+        pageCount = { Period.entries.size }
+    )
 
-    Column(
+    LaunchedEffect(period) {
+        if (periodPagerState.currentPage != period.ordinal) {
+            periodPagerState.animateScrollToPage(period.ordinal)
+        }
+    }
+    LaunchedEffect(periodPagerState.settledPage) {
+        val settledPeriod = Period.entries.getOrNull(periodPagerState.settledPage)
+        if (settledPeriod != null && settledPeriod != period) {
+            onPeriodChange(settledPeriod)
+        }
+    }
+
+    HorizontalPager(
+        state = periodPagerState,
+        flingBehavior = PagerDefaults.flingBehavior(
+            state = periodPagerState,
+            pagerSnapDistance = PagerSnapDistance.atMost(1),
+            snapPositionalThreshold = 0.12f
+        ),
         modifier = modifier
             .fillMaxSize()
             .padding(innerPadding)
-    ) {
-        TextSmall(
-            text = if (pagerState.currentPage == 0) {
-                "1 / 2  ·  ${stringResource(id = R.string.usage_analysis)}  ·  ↑"
-            } else {
-                "2 / 2  ·  ${stringResource(id = R.string.app_usage_ranking)}  ·  ↓"
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
-                .padding(top = dimensionResource(id = R.dimen.padding_small))
-        )
+    ) { periodPage ->
+        val pagePeriod = Period.entries[periodPage]
+        // Overview first, app ranking second. Each chapter keeps a LazyColumn for long lists.
+        val chapterPagerState = rememberPagerState(pageCount = { 2 })
 
-        VerticalPager(
-            state = pagerState,
-            flingBehavior = PagerDefaults.flingBehavior(
-                state = pagerState,
-                pagerSnapDistance = PagerSnapDistance.atMost(1),
-                snapPositionalThreshold = 0.12f
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .pointerInput(period, periodSwipeThreshold) {
-                    var dragDistance = 0f
-                    detectHorizontalDragGestures(
-                        onHorizontalDrag = { change, dragAmount ->
-                            dragDistance += dragAmount
-                            change.consume()
-                        },
-                        onDragEnd = {
-                            if (abs(dragDistance) >= periodSwipeThreshold) {
-                                val direction = if (dragDistance < 0f) 1 else -1
-                                val nextIndex = period.ordinal + direction
-                                if (nextIndex in Period.entries.indices) {
-                                    onPeriodChange(Period.entries[nextIndex])
-                                }
-                            }
-                            dragDistance = 0f
-                        },
-                        onDragCancel = { dragDistance = 0f }
-                    )
-                }
-        ) { page ->
-            when (page) {
-                0 -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        bottom = dimensionResource(id = R.dimen.padding_large)
-                    )
-                ) {
-                    item {
-                        MaintainerNotice(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(
-                                    horizontal = dimensionResource(id = R.dimen.padding_medium),
-                                    vertical = dimensionResource(id = R.dimen.padding_normal)
-                                )
+        Column(modifier = Modifier.fillMaxSize()) {
+            TextSmall(
+                text = if (chapterPagerState.currentPage == 0) {
+                    "1 / 2  ·  ${stringResource(id = R.string.usage_analysis)}  ·  ↑"
+                } else {
+                    "2 / 2  ·  ${stringResource(id = R.string.app_usage_ranking)}  ·  ↓"
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+                    .padding(top = dimensionResource(id = R.dimen.padding_small))
+            )
+
+            VerticalPager(
+                state = chapterPagerState,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = chapterPagerState,
+                    pagerSnapDistance = PagerSnapDistance.atMost(1),
+                    snapPositionalThreshold = 0.12f
+                ),
+                modifier = Modifier.weight(1f)
+            ) { page ->
+                when (page) {
+                    0 -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            bottom = dimensionResource(id = R.dimen.padding_large)
                         )
-                    }
-
-                    item {
-                        PeriodSelector(
-                            period = period,
-                            onPeriodChange = onPeriodChange,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(dimensionResource(id = R.dimen.padding_medium))
-                        )
-                    }
-
-                    when (deviceUsageResource) {
-                        is Resource.Failure -> item {
-                            FailureView(deviceUsageResource.throwable.toString())
-                        }
-                        is Resource.Progress -> item {
-                            LoadingDialog(
-                                title = stringResource(id = R.string.calculating),
-                                message = stringResource(id = R.string.calculating_message)
+                    ) {
+                        item {
+                            MaintainerNotice(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        horizontal = dimensionResource(id = R.dimen.padding_medium),
+                                        vertical = dimensionResource(id = R.dimen.padding_normal)
+                                    )
                             )
                         }
-                        is Resource.Success -> {
-                            val deviceUsage = deviceUsageResource.data
-                            item {
-                                TotalUsageView(
-                                    period = period,
-                                    dayIndex = dayIndex,
-                                    onDayIndexChange = onDayIndexChange,
-                                    selectedCentralTendency = selectedCentralTendency,
-                                    onSelectedCentralTendencyChange = onSelectedCentralTendencyChange,
-                                    deviceUsage = deviceUsage,
-                                    modelProducer = modelProducer,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+
+                        item {
+                            PeriodSelector(
+                                period = pagePeriod,
+                                onPeriodChange = onPeriodChange,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(dimensionResource(id = R.dimen.padding_medium))
+                            )
+                        }
+
+                        when (deviceUsageResource) {
+                            is Resource.Failure -> item {
+                                FailureView(deviceUsageResource.throwable.toString())
+                            }
+                            is Resource.Progress -> item {
+                                LoadingDialog(
+                                    title = stringResource(id = R.string.calculating),
+                                    message = stringResource(id = R.string.calculating_message)
                                 )
                             }
-                            comparison?.let { cmp ->
-                                if (cmp.period != Period.DAY) {
-                                    item {
-                                        ComparisonView(
-                                            comparison = cmp,
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(
-                                                    horizontal = dimensionResource(id = R.dimen.padding_medium),
-                                                    vertical = dimensionResource(id = R.dimen.padding_small)
-                                                )
-                                        )
+                            is Resource.Success -> {
+                                val deviceUsage = deviceUsageResource.data
+                                item {
+                                    TotalUsageView(
+                                        period = pagePeriod,
+                                        dayIndex = dayIndex,
+                                        onDayIndexChange = onDayIndexChange,
+                                        selectedCentralTendency = selectedCentralTendency,
+                                        onSelectedCentralTendencyChange = onSelectedCentralTendencyChange,
+                                        deviceUsage = deviceUsage,
+                                        modelProducer = modelProducer,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+                                    )
+                                }
+                                comparison?.let { cmp ->
+                                    if (cmp.period != Period.DAY) {
+                                        item {
+                                            ComparisonView(
+                                                comparison = cmp,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        horizontal = dimensionResource(id = R.dimen.padding_medium),
+                                                        vertical = dimensionResource(id = R.dimen.padding_small)
+                                                    )
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
 
-                else -> LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        horizontal = dimensionResource(id = R.dimen.padding_medium),
-                        vertical = dimensionResource(id = R.dimen.padding_medium)
-                    )
-                ) {
-                    when (deviceUsageResource) {
-                        is Resource.Failure -> item {
-                            FailureView(deviceUsageResource.throwable.toString())
-                        }
-                        is Resource.Progress -> item {
-                            LoadingDialog(
-                                title = stringResource(id = R.string.calculating),
-                                message = stringResource(id = R.string.calculating_message)
-                            )
-                        }
-                        is Resource.Success -> {
-                            val deviceUsage = deviceUsageResource.data
-                            if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
+                    else -> LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            horizontal = dimensionResource(id = R.dimen.padding_medium),
+                            vertical = dimensionResource(id = R.dimen.padding_medium)
+                        )
+                    ) {
+                        when (deviceUsageResource) {
+                            is Resource.Failure -> item {
+                                FailureView(deviceUsageResource.throwable.toString())
+                            }
+                            is Resource.Progress -> item {
+                                LoadingDialog(
+                                    title = stringResource(id = R.string.calculating),
+                                    message = stringResource(id = R.string.calculating_message)
+                                )
+                            }
+                            is Resource.Success -> {
+                                val deviceUsage = deviceUsageResource.data
+                                if (pagePeriod == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
+                                    item {
+                                        MonthlyInsightsView(
+                                            deviceUsage = deviceUsage,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(bottom = dimensionResource(id = R.dimen.padding_small))
+                                        )
+                                    }
+                                }
                                 item {
-                                    MonthlyInsightsView(
+                                    AppUsageGridView(
                                         deviceUsage = deviceUsage,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = dimensionResource(id = R.dimen.padding_small))
+                                        onAppClick = openApplicationUsageScreen,
+                                        onBackfill = onBackfill,
+                                        backfillRunning = backfillRunning,
+                                        backfillProgress = backfillProgress,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
-                            }
-                            item {
-                                AppUsageGridView(
-                                    deviceUsage = deviceUsage,
-                                    onAppClick = openApplicationUsageScreen,
-                                    onBackfill = onBackfill,
-                                    backfillRunning = backfillRunning,
-                                    backfillProgress = backfillProgress,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
                             }
                         }
                     }
