@@ -589,6 +589,8 @@ class UsageStatsTracker(
         val segments: List<SegmentEvidence>,
         /** Calendar days covered by accepted, non-overlapping intervals across all resolutions. */
         val coveredDays: Int,
+        /** Days covered specifically by WEEKLY / MONTHLY aggregates rather than DAILY buckets. */
+        val aggregatedDaysCovered: Int,
         /** True only when at least one non-daily aggregate bucket contributes to the total. */
         val isEstimated: Boolean = false
     )
@@ -756,6 +758,9 @@ class UsageStatsTracker(
 
         val totalMs = perPackageMs.values.sum()
         val coveredDays = evidences.sumOf { it.coveredDays }
+        val aggregatedDaysCovered = evidences
+            .filter { it.bucketName != "INTERVAL_DAILY" }
+            .sumOf { it.coveredDays }
         val isEstimated = evidences.any {
             it.bucketName != "INTERVAL_DAILY" && it.keptBuckets > 0
         }
@@ -765,6 +770,7 @@ class UsageStatsTracker(
             "requestedDays" to requestedDays,
             "totalMs" to totalMs,
             "coveredDays" to coveredDays,
+            "aggregatedDaysCovered" to aggregatedDaysCovered,
             "distinctPackages" to perPackageMs.size,
             "segments" to evidences.joinToString("|") {
                 "${it.bucketName}:${it.contributedMs}/${it.coveredDays}d"
@@ -773,7 +779,7 @@ class UsageStatsTracker(
             "bestBucketUsed" to false,
             "launchSource" to "queryEvents day-by-day permanent store (system buckets expose no launch counts)"
         )
-        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, coveredDays, isEstimated)
+        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, coveredDays, aggregatedDaysCovered, isEstimated)
     }
 
     private fun intervalName(intervalType: Int): String = when (intervalType) {
