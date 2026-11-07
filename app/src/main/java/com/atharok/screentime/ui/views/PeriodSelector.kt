@@ -1,5 +1,6 @@
 package com.atharok.screentime.ui.views
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.MultiChoiceSegmentedButtonRowScope
@@ -7,9 +8,14 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.consume
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.atharok.screentime.domain.entities.Period
 import com.atharok.screentime.ui.components.TextNormal
+import kotlin.math.abs
 
 @Composable
 fun PeriodSelector(
@@ -18,7 +24,30 @@ fun PeriodSelector(
     modifier: Modifier = Modifier
 ) {
     val entries = Period.entries
-    MultiChoiceSegmentedButtonRow(modifier = modifier) {
+    val swipeThreshold = with(LocalDensity.current) { 40.dp.toPx() }
+
+    MultiChoiceSegmentedButtonRow(
+        modifier = modifier.pointerInput(period, swipeThreshold) {
+            var dragDistance = 0f
+            detectHorizontalDragGestures(
+                onHorizontalDrag = { change, dragAmount ->
+                    dragDistance += dragAmount
+                    change.consume()
+                },
+                onDragEnd = {
+                    if (abs(dragDistance) >= swipeThreshold) {
+                        val direction = if (dragDistance < 0f) 1 else -1
+                        val nextIndex = (period.ordinal + direction)
+                        if (nextIndex in entries.indices) {
+                            onPeriodChange(entries[nextIndex])
+                        }
+                    }
+                    dragDistance = 0f
+                },
+                onDragCancel = { dragDistance = 0f }
+            )
+        }
+    ) {
         entries.forEachIndexed { index, p ->
             val shape = when (index) {
                 0 -> RoundedCornerShape(
