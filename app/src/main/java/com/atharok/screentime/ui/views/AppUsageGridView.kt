@@ -285,7 +285,9 @@ private fun RangeSummaryCard(
     backfillProgress: Int
 ) {
     val hours = DateTimeUtils.convertToHourFloat(range.totalTimeMillis)
-    val dailyHours = hours / range.numberOfDays.coerceAtLeast(1)
+    // Average only over days represented by accepted whole system buckets, not the requested
+    // rolling window; otherwise partial coverage would make the average look artificially low.
+    val dailyHours = hours / range.screenTimeDaysCovered.coerceAtLeast(1)
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -336,6 +338,7 @@ private fun RangeSummaryCard(
                     id = R.string.range_bucket_coverage,
                     range.keptBucketCount,
                     range.rawBucketCount,
+                    range.screenTimeDaysCovered,
                     range.droppedPartialBucketCount,
                     range.droppedOutsideWindowBucketCount,
                     range.zeroDurationBucketCount,
