@@ -122,7 +122,7 @@
     <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">排序：%1$s</string>
     <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
-    <string name="aggregate_hint">时长按 DAILY(近7天)+WEEKLY(8-28天)+MONTHLY(更早) 分段拼接，不使用自动选桶；点击量来自本机永久逐日事件记录，系统聚合桶不含启动次数。</string>
+    <string name="aggregate_hint">屏幕时长来自 DAILY、WEEKLY、MONTHLY 系统聚合桶；只有完整落在对应统计区间内的桶才会计入。不完整边界桶不会按比例估算，系统未提供的区间会保持缺失。打开次数来自本机逐日事件记录。</string>
     <string name="no_usage_data">暂时没有用量数据。</string>
 
     <!-- 运行日志 -->
