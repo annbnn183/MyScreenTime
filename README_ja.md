@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.24-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -30,9 +30,17 @@
 
 ## ✅ 現行バージョン：安定して快適に日常利用できます
 
-最近の実使用とパフォーマンスの確認では、v1.0.22 は日常操作がスムーズで、緊急対応が必要なクラッシュや継続的なカクつきは現時点で確認されていません。**安心してダウンロードしてご利用ください。**
+v1.0.24 はビルド済みで、固定署名証明書の検証を通過し、公開されています。最近の実機操作では、日常操作と上下スワイプによるページ切り替えは想定どおりに動作しています。端末固有の問題があれば Issues からお知らせください。**ぜひ最新版をお試しください。**
 
 今後も継続してメンテナンスします。大切な履歴を守るため、「設定 → データ管理」から定期的にバックアップすることをおすすめします。不具合を見つけた場合は Issues からお知らせください。
+
+## 🆕 v1.0.24：2 ページ構成と軽い縦スワイプ
+
+- **縦方向の 2 ページ構成：** 1 ページ目に期間選択・合計使用時間・期間比較、2 ページ目に月間インサイトとアプリランキングを配置。
+- **軽いスワイプで切り替え：** ページ切り替えのしきい値を下げ、短い上下スワイプでも切り替えやすくしました。
+- **ページ位置を吸着：** 指を離すとページ全体に収まり、中間位置で止まりません。1 回の操作で進むのは最大 1 ページです。
+- **既存機能を維持：** 期間統計、アプリランキング、エクスポート、ログ、更新、設定、アプリ詳細への導線を維持。
+- **更新互換性：** 既存のアプリ ID と固定署名を維持しているため、v1.0.7 以降から直接上書き更新できます。データベース構造、バックアップ形式、ユーザーデータは変更しません。
 
 ## 🧪 v1.0.22：次のバージョンにつながる診断摘要
 
