@@ -94,7 +94,7 @@
     <string name="goal_calendar_title">每日目标达标日历（近 30 天）</string>
     <string name="goal_calendar_summary">%3$s 目标内 %1$d 天，超标 %2$d 天</string>
     <string name="goal_calendar_hint">在设置中设定每日目标后，可查看达标日历。</string>
-    <string name="monthly_data_limited">逐日实测 %1$d/%2$d 天：其中 %3$d 天超出系统约 7 天的 DAILY 保留上限（由周/月聚合桶补全），另有 %4$d 天在上限内缺失（过滤或未使用）。总量按 DAILY+WEEKLY+MONTHLY 分段拼接，不再用自动选桶。</string>
+    <string name="monthly_data_limited">逐日桶中有正使用时长：%1$d/%2$d 天。%3$d 天超出系统约 7 天 DAILY 保留窗口；只有完整落在统计区间内的周/月桶才参与总量。保留窗口内另有 %4$d 天没有正时长记录。没有可用聚合桶的历史不会用 0 或伪造估算补齐。</string>
     <string name="export_report">导出 CSV 报告</string>
     <string name="export_report_subject">MyScreenTime 用量报告</string>
 
@@ -245,4 +245,5 @@
     <string name="increased_by">▲ %1$s</string>
     <string name="decreased_by">▼ %1$s</string>
     <string name="no_comparison_data">上一周期暂无数据</string>
+    <string name="range_bucket_coverage">系统聚合桶：返回 %2$d 条，完整入窗 %1$d 条；排除部分越界 %3$d 条、完全越界 %4$d 条、零时长 %5$d 条、时间戳无效 %6$d 条。不会按比例拆分不完整桶。</string>
 </resources>
