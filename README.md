@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -33,6 +33,7 @@
 - [关于这个项目](#关于这个项目)
 - [✨ 功能特性](#-功能特性)
 - [💾 数据管理：备份、恢复与迁移](#-数据管理备份恢复与迁移)
+- [🏆 v1.0.19：综合排行榜](#-v1019综合排行榜)
 - [⚡ v1.0.17 → v1.0.18：体验优化](#-v1017--v1018依据真实运行日志的体验优化)
 - [📸 界面截图](#-界面截图)
 - [⬇️ 下载](#️-下载)
@@ -57,7 +58,7 @@
 
 | 🗓️ 多周期与长期趋势 | 📊 应用四列网格排行 |
 | :--- | :--- |
-| 日 / 周 / 月多周期查看，以及 **4 周、半年、一年（平均）** 的长期趋势视图：读取系统预聚合的长周期统计，历史更完整，也不卡顿。 | 可按使用时长 / 点击量 / 名称排序，附细进度条；首屏一页，按需增量展开，避免一次性渲染 200+ 应用。 |
+| 日 / 周 / 月多周期查看，以及 **4 周、半年、一年（平均）** 的长期趋势视图：读取系统预聚合的长周期统计，历史更完整，也不卡顿。 | 可按使用时长 / 点击量 / 名称 / **综合**排序，附细进度条；首屏一页，按需增量展开，避免一次性渲染 200+ 应用。 |
 | 🖱️ 打开次数与占比 | 🎯 每日屏幕使用目标提醒 |
 | 统计各应用的打开（进入前台）次数及占比，并写入 CSV 报表。 | 自定义目标时长与预警比例，每天在达标前提醒一次（Android 13+ 需通知权限）。 |
 | 📈 月度洞察 | 📤 CSV 导出 / 分享 |
@@ -137,6 +138,25 @@
 4. 按提示重新授予「使用情况访问」权限。
 
 ---
+
+## 🏆 v1.0.19：综合排行榜
+
+排行榜原来只能「按时长」或「按点击量」二选一，用得久但很少打开的应用，和开得勤但每次很短的应用，没法放在一起比。这一版在排序菜单里新增第 4 项 **「综合」**，把两个维度合成一个榜。
+
+| 项目 | 说明 |
+| :--- | :--- |
+| 算法 | 综合占比 = 时长占比 × w + 点击占比 × (1 − w)。两个占比都相对于所选范围内所有应用的总量，所以各应用的综合占比加起来是 100% |
+| 为什么用占比 | 毫秒和次数量纲不同，直接相加会被数值大的一项压倒；占比都落在 0–1，才能公平加权 |
+| 三档权重 | 时长优先 7:3 / 均衡 5:5（默认）/ 点击优先 3:7，一键切换 |
+| 范围 | 跟随上方「4 周 / 半年 / 一年」；日、周视图使用当前周期的数据 |
+| 每行显示 | 名次、图标、应用名、时长及占比、点击次数及占比、综合占比 |
+| 没有点击量记录时 | 自动只按时长排序并给出提示，不会用一个全为 0 的权重来排名 |
+| 同分 | 依次按时长、名称决定，保证顺序稳定 |
+| 首屏 | 前 10 名，其余按需展开 |
+
+顺带修了一个小问题：「再显示」按钮原来只在应用多于 40 个时出现，21–40 个应用时展开不了；现在按首屏数量判断，「只看前 40 个」也改成了「收起」。
+
+> 注意：点击量只覆盖汇总卡里「已记录天数」，而时长覆盖整个范围。已记录天数远少于范围天数时，两项的统计窗口不一致，综合榜仅供参考。
 
 ## ⚡ v1.0.17 → v1.0.18：依据真实运行日志的体验优化
 
@@ -355,7 +375,7 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 
 ## ⚙️ 自动构建
 
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.18.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.19.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
 ---
 

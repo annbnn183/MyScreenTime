@@ -174,6 +174,15 @@
     <string name="sort_time">Time</string>
     <string name="sort_launches">Launches</string>
     <string name="sort_name">Name</string>
+    <string name="sort_combined">Combined</string>
+    <string name="combined_weight_time">Time first 7:3</string>
+    <string name="combined_weight_balanced">Balanced 5:5</string>
+    <string name="combined_weight_launch">Opens first 3:7</string>
+    <string name="combined_explain">Combined share = time share × %1$d%% + opens share × %2$d%%. Shares are relative to all apps in this range, so the combined shares add up to 100%%.</string>
+    <string name="combined_no_launch_hint">No open counts are recorded for this range yet, so apps are ranked by screen time only.</string>
+    <string name="combined_time_line">Time %1$s · %2$.1f%%</string>
+    <string name="combined_launch_line">Opens %1$d · %2$.1f%%</string>
+    <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">Sort: %1$s</string>
     <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
     <string name="aggregate_hint">Screen time = disjoint DAILY (last 7d) + WEEKLY (8-28d) + MONTHLY (29d+) segments; INTERVAL_BEST is not used. Open counts come from the permanent local per-day event history, because system buckets contain none.</string>
@@ -220,7 +229,7 @@
 
     <!-- Smooth grid rendering -->
     <string name="grid_show_more">Show 40 more (%1$d/%2$d shown)</string>
-    <string name="grid_collapse">Show top 40 only</string>
+    <string name="grid_collapse">Collapse</string>
     <string name="grid_lazy_hint">Apps are drawn in batches of 40 to keep the list smooth.</string>
 
     <!-- Log viewer ordering -->

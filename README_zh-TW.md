@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -55,7 +55,7 @@
 
 | 🗓️ 多週期與長期趨勢 | 📊 應用程式四列網格排行 |
 | :--- | :--- |
-| 日 / 週 / 月多週期檢視，以及 **4 週、半年、一年（平均）** 的長期趨勢檢視：讀取系統預聚合的長週期統計，歷史更完整，也不卡頓。 | 可按使用時長 / 開啟次數 / 名稱排序，附細進度條，支援「再顯示 40 個」增量載入。 |
+| 日 / 週 / 月多週期檢視，以及 **4 週、半年、一年（平均）** 的長期趨勢檢視：讀取系統預聚合的長週期統計，歷史更完整，也不卡頓。 | 可按使用時長 / 開啟次數 / 名稱 / **綜合**排序，附細進度條，支援「再顯示 40 個」增量載入。 |
 | 🖱️ 開啟次數與占比 | 🎯 每日螢幕使用目標提醒 |
 | 統計各應用程式的開啟（進入前景）次數及占比，並寫入 CSV 報表。 | 自訂目標時長與預警比例，每天在達標前提醒一次（Android 13+ 需通知權限）。 |
 | 📈 月度洞察 | 📤 CSV 匯出 / 分享 |
@@ -96,6 +96,25 @@
 **版本相容：** 備份格式與資料庫結構相互獨立，檔案帶 `format`/`schemaVersion`；**較新格式的備份會被拒絕並說明原因**，較舊格式會被處理。
 
 ---
+
+## 🏆 v1.0.19：綜合排行榜
+
+排行榜原本只能「按時長」或「按點擊量」二選一，用得久但很少開啟的應用，和開得勤但每次很短的應用，沒辦法放在一起比。這一版在排序選單新增第 4 項 **「綜合」**，把兩個維度合成一個榜。
+
+| 項目 | 說明 |
+| :--- | :--- |
+| 演算法 | 綜合佔比 = 時長佔比 × w + 點擊佔比 × (1 − w)。兩個佔比都相對於所選範圍內所有應用的總量，所以各應用的綜合佔比加起來是 100% |
+| 為什麼用佔比 | 毫秒和次數單位不同，直接相加會被數值大的一項壓倒；佔比都落在 0–1，才能公平加權 |
+| 三檔權重 | 時長優先 7:3 / 均衡 5:5（預設）/ 點擊優先 3:7，一鍵切換 |
+| 範圍 | 跟隨上方「4 週 / 半年 / 一年」；日、週檢視使用目前週期的資料 |
+| 每列顯示 | 名次、圖示、應用名稱、時長及佔比、點擊次數及佔比、綜合佔比 |
+| 沒有點擊量記錄時 | 自動只按時長排序並給出提示，不會用一個全為 0 的權重來排名 |
+| 同分 | 依序按時長、名稱決定，確保順序穩定 |
+| 首屏 | 前 10 名，其餘按需展開 |
+
+順帶修了一個小問題：「再顯示」按鈕原本只在應用多於 40 個時出現，21–40 個應用時展開不了；現在按首屏數量判斷，「只看前 40 個」也改成「收起」。
+
+> 注意：點擊量只涵蓋摘要卡裡的「已記錄天數」，而時長涵蓋整個範圍。已記錄天數遠少於範圍天數時，兩項的統計視窗不一致，綜合榜僅供參考。
 
 ## ⚡ v1.0.17 → v1.0.18：依真實執行日誌修正
 
@@ -308,7 +327,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.18.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.19.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 

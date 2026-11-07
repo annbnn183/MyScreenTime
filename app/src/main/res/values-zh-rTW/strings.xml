@@ -113,6 +113,15 @@
     <string name="sort_time">時間</string>
     <string name="sort_launches">點擊量</string>
     <string name="sort_name">名稱</string>
+    <string name="sort_combined">綜合</string>
+    <string name="combined_weight_time">時長優先 7:3</string>
+    <string name="combined_weight_balanced">均衡 5:5</string>
+    <string name="combined_weight_launch">點擊優先 3:7</string>
+    <string name="combined_explain">綜合佔比 = 時長佔比 × %1$d%% + 點擊佔比 × %2$d%%。佔比相對於本範圍內所有應用的總量，所以各應用的綜合佔比加起來是 100%%。</string>
+    <string name="combined_no_launch_hint">這個範圍還沒有點擊量記錄，暫時只按螢幕使用時長排序。</string>
+    <string name="combined_time_line">時長 %1$s · 佔 %2$.1f%%</string>
+    <string name="combined_launch_line">點擊 %1$d 次 · 佔 %2$.1f%%</string>
+    <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">排序：%1$s</string>
     <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
     <string name="aggregate_hint">時長按 DAILY(近7天)+WEEKLY(8-28天)+MONTHLY(更早) 分段拼接，不使用自動選桶；點擊量來自本機永久逐日事件記錄，系統聚合桶不含啟動次數。</string>
@@ -158,7 +167,7 @@
 
     <!-- 網格流暢渲染 -->
     <string name="grid_show_more">再顯示 40 個（%1$d/%2$d）</string>
-    <string name="grid_collapse">只看前 40 個</string>
+    <string name="grid_collapse">收起</string>
     <string name="grid_lazy_hint">應用按每批 40 個繪製，避免列表卡頓；點上方按鈕載入更多。</string>
 
     <!-- 日誌排序 -->

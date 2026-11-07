@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -55,7 +55,7 @@
 
 | 🗓️ 複数期間・長期トレンド | 📊 アプリ 4 列グリッドランキング |
 | :--- | :--- |
-| 日 / 週 / 月の表示に加え、**4 週間・半年・1 年（平均）** の長期トレンド表示。システムの事前集計された長期統計を読むため、履歴がより完全で、カクつきもありません。 | 使用時間 / 起動回数 / 名前で並べ替え可能、細かいプログレスバー付き、「あと 40 件」の増分読み込み対応。 |
+| 日 / 週 / 月の表示に加え、**4 週間・半年・1 年（平均）** の長期トレンド表示。システムの事前集計された長期統計を読むため、履歴がより完全で、カクつきもありません。 | 使用時間 / 起動回数 / 名前 / **総合** で並べ替え可能、細かいプログレスバー付き、「あと 40 件」の増分読み込み対応。 |
 | 🖱️ 起動回数と占有率 | 🎯 1 日の画面使用目標リマインダー |
 | 各アプリの起動（フォアグラウンドへの移動）回数と占有率を集計し、CSV に出力。 | 目標時間と警告比率をカスタム。毎日目標達成前に 1 回通知（Android 13+ は通知権限が必要）。 |
 | 📈 月間インサイト | 📤 CSV 出力 / 共有 |
@@ -96,6 +96,25 @@
 **バージョン互換性：** バックアップ形式はデータベースと独立。`format`/`schemaVersion` を持ち、**より新しい形式のバックアップは理由付きで拒否**、古いものは処理します。
 
 ---
+
+## 🏆 v1.0.19：総合ランキング
+
+これまでランキングは「使用時間」か「起動回数」のどちらか一方でしか並べ替えられず、何時間も使うがあまり開かないアプリと、頻繁に開くが一回が短いアプリを同じ土俵で比べられませんでした。今回、並べ替えに 4 つ目の **「総合」** を追加し、二つの指標を 1 つのランキングにまとめました。
+
+| 項目 | 内容 |
+| :--- | :--- |
+| 計算式 | 総合シェア = 使用時間シェア × w + 起動回数シェア × (1 − w)。どちらのシェアも選択範囲内の全アプリの合計に対する割合なので、総合シェアの合計は 100% になります |
+| シェアを使う理由 | ミリ秒と回数は単位が違い、生の値を足すと大きい方に引きずられます。シェアはどちらも 0〜1 なので公平に重み付けできます |
+| 3 段階の重み | 時間優先 7:3 / バランス 5:5（既定）/ 起動優先 3:7 |
+| 範囲 | 上の「4 週間 / 半年 / 1 年」に連動。日・週表示では現在の期間 |
+| 各行 | 順位、アイコン、アプリ名、使用時間とそのシェア、起動回数とそのシェア、総合シェア |
+| 起動回数の記録がないとき | 使用時間のみで並べ、その旨を表示します（重みがすべて 0 の指標で順位が決まることはありません） |
+| 同点 | 使用時間、次にアプリ名で決め、順序を安定させます |
+| 最初の画面 | 上位 10 件、残りは必要に応じて展開 |
+
+小さな修正も一つ：「さらに表示」は 40 個を超えるときだけ出ていたため、21〜40 個では展開できませんでした。最初の画面の件数を基準に判定するよう直し、「上位 40 個のみ」は「折りたたむ」に変えました。
+
+> 注意：起動回数は概要カードの「記録済み日数」の範囲だけが対象で、使用時間は範囲全体が対象です。記録済み日数が範囲の日数よりずっと少ない場合は集計期間が揃わないため、総合ランキングは目安としてご覧ください。
 
 ## ⚡ v1.0.17 → v1.0.18：実行ログが示した問題を実際に直す
 
@@ -308,7 +327,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.18.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.19.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

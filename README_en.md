@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.18-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -55,7 +55,7 @@ On top of the original open-source project, I have added capabilities while stic
 
 | 🗓️ Multi-period & long-term trends | 📊 App four-column grid ranking |
 | :--- | :--- |
-| Daily / weekly / monthly views, plus **4-week, half-year, and year (average)** long-term trend views: reads the system's pre-aggregated long-period stats, so history is more complete and never stutters. | Sortable by usage time / open count / name, with fine progress bars and incremental "+40 more" loading. |
+| Daily / weekly / monthly views, plus **4-week, half-year, and year (average)** long-term trend views: reads the system's pre-aggregated long-period stats, so history is more complete and never stutters. | Sortable by usage time / open count / name / **combined**, with fine progress bars and incremental "+40 more" loading. |
 | 🖱️ Open count & share | 🎯 Daily screen-time goal reminder |
 | Counts how many times each app was opened (brought to foreground) and its share, exported to CSV. | Custom target duration and warning ratio; reminds you once before reaching the goal each day (notification permission required on Android 13+). |
 | 📈 Monthly insights | 📤 CSV export / share |
@@ -96,6 +96,25 @@ On top of the original open-source project, I have added capabilities while stic
 **Version compatibility:** the backup format is independent of the database; files carry `format`/`schemaVersion`; **newer-format backups are rejected with a reason**, older ones are handled.
 
 ---
+
+## 🏆 v1.0.19: combined ranking
+
+The ranking could only be sorted by time or by opens, so an app used for hours but rarely opened could not be compared with one opened constantly for a few seconds each. This release adds a 4th sort option, **"Combined"**, that merges both into one list.
+
+| Item | Details |
+| :--- | :--- |
+| Formula | Combined share = time share × w + open share × (1 − w). Both shares are relative to all apps in the selected range, so the combined shares add up to 100% |
+| Why shares | Milliseconds and counts have different scales; adding raw values would let the bigger number dominate. Shares both live in 0–1 and can be weighted fairly |
+| Three weights | Time first 7:3 / Balanced 5:5 (default) / Opens first 3:7 |
+| Range | Follows the 4 weeks / 6 months / year chips above; day and week views use the current period |
+| Each row | Rank, icon, name, time and its share, opens and their share, combined share |
+| No open counts | Falls back to screen time only and says so, instead of ranking on a weight that is all zeros |
+| Ties | Broken by time, then name, so the order is stable |
+| First screen | Top 10; the rest expands on demand |
+
+One small fix on the way: "show more" only appeared with more than 40 apps, so lists of 21–40 apps could not be expanded. It now follows the first-screen size, and "Show top 40 only" is now simply "Collapse".
+
+> Caveat: open counts only cover the "days recorded" shown in the summary card, while time covers the whole range. When days recorded is far below the range length, the two windows differ and the combined ranking is indicative only.
 
 ## ⚡ v1.0.17 → v1.0.18: fixing what the runtime log actually showed
 
@@ -308,7 +327,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.18.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.19.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

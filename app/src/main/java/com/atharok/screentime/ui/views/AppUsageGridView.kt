@@ -19,11 +19,14 @@ import androidx.compose.ui.unit.dp
 import com.atharok.screentime.R
 import com.atharok.screentime.common.utils.DateTimeUtils
 import com.atharok.screentime.domain.entities.usage.AppUsageRange
+import com.atharok.screentime.domain.entities.usage.CombinedRankedApp
+import com.atharok.screentime.domain.entities.usage.CombinedRanking
 import com.atharok.screentime.domain.entities.usage.DeviceUsage
 import com.atharok.screentime.domain.entities.usage.MonthlyDeviceUsage
 import com.atharok.screentime.domain.entities.usage.RankedApp
 import com.atharok.screentime.ui.components.ApplicationIcon
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
  * Four-column app ranking, inspired by Usage Analyzer. Long ranges (4 weeks / 6 months / year)
@@ -44,12 +47,17 @@ fun AppUsageGridView(
     val monthly = deviceUsage as? MonthlyDeviceUsage
     var rangeIndex by remember { mutableIntStateOf(0) }
     var sortIndex by remember { mutableIntStateOf(0) }
+    // 第 4 个排序「综合」把时长与点击量合成一个榜；权重档位只在该模式下使用。
+    val isCombined = sortIndex == SORT_COMBINED
+    var weightIndex by remember { mutableIntStateOf(1) }
     // Only a few rows are composed at first. Long ranges can hold 200-300 apps; rendering all of
     // them inside a single LazyColumn item produced multi-hundred-ms frames. "Show 40 more" grows
     // the window incrementally, and switching range/sort resets it.
     // 首屏只组合一屏（4 列 × 5 行 = 20 个），其余按需展开。
     // 导出日志里「扫描结果上屏」曾出现 904 ms 的主线程长帧，减少首帧组合量是直接收益。
-    var shownCount by remember(rangeIndex, sortIndex) { mutableIntStateOf(20) }
+    // 综合榜是一行一个应用（比四列网格高得多），首屏只放前 10 名。
+    val initialCount = if (isCombined) 10 else 20
+    var shownCount by remember(rangeIndex, sortIndex) { mutableIntStateOf(initialCount) }
 
     val ranges = monthly?.rangeRankings.orEmpty()
     val fallbackApps: List<RankedApp> = remember(deviceUsage) {
@@ -75,8 +83,13 @@ fun AppUsageGridView(
         deviceUsage.totalLaunchCount
     }
 
-    val apps: List<RankedApp> = remember(sourceApps, sortIndex) {
+    val combined: List<CombinedRankedApp> = remember(sourceApps, isCombined, weightIndex) {
+        if (isCombined) CombinedRanking.rank(sourceApps, COMBINED_WEIGHTS[weightIndex]) else emptyList()
+    }
+
+    val apps: List<RankedApp> = remember(sourceApps, sortIndex, combined) {
         when (sortIndex) {
+            SORT_COMBINED -> combined.map { it.app }
             1 -> sourceApps.sortedWith(
                 compareByDescending<RankedApp> { it.launchCount }
                     .thenByDescending { it.duration }
@@ -87,7 +100,12 @@ fun AppUsageGridView(
     }
 
     val visibleApps = apps.take(shownCount)
-    val sortLabels = listOf(R.string.sort_time, R.string.sort_launches, R.string.sort_name)
+    val sortLabels = listOf(
+        R.string.sort_time,
+        R.string.sort_launches,
+        R.string.sort_name,
+        R.string.sort_combined
+    )
     // A direct picker is clearer than cycling through options: one tap shows all three sort modes
     // with the active one checked, so users never have to guess how many taps reach "Launches".
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -166,30 +184,41 @@ fun AppUsageGridView(
             apps.maxOfOrNull { it.duration }?.coerceAtLeast(1L) ?: 1L
         }
 
-        visibleApps.chunked(4).forEach { rowApps ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                rowApps.forEach { app ->
-                    Box(modifier = Modifier.weight(1f)) {
-                        // Bind the composable identity to the app, not to its slot in the row.
-                        // After a re-sort the same position now holds a different package; without
-                        // this key Compose reuses the old cell's remembered state (icons included).
-                        key(app.packageName) {
-                            GridAppItem(
-                                app = app,
-                                totalLaunches = totalLaunches,
-                                maxDuration = maxDuration,
-                                onAppClick = onAppClick
-                            )
+        if (isCombined) {
+            CombinedRankingSection(
+                items = combined.take(shownCount),
+                topScore = combined.firstOrNull()?.score ?: 0f,
+                weightIndex = weightIndex,
+                onWeightChange = { weightIndex = it },
+                hasLaunchData = sourceApps.any { it.launchCount > 0 },
+                onAppClick = onAppClick
+            )
+        } else {
+            visibleApps.chunked(4).forEach { rowApps ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    rowApps.forEach { app ->
+                        Box(modifier = Modifier.weight(1f)) {
+                            // Bind the composable identity to the app, not to its slot in the row.
+                            // After a re-sort the same position now holds a different package; without
+                            // this key Compose reuses the old cell's remembered state (icons included).
+                            key(app.packageName) {
+                                GridAppItem(
+                                    app = app,
+                                    totalLaunches = totalLaunches,
+                                    maxDuration = maxDuration,
+                                    onAppClick = onAppClick
+                                )
+                            }
                         }
                     }
-                }
-                repeat(4 - rowApps.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+                    repeat(4 - rowApps.size) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
                 }
             }
         }
 
-        if (apps.size > 40) {
+        if (apps.size > initialCount) {
             if (shownCount < apps.size) {
                 TextButton(
                     onClick = { shownCount = (shownCount + 40).coerceAtMost(apps.size) },
@@ -212,7 +241,7 @@ fun AppUsageGridView(
                 )
             } else {
                 TextButton(
-                    onClick = { shownCount = 20 },
+                    onClick = { shownCount = initialCount },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -472,6 +501,143 @@ private fun GridAppItem(
                 .height(3.dp)
                 .clip(CircleShape),
             drawStopIndicator = {}
+        )
+    }
+}
+
+private const val SORT_COMBINED = 3
+
+/** 与「时长优先 / 均衡 / 点击优先」三个档位一一对应的时长权重。 */
+private val COMBINED_WEIGHTS = listOf(
+    CombinedRanking.WEIGHT_TIME_FIRST,
+    CombinedRanking.WEIGHT_BALANCED,
+    CombinedRanking.WEIGHT_LAUNCH_FIRST
+)
+
+/** 综合排行榜：时长占比与点击占比按权重合成一个名次，每行一个应用。 */
+@Composable
+private fun CombinedRankingSection(
+    items: List<CombinedRankedApp>,
+    topScore: Float,
+    weightIndex: Int,
+    onWeightChange: (Int) -> Unit,
+    hasLaunchData: Boolean,
+    onAppClick: (String) -> Unit
+) {
+    val weightLabels = listOf(
+        R.string.combined_weight_time,
+        R.string.combined_weight_balanced,
+        R.string.combined_weight_launch
+    )
+    val timePercent = (COMBINED_WEIGHTS[weightIndex] * 100f).roundToInt()
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            weightLabels.forEachIndexed { index, labelRes ->
+                FilterChip(
+                    selected = weightIndex == index,
+                    onClick = { onWeightChange(index) },
+                    label = { Text(text = stringResource(id = labelRes), maxLines = 1) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = if (hasLaunchData) {
+                stringResource(id = R.string.combined_explain, timePercent, 100 - timePercent)
+            } else {
+                stringResource(id = R.string.combined_no_launch_hint)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+
+        items.forEach { item ->
+            // 与网格一样用包名做身份，换权重重新排序后图标不会错位。
+            key(item.app.packageName) {
+                CombinedRankingRow(item = item, topScore = topScore, onAppClick = onAppClick)
+            }
+        }
+    }
+}
+
+@Composable
+private fun CombinedRankingRow(
+    item: CombinedRankedApp,
+    topScore: Float,
+    onAppClick: (String) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onAppClick(item.app.packageName) }
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = item.rank.toString(),
+            style = MaterialTheme.typography.titleSmall,
+            color = if (item.rank <= 3) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.width(32.dp)
+        )
+        ApplicationIcon(
+            packageName = item.app.packageName,
+            contentDescription = item.app.appName,
+            modifier = Modifier.size(dimensionResource(id = R.dimen.icon_large_size))
+        )
+        Spacer(modifier = Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.app.appName,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = stringResource(
+                    id = R.string.combined_time_line,
+                    DateTimeUtils.formatToDuration(item.app.duration),
+                    item.durationShare * 100f
+                ),
+                maxLines = 1,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(
+                    id = R.string.combined_launch_line,
+                    item.app.launchCount,
+                    item.launchShare * 100f
+                ),
+                maxLines = 1,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            LinearProgressIndicator(
+                progress = {
+                    if (topScore > 0f) (item.score / topScore).coerceIn(0f, 1f) else 0f
+                },
+                modifier = Modifier
+                    .padding(top = 4.dp)
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .clip(CircleShape),
+                drawStopIndicator = {}
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = stringResource(id = R.string.combined_score, item.score * 100f),
+            maxLines = 1,
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.primary
         )
     }
 }

@@ -111,6 +111,15 @@
     <string name="sort_time">时间</string>
     <string name="sort_launches">点击量</string>
     <string name="sort_name">名称</string>
+    <string name="sort_combined">综合</string>
+    <string name="combined_weight_time">时长优先 7:3</string>
+    <string name="combined_weight_balanced">均衡 5:5</string>
+    <string name="combined_weight_launch">点击优先 3:7</string>
+    <string name="combined_explain">综合占比 = 时长占比 × %1$d%% + 点击占比 × %2$d%%。占比相对于本范围内所有应用的总量，所以各应用的综合占比加起来是 100%%。</string>
+    <string name="combined_no_launch_hint">这个范围还没有点击量记录，暂时只按屏幕使用时长排序。</string>
+    <string name="combined_time_line">时长 %1$s · 占 %2$.1f%%</string>
+    <string name="combined_launch_line">点击 %1$d 次 · 占 %2$.1f%%</string>
+    <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">排序：%1$s</string>
     <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
     <string name="aggregate_hint">时长按 DAILY(近7天)+WEEKLY(8-28天)+MONTHLY(更早) 分段拼接，不使用自动选桶；点击量来自本机永久逐日事件记录，系统聚合桶不含启动次数。</string>
@@ -157,7 +166,7 @@
 
     <!-- 网格流畅渲染 -->
     <string name="grid_show_more">再显示 40 个（%1$d/%2$d）</string>
-    <string name="grid_collapse">只看前 40 个</string>
+    <string name="grid_collapse">收起</string>
     <string name="grid_lazy_hint">应用按每批 40 个绘制，避免列表卡顿；点上方按钮加载更多。</string>
 
     <!-- 日志排序 -->

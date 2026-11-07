@@ -88,7 +88,20 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
-          What's new in v1.0.18 — making the runtime log trustworthy:
+          What's new in v1.0.19 — combined ranking by opens x screen time:
+          - New 4th sort option "Combined" in the app ranking. Combined share = time share x w +
+            open share x (1 - w); both shares are taken against all apps in the selected range, so
+            the combined shares add up to 100%. Shares (not raw values) are used because
+            milliseconds and counts have different scales.
+          - Three one-tap weights: time first 7:3 / balanced 5:5 (default) / opens first 3:7.
+          - Each row shows rank, icon, name, time + share, opens + share and the combined share.
+            With no open counts recorded for the range it falls back to screen time only and says so.
+          - Small fix: "show more" now appears whenever there are more apps than the first screen
+            (it used to need more than 40, so 21-40 apps could not be expanded); "Show top 40 only"
+            now reads "Collapse".
+          - Nothing is deleted or migrated: data, backups and the permanent log are untouched.
+
+          Previously, v1.0.18 — making the runtime log trustworthy:
           The previous log had 922 JANK records at the same time as 10 ms tap-to-frame latency,
           which is self-contradictory. Root cause: the frame monitor counted "the UI is idle, so
           there is no new frame" as a dropped frame (one gap was 2.3 s). That noise would keep
