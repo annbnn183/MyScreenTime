@@ -17,9 +17,9 @@ android {
         // SINGLE SOURCE OF TRUTH for every version number shown to users and published on GitHub.
         // The CI workflow reads this versionName to build the release tag, release name and APK
         // filename, so the in-app version and the GitHub release can never drift apart again.
-        // Keep it in sync with versionCode: v1.0.20 -> versionCode 30 -> versionName 1.0.20.
-        versionCode = 31
-        versionName = "1.0.21"
+        // Keep it in sync with versionCode: v1.0.22 -> versionCode 32 -> versionName 1.0.22.
+        versionCode = 32
+        versionName = "1.0.22"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
