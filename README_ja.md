@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -376,7 +376,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultRelease` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.20.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultRelease` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.22.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 
