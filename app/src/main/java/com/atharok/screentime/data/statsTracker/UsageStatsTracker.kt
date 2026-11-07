@@ -344,11 +344,20 @@ class UsageStatsTracker(
             val duration = stats.totalTimeInForeground
             if (duration <= 0L) { filteredZeroDuration++; continue }
 
-            // firstTimeStamp is the beginning of the time range represented by this daily
-            // bucket. Use it for calendar-day attribution; lastTimeStamp is the range end and may
-            // fall on the following midnight on some Android builds.
+            // firstTimeStamp / lastTimeStamp are the represented interval boundaries, not
+            // the app's first/last foreground event. A daily bucket crossing the requested
+            // millisecond window cannot be split safely, so exclude it rather than overcounting
+            // the partial boundary day.
             val bucketBegin = stats.firstTimeStamp
-            if (bucketBegin <= 0L) { unattributedTimestamps++; continue }
+            val bucketEnd = stats.lastTimeStamp
+            if (bucketBegin <= 0L || bucketEnd <= bucketBegin) {
+                unattributedTimestamps++
+                continue
+            }
+            if (bucketBegin < startTimestamp || bucketEnd > endTimestamp) {
+                filteredOutOfWindow++
+                continue
+            }
             val dayTimestamp = DateTimeUtils.truncateToDay(bucketBegin)
             if (dayTimestamp < startDay || dayTimestamp > endDay) { filteredOutOfWindow++; continue }
 
