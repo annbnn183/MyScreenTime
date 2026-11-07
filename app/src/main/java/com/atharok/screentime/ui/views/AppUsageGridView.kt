@@ -330,6 +330,21 @@ private fun RangeSummaryCard(
                 )
             }
 
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = stringResource(
+                    id = R.string.range_bucket_coverage,
+                    range.keptBucketCount,
+                    range.rawBucketCount,
+                    range.droppedPartialBucketCount,
+                    range.droppedOutsideWindowBucketCount,
+                    range.zeroDurationBucketCount,
+                    range.invalidTimestampBucketCount
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             if (onBackfill != null && range.clickDaysRecorded < range.numberOfDays) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
