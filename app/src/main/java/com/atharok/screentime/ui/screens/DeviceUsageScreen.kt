@@ -3,6 +3,7 @@ package com.atharok.screentime.ui.screens
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
 import androidx.compose.foundation.pager.VerticalPager
@@ -27,7 +28,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,6 +60,7 @@ import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
 import com.atharok.screentime.ui.views.ComparisonView
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import kotlin.math.abs
 
 @Composable
 fun DeviceUsageScreen(
@@ -211,6 +215,10 @@ private fun PortraitDeviceUsageScreen(
     // Two full-screen chapters: overview first, app ranking second.
     // Each chapter owns a LazyColumn, preserving efficient rendering for long content.
     val pagerState = rememberPagerState(pageCount = { 2 })
+    // A short horizontal swipe anywhere in the statistics content changes one period.
+    // Keep this on the pager container (not the segmented selector) so charts and cards
+    // share one consistent gesture target while the vertical page swipe remains available.
+    val periodSwipeThreshold = with(LocalDensity.current) { 32.dp.toPx() }
 
     Column(
         modifier = modifier
@@ -236,7 +244,28 @@ private fun PortraitDeviceUsageScreen(
                 pagerSnapDistance = PagerSnapDistance.atMost(1),
                 snapPositionalThreshold = 0.12f
             ),
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(period, periodSwipeThreshold) {
+                    var dragDistance = 0f
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, dragAmount ->
+                            dragDistance += dragAmount
+                            change.consume()
+                        },
+                        onDragEnd = {
+                            if (abs(dragDistance) >= periodSwipeThreshold) {
+                                val direction = if (dragDistance < 0f) 1 else -1
+                                val nextIndex = period.ordinal + direction
+                                if (nextIndex in Period.entries.indices) {
+                                    onPeriodChange(Period.entries[nextIndex])
+                                }
+                            }
+                            dragDistance = 0f
+                        },
+                        onDragCancel = { dragDistance = 0f }
+                    )
+                }
         ) { page ->
             when (page) {
                 0 -> LazyColumn(
