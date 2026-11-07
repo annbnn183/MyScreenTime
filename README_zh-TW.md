@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.30-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,13 +28,13 @@
 
 ---
 
-## ✅ 目前版本：v1.0.29（統計頁面左右滑動切換週期）
+## ✅ 目前版本：v1.0.30（統計頁面左右滑動切換週期）
 
-v1.0.29 將統計畫面改為「年 / 月 / 週 / 日」四個橫向頁面。在統計內容區域輕輕左右滑動，即可切換相鄰週期，並以原生頁面滑動與吸附動畫平順切換。週期選擇按鈕會與目前頁面同步，原有直接點選功能也保留。「統計概覽 / 應用程式排行」之間的上下滑動同樣保留。
+v1.0.30 將統計畫面改為「年 / 月 / 週 / 日」四個橫向頁面。在統計內容區域輕輕左右滑動，即可切換相鄰週期，並以原生頁面滑動與吸附動畫平順切換。週期選擇按鈕會與目前頁面同步，原有直接點選功能也保留。「統計概覽 / 應用程式排行」之間的上下滑動同樣保留。
 
 本次只調整畫面導覽，不修改統計資料來源、計算邏輯、歷史資料、資料庫結構或備份格式。沿用原有套件 ID 與固定簽章，GitHub Actions 會在發布前驗證憑證指紋。
 
-## 🆕 v1.0.29：統計內容區域支援左右輕掃
+## 🆕 v1.0.30：統計內容區域支援左右輕掃
 
 - **整個內容區都能滑動：** 在統計概覽或應用程式排行頁面左右輕掃，都能切換相鄰週期。
 - **平順頁面動畫：** 使用橫向分頁與吸附效果，放手後完整停靠，不會停在兩頁中間。
