@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.24-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -30,9 +30,17 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ## ✅ Current release: stable and smooth for everyday use
 
-Based on recent real-world use and performance observations, v1.0.22 feels smooth in everyday operation, with no currently identified crashes or persistent stuttering that require urgent action. **You are welcome to download and use it with confidence.**
+v1.0.24 has been built, verified with the fixed signing certificate, and published. Recent hands-on use indicates that everyday operation and vertical page swipes behave as intended. If you encounter device-specific issues, please report them through Issues. **You are welcome to try the latest release.**
 
 The app will continue to be maintained. To protect your history, we recommend backing up important data regularly via **Settings → Data Management**. If you encounter an issue, please report it through Issues.
+
+## 🆕 v1.0.24: two-page layout with responsive vertical swipes
+
+- **Two vertical chapters:** page one groups the period selector, total usage and period comparison; page two contains monthly insights and the app ranking.
+- **Lighter swipes:** a lower page-switch threshold makes short upward or downward swipes easier to trigger.
+- **Reliable snapping:** when the gesture ends, the pager settles on a full page rather than stopping halfway; one gesture advances at most one page.
+- **Existing tools remain:** period statistics, app ranking, export, logs, refresh, settings and app details are retained.
+- **Upgrade compatibility:** v1.0.24 keeps the existing application ID and fixed signing certificate, so it can update v1.0.7 and later directly. No database schema, backup format or user data is changed.
 
 ## 🧪 v1.0.22: diagnostic summaries that guide the next release
 
