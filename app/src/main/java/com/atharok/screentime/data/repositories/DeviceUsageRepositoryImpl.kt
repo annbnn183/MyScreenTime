@@ -467,7 +467,7 @@ class DeviceUsageRepositoryImpl(
         onProgress?.invoke(done, maxDays)
         AppLog.i(
             "DeviceUsageRepository",
-            "Backfilled $done event-retained days of launch history (stored days: ${launchHistory.scannedDays()}, recent scanned days: ${launchHistory.countScannedInRange(eventHorizonStart, today)})"
+            "Checked $done event-retained days (legacy scan keys: ${launchHistory.scannedDays()} are not a coverage measure; recent scanned days: ${launchHistory.countScannedInRange(eventHorizonStart, today)})"
         )
         return done
     }
