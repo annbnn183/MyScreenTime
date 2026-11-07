@@ -567,8 +567,11 @@ class UsageStatsTracker(
         val keptBuckets: Int,
         val droppedOutsideWindow: Int,
         val droppedPartialBucket: Int,
+        val droppedOverlapBuckets: Int,
         val zeroDurationBuckets: Int,
         val invalidTimestampBuckets: Int,
+        val acceptedIntervals: Int,
+        val coveredDays: Int,
         val contributedMs: Long,
         val retentionCapDays: Int,
         val reflectedLaunches: Int
@@ -583,17 +586,12 @@ class UsageStatsTracker(
     )
 
     /**
-     * Builds an EXPLAINABLE total for the requested window by concatenating three DISJOINT time
-     * segments, each served by the system bucket whose retention actually covers it:
-     *   - last 7 days   -> INTERVAL_DAILY   (per-day, precise, ~7 day retention)
-     *   - day 8 .. 28   -> INTERVAL_WEEKLY  (~4 week retention)
-     *   - day 29+       -> INTERVAL_MONTHLY (~6 month retention)
-     *
-     * INTERVAL_BEST is intentionally NOT used: it silently picks whichever bucket the system
-     * considers "best" (device logs: BEST returned exactly the YEARLY figures), so a 30-day window
-     * would be reported with a one-year granularity. Each bucket is credited to exactly one segment
-     * only when its full represented time range fits inside one segment. Partial buckets are
-     * rejected because their aggregate duration cannot be split across segment boundaries.
+     * Builds a disjoint total from the best complete system intervals available in the requested
+     * range. Query each interval across the whole range, then prefer DAILY over WEEKLY over MONTHLY.
+     * A lower-resolution bucket is accepted only when its complete represented time range is
+     * inside the requested range and does not overlap a higher-resolution bucket already accepted.
+     * This avoids fixed rolling cutoffs that can slice through calendar-aligned weekly/monthly
+     * buckets and accidentally discard otherwise usable history.
      */
     fun querySegmentedMonthTotals(
         startTimestamp: Long,
@@ -601,146 +599,171 @@ class UsageStatsTracker(
         ignoreSystemApps: Boolean,
         ignoredPackages: List<String>
     ): SegmentedMonthTotals {
-        val day = MILLIS_IN_A_DAY
-        val requestedDays = ((endTimestamp - startTimestamp) / day).toInt().coerceAtLeast(1)
-
-        val dailyStart = maxOf(startTimestamp, endTimestamp - 7L * day)
-        val weeklyStart = maxOf(startTimestamp, endTimestamp - 28L * day)
-        // Disjoint windows: [start, weeklyStart) MONTHLY, [weeklyStart, dailyStart) WEEKLY,
-        // [dailyStart, end] DAILY. Their union is exactly the requested [start, end].
+        val requestedDays = ((endTimestamp - startTimestamp) / MILLIS_IN_A_DAY).toInt().coerceAtLeast(1)
         val specs = listOf(
-            Triple(UsageStatsManager.INTERVAL_DAILY, dailyStart to endTimestamp, 7),
-            Triple(UsageStatsManager.INTERVAL_WEEKLY, weeklyStart to dailyStart, 28),
-            Triple(UsageStatsManager.INTERVAL_MONTHLY, startTimestamp to weeklyStart, 180)
-        ).filter { (_, window, _) -> window.second > window.first }
+            Triple(UsageStatsManager.INTERVAL_DAILY, "INTERVAL_DAILY", 7),
+            Triple(UsageStatsManager.INTERVAL_WEEKLY, "INTERVAL_WEEKLY", 28),
+            Triple(UsageStatsManager.INTERVAL_MONTHLY, "INTERVAL_MONTHLY", 180)
+        )
+        val rawByInterval = specs.associate { (interval, _, _) ->
+            interval to try {
+                usageStatsManager.queryUsageStats(interval, startTimestamp, endTimestamp).orEmpty()
+            } catch (e: Exception) {
+                AppLog.e("UsageStatsTracker", "queryUsageStats(segment $interval) failed", e)
+                emptyList()
+            }
+        }
+
+        val selfPackage = context.packageName
+        fun isAllowed(stats: android.app.usage.UsageStats): Boolean {
+            val packageName = stats.packageName ?: return false
+            if (packageName.isEmpty() || packageName == selfPackage) return false
+            if (ignoredPackages.contains(packageName)) return false
+            if (ignoreSystemApps && packageName !in launchableApp) return false
+            return true
+        }
+
+        fun overlaps(left: Pair<Long, Long>, right: Pair<Long, Long>): Boolean =
+            left.first < right.second && right.first < left.second
+
+        // Choose unique interval ranges in resolution order. Multiple package rows can describe
+        // the same interval, so the set is keyed by the interval boundaries, not package name.
+        val acceptedRanges = mutableListOf<Pair<Long, Long>>()
+        val acceptedByInterval = mutableMapOf<Int, MutableSet<Pair<Long, Long>>>()
+        val overlapDropsByInterval = mutableMapOf<Int, Int>()
+        for ((interval, _, _) in specs) {
+            val candidates = rawByInterval[interval].orEmpty().mapNotNull { stats ->
+                if (!isAllowed(stats) || stats.totalTimeInForeground <= 0L) return@mapNotNull null
+                val begin = stats.firstTimeStamp
+                val end = stats.lastTimeStamp
+                if (begin <= 0L || end <= begin) return@mapNotNull null
+                if (begin < startTimestamp || end > endTimestamp) return@mapNotNull null
+                begin to end
+            }.toSet().sortedBy { it.first }
+
+            val accepted = acceptedByInterval.getOrPut(interval) { mutableSetOf() }
+            for (range in candidates) {
+                if (acceptedRanges.any { overlaps(it, range) }) {
+                    overlapDropsByInterval[interval] = (overlapDropsByInterval[interval] ?: 0) + 1
+                } else {
+                    accepted.add(range)
+                    acceptedRanges.add(range)
+                }
+            }
+        }
 
         val perPackageMs = mutableMapOf<String, Long>()
         val evidences = mutableListOf<SegmentEvidence>()
-        for ((interval, window, capDays) in specs) {
-            val (segStart, segEnd) = window
-            val ev = queryBucketWithinSegment(
-                intervalType = interval,
-                segStart = segStart,
-                segEnd = segEnd,
+        for ((interval, name, capDays) in specs) {
+            val statsList = rawByInterval[interval].orEmpty()
+            val acceptedRangesForInterval = acceptedByInterval[interval].orEmpty()
+            var droppedOutsideWindow = 0
+            var droppedPartialBucket = 0
+            var zeroDurationBuckets = 0
+            var invalidTimestampBuckets = 0
+            var reflectedLaunches = 0
+            val packageBucketDurations = mutableMapOf<Pair<String, Pair<Long, Long>>, Long>()
+            val packageBucketLaunches = mutableMapOf<Pair<String, Pair<Long, Long>>, Int>()
+
+            for (stats in statsList) {
+                if (!isAllowed(stats)) continue
+                val duration = stats.totalTimeInForeground.coerceAtLeast(0L)
+                if (duration <= 0L) {
+                    zeroDurationBuckets++
+                    continue
+                }
+                val begin = stats.firstTimeStamp
+                val end = stats.lastTimeStamp
+                if (begin <= 0L || end <= begin) {
+                    invalidTimestampBuckets++
+                    continue
+                }
+                if (end <= startTimestamp || begin >= endTimestamp) {
+                    droppedOutsideWindow++
+                    continue
+                }
+                if (begin < startTimestamp || end > endTimestamp) {
+                    droppedPartialBucket++
+                    continue
+                }
+                val range = begin to end
+                if (range !in acceptedRangesForInterval) continue
+
+                val packageName = stats.packageName ?: continue
+                val key = packageName to range
+                packageBucketDurations[key] = maxOf(packageBucketDurations[key] ?: 0L, duration)
+                val launches = readLaunchCount(stats)
+                packageBucketLaunches[key] = maxOf(packageBucketLaunches[key] ?: 0, launches)
+            }
+
+            packageBucketDurations.forEach { (key, duration) ->
+                perPackageMs[key.first] = (perPackageMs[key.first] ?: 0L) + duration
+            }
+            reflectedLaunches = packageBucketLaunches.values.sum()
+            val coveredDays = acceptedRangesForInterval.sumOf { (begin, end) ->
+                ((end - begin) / MILLIS_IN_A_DAY).toInt().coerceAtLeast(0)
+            }
+            val contributedMs = packageBucketDurations.values.sum()
+            val ev = SegmentEvidence(
+                bucketName = name,
+                windowBegin = startTimestamp,
+                windowEnd = endTimestamp,
+                windowDays = requestedDays,
+                rawEntries = statsList.size,
+                keptBuckets = packageBucketDurations.size,
+                droppedOutsideWindow = droppedOutsideWindow,
+                droppedPartialBucket = droppedPartialBucket,
+                droppedOverlapBuckets = overlapDropsByInterval[interval] ?: 0,
+                zeroDurationBuckets = zeroDurationBuckets,
+                invalidTimestampBuckets = invalidTimestampBuckets,
+                acceptedIntervals = acceptedRangesForInterval.size,
+                coveredDays = coveredDays,
+                contributedMs = contributedMs,
                 retentionCapDays = capDays,
-                ignoreSystemApps = ignoreSystemApps,
-                ignoredPackages = ignoredPackages,
-                sink = perPackageMs
+                reflectedLaunches = reflectedLaunches
             )
             evidences.add(ev)
             AppLog.event(
                 "DEBUG", "UsageStatsTracker", "SEGMENT",
-                "${ev.bucketName} contributed ${ev.contributedMs} ms over ${ev.windowDays}d",
+                "${ev.bucketName} contributed ${ev.contributedMs} ms from ${ev.acceptedIntervals} complete intervals",
                 "bucket" to ev.bucketName,
                 "windowBegin" to ev.windowBegin,
                 "windowEnd" to ev.windowEnd,
                 "windowDays" to ev.windowDays,
                 "rawEntries" to ev.rawEntries,
                 "keptBuckets" to ev.keptBuckets,
+                "acceptedIntervals" to ev.acceptedIntervals,
+                "coveredDays" to ev.coveredDays,
                 "droppedOutsideWindow" to ev.droppedOutsideWindow,
                 "droppedPartialBucket" to ev.droppedPartialBucket,
+                "droppedOverlapBuckets" to ev.droppedOverlapBuckets,
                 "zeroDurationBuckets" to ev.zeroDurationBuckets,
                 "invalidTimestampBuckets" to ev.invalidTimestampBuckets,
                 "contributedMs" to ev.contributedMs,
                 "retentionCapDays" to ev.retentionCapDays,
                 "reflectedLaunches" to ev.reflectedLaunches,
-                "note" to "disjoint segments; INTERVAL_BEST is never used"
+                "note" to "complete non-overlapping buckets; priority DAILY > WEEKLY > MONTHLY"
             )
         }
+
         val totalMs = perPackageMs.values.sum()
         val isEstimated = evidences.any {
             it.bucketName != "INTERVAL_DAILY" && it.keptBuckets > 0
         }
         AppLog.event(
             "DEBUG", "UsageStatsTracker", "SEGMENT_TOTALS",
-            "Segmented ${requestedDays}d total = $totalMs ms from ${evidences.size} disjoint buckets",
+            "Segmented ${requestedDays}d total = $totalMs ms from non-overlapping complete buckets",
             "requestedDays" to requestedDays,
             "totalMs" to totalMs,
             "distinctPackages" to perPackageMs.size,
-            "segments" to evidences.joinToString("|") { "${it.bucketName}:${it.contributedMs}" },
+            "segments" to evidences.joinToString("|") {
+                "${it.bucketName}:${it.contributedMs}/${it.coveredDays}d"
+            },
             "isEstimated" to isEstimated,
             "bestBucketUsed" to false,
             "launchSource" to "queryEvents day-by-day permanent store (system buckets expose no launch counts)"
         )
         return SegmentedMonthTotals(perPackageMs, totalMs, evidences, isEstimated)
-    }
-
-    /** Reads one bucket for a single disjoint segment and folds each entry into [sink]. */
-    private fun queryBucketWithinSegment(
-        intervalType: Int,
-        segStart: Long,
-        segEnd: Long,
-        retentionCapDays: Int,
-        ignoreSystemApps: Boolean,
-        ignoredPackages: List<String>,
-        sink: MutableMap<String, Long>
-    ): SegmentEvidence {
-        val statsList = try {
-            usageStatsManager.queryUsageStats(intervalType, segStart, segEnd)
-        } catch (e: Exception) {
-            AppLog.e("UsageStatsTracker", "queryUsageStats(segment $intervalType) failed", e)
-            null
-        }.orEmpty()
-
-        val selfPackage = context.packageName
-        var keptBuckets = 0
-        var droppedOutsideWindow = 0
-        var droppedPartialBucket = 0
-        var zeroDurationBuckets = 0
-        var invalidTimestampBuckets = 0
-        var contributedMs = 0L
-        var reflectedLaunches = 0
-        for (stats in statsList) {
-            val packageName = stats.packageName ?: continue
-            if (packageName.isEmpty() || packageName == selfPackage) continue
-            if (ignoredPackages.contains(packageName)) continue
-            if (ignoreSystemApps && packageName !in launchableApp) continue
-            val duration = stats.totalTimeInForeground.coerceAtLeast(0L)
-            if (duration <= 0L) {
-                zeroDurationBuckets++
-                continue
-            }
-
-            // firstTimeStamp / lastTimeStamp describe the time range represented by this
-            // UsageStats object, not the app's last foreground event. Android may expand
-            // queryUsageStats() to whole weekly/monthly intervals. Never assign a partial bucket
-            // to a disjoint segment: its aggregate duration cannot be prorated safely.
-            val bucketBegin = stats.firstTimeStamp
-            val bucketEnd = stats.lastTimeStamp
-            if (bucketBegin <= 0L || bucketEnd <= bucketBegin) {
-                invalidTimestampBuckets++
-                continue
-            }
-            if (bucketEnd <= segStart || bucketBegin >= segEnd) {
-                droppedOutsideWindow++
-                continue
-            }
-            if (bucketBegin < segStart || bucketEnd > segEnd) {
-                droppedPartialBucket++
-                continue
-            }
-            sink[packageName] = (sink[packageName] ?: 0L) + duration
-            contributedMs += duration
-            keptBuckets++
-            // getAppLaunchCount() cross-check: on most ROMs the long-lived buckets report 0,
-            // so the authoritative launch counts stay in the permanent per-day event store.
-            reflectedLaunches += readLaunchCount(stats)
-        }
-        return SegmentEvidence(
-            bucketName = intervalName(intervalType),
-            windowBegin = segStart,
-            windowEnd = segEnd,
-            windowDays = ((segEnd - segStart) / MILLIS_IN_A_DAY).toInt(),
-            rawEntries = statsList.size,
-            keptBuckets = keptBuckets,
-            droppedOutsideWindow = droppedOutsideWindow,
-            droppedPartialBucket = droppedPartialBucket,
-            zeroDurationBuckets = zeroDurationBuckets,
-            invalidTimestampBuckets = invalidTimestampBuckets,
-            contributedMs = contributedMs,
-            retentionCapDays = retentionCapDays,
-            reflectedLaunches = reflectedLaunches
-        )
     }
 
     private fun intervalName(intervalType: Int): String = when (intervalType) {
