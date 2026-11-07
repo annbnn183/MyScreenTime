@@ -38,8 +38,13 @@ jobs:
           echo "Invalid or missing versionName in app/build.gradle.kts: '$V'" >&2
           exit 1
         fi
-        C=$(grep -m1 -E '^[[:space:]]*versionCode[[:space:]]*=' app/build.gradle.kts | sed -E 's/.*=[[:space:]]*([0-9]+).*/\1/')
-        if ! printf '%s' "$C" | grep -qE '^[0-9]+
+        C=$(awk -F= '/^[[:space:]]*versionCode[[:space:]]*=/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' app/build.gradle.kts)
+        if ! printf '%s' "$C" | grep -qE '^[0-9]+$' ; then
+          echo "Invalid versionCode in app/build.gradle.kts: '$C'" >&2
+          exit 1
+        fi
+        echo "version=$V" >> "$GITHUB_OUTPUT"
+        echo "version_code=$C" >> "$GITHUB_OUTPUT"
         echo "Release version: v$V (from app/build.gradle.kts)"
 
     # A fixed keystore keeps the signing certificate identical across every CI run, so users can
