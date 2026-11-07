@@ -28,6 +28,12 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ---
 
+## ✅ Current release: stable and smooth for everyday use
+
+Based on recent real-world use and performance observations, v1.0.22 feels smooth in everyday operation, with no currently identified crashes or persistent stuttering that require urgent action. **You are welcome to download and use it with confidence.**
+
+The app will continue to be maintained. To protect your history, we recommend backing up important data regularly via **Settings → Data Management**. If you encounter an issue, please report it through Issues.
+
 ## 🧪 v1.0.22: diagnostic summaries that guide the next release
 
 This release focuses on making exported diagnostics more useful, not simply collecting more logs:
