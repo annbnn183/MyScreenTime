@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -94,6 +94,34 @@ On top of the original open-source project, I have added capabilities while stic
 **Delete all data:** writes a safety snapshot first, then clears settings and history.
 
 **Version compatibility:** the backup format is independent of the database; files carry `format`/`schemaVersion`; **newer-format backups are rejected with a reason**, older ones are handled.
+
+---
+
+## 🗂 v1.0.20: logs short enough to paste into a chat
+
+Sharing used to produce exactly one thing: a 1.6 MB TXT with 9,000 lines. Too big to send on WeChat, too long for an AI chat box, so the usual outcome was deleting most of it — losing the error lines that actually mattered.
+
+This release splits export into three levels you choose from:
+
+| Level | Size | When to use |
+| :--- | :--- | :--- |
+| Short digest | ~600 characters | Paste straight into WeChat / ChatGPT, fits one screen |
+| Recent 500 lines | ~60 KB | Need context without handing over the whole history |
+| Full log | several MB | Archiving, line-by-line review |
+
+The copy button in the top bar now copies the **short digest**, which contains only:
+
+- version, package, device model, Android version, ABI, usage-access state
+- error count (ERROR / FATAL / crash / ANR) plus the latest raw lines
+- abnormal exits (low-memory kill, ANR, crash), de-duplicated by reason
+- key numbers: tap-to-frame (avg / worst), dropped frames, query cost (avg / worst)
+- the 3 slowest taps and 2 slowest queries
+
+The digest is capped at 1,500 characters. On overflow it drops slowest operations first, then the metrics block; **errors and device info are never dropped**.
+
+> This also fixes a bug that made the statistics meaningless: Android returns the same exit list on every launch and the app wrote all of it again, so one kill appeared 8 times — the old log claimed "109 LOW_MEMORY exits" when only 13 had happened. Records are now keyed by reason + timestamp, and the digest merges historical duplicates too.
+
+Logging policy is unchanged: **the full log is still captured forever and nothing is deleted**. This release only adds shorter ways to export it.
 
 ---
 
@@ -327,7 +355,7 @@ MyScreenTime does not need to become the screen-time app with the most features,
 
 ## ⚙️ Automated build
 
-Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.19.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
+Pushing to `main` triggers [`.github/workflows/build.yml`](.github/workflows/build.yml), which builds `assembleDefaultDebug`, signs it with a fixed key, and publishes the APK to Releases. **The version number takes [`app/build.gradle.kts`](app/build.gradle.kts)'s `versionName` as the single source of truth**: the Release tag, Release name, APK file name (e.g. `MyScreenTime-v1.0.20.apk`), and the version shown in Settings → About are all generated from it, so they always match; to publish a new version, just bump both `versionName` and `versionCode`. The signing key lives only in the repo's Actions Secrets and is not committed (see `.gitignore`).
 
 ---
 

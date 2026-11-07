@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -94,6 +94,34 @@
 **刪除全部資料：** 先留一份安全快照，再清空設定與歷史。
 
 **版本相容：** 備份格式與資料庫結構相互獨立，檔案帶 `format`/`schemaVersion`；**較新格式的備份會被拒絕並說明原因**，較舊格式會被處理。
+
+---
+
+## 🗂 v1.0.20：日誌短到能貼進聊天框
+
+以前按「分享」只有一種結果：一個 1.6 MB、9000 行的 TXT。微信傳不出去，貼進 AI 對話框也太長，最後只能刪掉大半——真正有用的錯誤行反而沒了。
+
+這一版把「匯出」拆成三檔，由你選：
+
+| 粒度 | 體積 | 適用場景 |
+| :--- | :--- | :--- |
+| 精簡摘要 | 約 600 字 | 直接貼進微信 / ChatGPT，一屏看完 |
+| 最近 500 行 | 約 60 KB | 需要上下文，但不想給整份歷史 |
+| 完整日誌 | 幾 MB | 存檔、逐行核對 |
+
+頂端的複製按鈕現在複製的是**精簡摘要**，只包含：
+
+- 版本、套件名、裝置型號、Android 版本、ABI、使用情況存取權限
+- 錯誤筆數（ERROR / FATAL / 崩潰 / ANR），以及最近幾筆原文
+- 異常結束（低記憶體被殺、ANR、崩潰），依原因去重
+- 關鍵指標：點擊到首幀（平均／最差）、掉幀、查詢耗時（平均／最差）
+- 最慢的 3 次點擊與 2 次查詢
+
+摘要上限 1500 字。萬一超出，先丟「最慢操作」，再丟「關鍵指標」，**錯誤與裝置資訊永不丟**。
+
+> 順帶修了一個會讓統計徹底失真的問題：系統每次啟動都會把同一批結束記錄再回傳一遍，應用原樣寫進日誌，於是一次被殺會記 8 次——舊日誌裡「109 次 LOW_MEMORY」其實只發生 13 次。現在依「原因 + 時間」去重，新記錄不再重複，歷史重複項在摘要裡也會合併。
+
+日誌策略沒變：**完整日誌仍然一筆不丟、永久保存**。這一版只是多給了幾種更短的匯出方式，不刪除任何東西。
 
 ---
 
@@ -327,7 +355,7 @@ MyScreenTime 不需要成為功能最多的螢幕使用時間軟體，而應該�
 
 ## ⚙️ 自動建置
 
-推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.19.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
+推送到 `main` 會觸發 [`.github/workflows/build.yml`](.github/workflows/build.yml)，建置 `assembleDefaultDebug`，用固定金鑰簽名後把 APK 發佈到 Releases。**版本號以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 為唯一來源**：Release 標籤、Release 名稱、APK 檔名（如 `MyScreenTime-v1.0.20.apk`）以及應用程式內「設定 → 關於」顯示的版本都由它生成，因此始終一致；發佈新版本只需同時遞增 `versionName` 與 `versionCode`。簽名金鑰只存放在倉庫的 Actions Secrets 中，不入庫（見 `.gitignore`）。
 
 ---
 

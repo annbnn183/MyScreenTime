@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -33,6 +33,7 @@
 - [关于这个项目](#关于这个项目)
 - [✨ 功能特性](#-功能特性)
 - [💾 数据管理：备份、恢复与迁移](#-数据管理备份恢复与迁移)
+- [🗂 v1.0.20：日志导出](#-v1020日志导出短到能发微信)
 - [🏆 v1.0.19：综合排行榜](#-v1019综合排行榜)
 - [⚡ v1.0.17 → v1.0.18：体验优化](#-v1017--v1018依据真实运行日志的体验优化)
 - [📸 界面截图](#-界面截图)
@@ -90,7 +91,7 @@
 {
   "format": 2,
   "schemaVersion": 2,
-  "appVersion": "1.0.18",
+  "appVersion": "1.0.20",
   "exportedAt": "2026-11-07 05:13:23",
   "exportedAtEpochMs": 1793999603000,
   "timeZoneId": "Asia/Shanghai",
@@ -136,6 +137,34 @@
 2. 新机：安装同一签名的新版本 → 设置 → **恢复数据** → 选择文件。
 3. 选择**合并**（保留新机已有数据）或**覆盖**（完全还原旧机数据）。
 4. 按提示重新授予「使用情况访问」权限。
+
+---
+
+## 🗂 v1.0.20：日志导出，短到能发微信
+
+以前点「分享」只有一种结果：一个 1.6 MB、9000 行的 TXT。微信里发不出去，粘进 AI 对话框也超过长度限制，最后只能整段删到只剩几行——真正有用的错误信息反而丢了。
+
+这一版把「导出」拆成三档，由你选：
+
+| 粒度 | 体积 | 适用场景 |
+| :--- | :--- | :--- |
+| 精简摘要 | 约 600 字 | 直接粘进微信 / ChatGPT，一屏看完 |
+| 最近 500 行 | 约 60 KB | 需要上下文，但不想给整份历史 |
+| 完整日志 | 几 MB | 存档、逐行核对 |
+
+顶栏的复制按钮现在复制的是**精简摘要**，只包含：
+
+- 版本、包名、设备型号、Android 版本、ABI、使用情况访问权限
+- 错误条数（ERROR / FATAL / 崩溃 / ANR），以及最近几条原文
+- 异常退出（低内存被杀、ANR、崩溃），按原因去重
+- 关键指标：点击到首帧（平均 / 最差）、掉帧、查询耗时（平均 / 最差）
+- 最慢的 3 次点击和 2 次查询
+
+摘要上限 1500 字。万一超了，先丢「最慢操作」，再丢「关键指标」，**错误和设备信息永不丢**。
+
+> 顺带修了一个会让统计彻底失真的问题：系统每次启动都会把同一批退出记录再返回一遍，应用原样写进日志，于是一次被杀会记 8 次——旧日志里「109 次 LOW_MEMORY」其实只发生了 13 次。现在按「原因 + 时间」去重，新记录不再重复，历史重复项在摘要里也会被合并。
+
+日志策略没变：**完整日志仍然一条不丢、永久保存**。这一版只是多给了几种更短的导出方式，不删除任何东西。
 
 ---
 
@@ -375,7 +404,7 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 
 ## ⚙️ 自动构建
 
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.19.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultDebug`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.20.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
 ---
 

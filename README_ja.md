@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -94,6 +94,34 @@
 **すべてのデータを削除：** 先に安全スナップショットを作成してから設定と履歴を消去。
 
 **バージョン互換性：** バックアップ形式はデータベースと独立。`format`/`schemaVersion` を持ち、**より新しい形式のバックアップは理由付きで拒否**、古いものは処理します。
+
+---
+
+## 🗂 v1.0.20：チャットに貼れる長さのログ
+
+これまで「共有」は 1.6 MB・9000 行の TXT を 1 種類だけ出力していました。WeChat では送れず、AI の入力欄にも長すぎるため、結局ほとんどを削ってから貼ることになり、本当に必要なエラー行が消えていました。
+
+この版では出力を 3 段階から選べます。
+
+| 粒度 | サイズ | 用途 |
+| :--- | :--- | :--- |
+| 簡易サマリー | 約 600 文字 | WeChat / ChatGPT にそのまま貼れる |
+| 直近 500 行 | 約 60 KB | 文脈は欲しいが全履歴は不要 |
+| 完全ログ | 数 MB | 保管・行単位の確認 |
+
+上部のコピーボタンは**簡易サマリー**をコピーします。含まれるのは以下だけです。
+
+- バージョン、パッケージ名、端末モデル、Android バージョン、ABI、使用状況アクセスの状態
+- エラー件数（ERROR / FATAL / クラッシュ / ANR）と直近の原文
+- 異常終了（低メモリ kill、ANR、クラッシュ）。理由ごとに重複排除
+- 主要指標：タップから初回フレーム（平均 / 最悪）、フレーム落ち、クエリ時間（平均 / 最悪）
+- 遅いタップ 3 件、遅いクエリ 2 件
+
+上限は 1500 文字。超えた場合は「遅い操作」→「主要指標」の順に削り、**エラーと端末情報は絶対に削りません**。
+
+> 統計を根本から狂わせる不具合も直しました。Android は起動のたびに同じ終了履歴を返し、アプリはそれをそのまま再記録していたため、1 回の kill が 8 回分になっていました（旧ログの「109 回 LOW_MEMORY」の実体は 13 回）。現在は「理由 + 時刻」で重複を排除し、過去分もサマリー側で統合します。
+
+ログの方針は変わりません。**完全ログは 1 件も削除せず永久保存**します。短く出す方法を増やしただけです。
 
 ---
 
@@ -327,7 +355,7 @@ MyScreenTime は機能最多の画面使用時間アプリになる必要はな�
 
 ## ⚙️ 自動ビルド
 
-`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.19.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
+`main` へのプッシュで [`.github/workflows/build.yml`](.github/workflows/build.yml) が起動し、`assembleDefaultDebug` をビルド、固定キーで署名して APK を Releases に公開します。**バージョン番号は [`app/build.gradle.kts`](app/build.gradle.kts) の `versionName` を単一の情報源**とします。Release タグ・Release 名・APK ファイル名（例 `MyScreenTime-v1.0.20.apk`）・設定 → 概要に表示されるバージョンはすべてここから生成されるため常に一致します。新バージョン公開時は `versionName` と `versionCode` を同時に増やすだけです。署名キーはリポジトリの Actions Secrets のみにあり、コミットされません（`.gitignore` 参照）。
 
 ---
 

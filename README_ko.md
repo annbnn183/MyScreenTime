@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.19-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.20-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -94,6 +94,34 @@
 **모든 데이터 삭제:** 먼저 안전 스냅샷을 만든 뒤 설정과 기록을 지웁니다.
 
 **버전 호환성:** 백업 형식은 데이터베이스와 독립적이며 `format`/`schemaVersion`을 가집니다. **더 새로운 형식의 백업은 이유와 함께 거부**하고, 이전 형식은 처리합니다.
+
+---
+
+## 🗂 v1.0.20: 채팅창에 붙일 수 있는 짧은 로그
+
+이전에는 '공유'를 누르면 1.6 MB·9,000줄짜리 TXT 하나만 나왔습니다. 위챗으로 보내기엔 크고 AI 입력창에는 너무 길어서, 결국 대부분을 지우고 붙여야 했고 정작 필요한 오류 줄이 사라졌습니다.
+
+이번 버전은 내보내기를 세 단계로 나눕니다.
+
+| 단위 | 크기 | 용도 |
+| :--- | :--- | :--- |
+| 요약본 | 약 600자 | 위챗 / ChatGPT에 바로 붙여넣기 |
+| 최근 500줄 | 약 60 KB | 맥락은 필요하지만 전체 이력은 불필요 |
+| 전체 로그 | 수 MB | 보관, 줄 단위 확인 |
+
+상단 복사 버튼은 이제 **요약본**을 복사하며, 포함 내용은 다음과 같습니다.
+
+- 버전, 패키지명, 기기 모델, Android 버전, ABI, 사용 정보 접근 권한
+- 오류 건수(ERROR / FATAL / 크래시 / ANR)와 최근 원문
+- 비정상 종료(저메모리 kill, ANR, 크래시)를 원인별로 중복 제거
+- 핵심 지표: 탭→첫 프레임(평균/최악), 프레임 드랍, 쿼리 시간(평균/최악)
+- 가장 느린 탭 3건, 쿼리 2건
+
+요약본은 최대 1,500자입니다. 초과하면 '느린 작업' → '핵심 지표' 순으로 줄이고, **오류와 기기 정보는 절대 줄이지 않습니다**.
+
+> 통계를 완전히 왜곡하던 버그도 고쳤습니다. Android는 실행할 때마다 같은 종료 이력을 다시 주는데 앱이 그대로 또 기록해서, 한 번의 kill이 8번으로 남았습니다(예전 로그의 "109회 LOW_MEMORY"는 실제 13회). 이제 '원인 + 시각'으로 중복을 제거하고, 과거 중복도 요약본에서 합칩니다.
+
+로그 정책은 그대로입니다. **전체 로그는 한 줄도 삭제하지 않고 영구 보관**하며, 더 짧게 내보내는 방법만 늘렸습니다.
 
 ---
 
@@ -327,7 +355,7 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 
 ## ⚙️ 자동 빌드
 
-`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.19.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultDebug`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.20.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
 
 ---
 
