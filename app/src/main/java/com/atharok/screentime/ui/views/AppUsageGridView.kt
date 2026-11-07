@@ -345,13 +345,14 @@ private fun RangeSummaryCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            if (onBackfill != null && range.clickDaysRecorded < range.numberOfDays) {
+            if (onBackfill != null && range.clickDaysRecorded < range.backfillLimitDays) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(
                         id = R.string.click_backfill_hint,
                         range.clickDaysRecorded,
-                        range.numberOfDays
+                        range.numberOfDays,
+                        range.backfillLimitDays
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
