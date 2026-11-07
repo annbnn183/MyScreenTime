@@ -480,7 +480,6 @@ class UsageStatsTracker(
             AppLog.e("UsageStatsTracker", "queryUsageStats(intervalType=$intervalType) failed", e)
             null
         }.orEmpty()
-        var keptBuckets = 0
         var droppedPartialBuckets = 0
         var droppedOutsideWindow = 0
         var zeroDurationBuckets = 0
@@ -588,6 +587,8 @@ class UsageStatsTracker(
         val perPackageMs: Map<String, Long>,
         val totalMs: Long,
         val segments: List<SegmentEvidence>,
+        /** Calendar days covered by accepted, non-overlapping intervals across all resolutions. */
+        val coveredDays: Int,
         /** True only when at least one non-daily aggregate bucket contributes to the total. */
         val isEstimated: Boolean = false
     )
@@ -754,6 +755,7 @@ class UsageStatsTracker(
         }
 
         val totalMs = perPackageMs.values.sum()
+        val coveredDays = evidences.sumOf { it.coveredDays }
         val isEstimated = evidences.any {
             it.bucketName != "INTERVAL_DAILY" && it.keptBuckets > 0
         }
@@ -762,6 +764,7 @@ class UsageStatsTracker(
             "Segmented ${requestedDays}d total = $totalMs ms from non-overlapping complete buckets",
             "requestedDays" to requestedDays,
             "totalMs" to totalMs,
+            "coveredDays" to coveredDays,
             "distinctPackages" to perPackageMs.size,
             "segments" to evidences.joinToString("|") {
                 "${it.bucketName}:${it.contributedMs}/${it.coveredDays}d"
@@ -770,7 +773,7 @@ class UsageStatsTracker(
             "bestBucketUsed" to false,
             "launchSource" to "queryEvents day-by-day permanent store (system buckets expose no launch counts)"
         )
-        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, isEstimated)
+        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, coveredDays, isEstimated)
     }
 
     private fun intervalName(intervalType: Int): String = when (intervalType) {
