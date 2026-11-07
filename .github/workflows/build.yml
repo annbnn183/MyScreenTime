@@ -38,7 +38,173 @@ jobs:
           echo "Invalid or missing versionName in app/build.gradle.kts: '$V'" >&2
           exit 1
         fi
+        C=$(grep -m1 -E '^[[:space:]]*versionCode[[:space:]]*=' app/build.gradle.kts | sed -E 's/.*=[[:space:]]*([0-9]+).*/\1/')
+        if ! printf '%s' "$C" | grep -qE '^[0-9]+
+        echo "Release version: v$V (from app/build.gradle.kts)"
+
+    # A fixed keystore keeps the signing certificate identical across every CI run, so users can
+    # install newer builds directly over older ones instead of being forced to uninstall first.
+    - name: Decode the fixed signing keystore
+      id: keystore
+      env:
+        SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+      run: |
+        if [ -z "$SIGNING_KEYSTORE_BASE64" ]; then
+          echo "SIGNING_KEYSTORE_BASE64 is required; refusing to publish with a fallback certificate." >&2
+          exit 1
+        fi
+        printf '%s' "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/myscreentime.jks"
+        test -s "$RUNNER_TEMP/myscreentime.jks"
+        echo "path=$RUNNER_TEMP/myscreentime.jks" >> "$GITHUB_OUTPUT"
+        echo "Fixed signing keystore decoded."
+
+    # The project has "default" and "gplay" product flavors, so a plain `assembleDebug` puts the
+    # APK under apk/<flavor>/debug/ instead of apk/debug/. Build one flavor explicitly.
+    - name: Run unit tests and build signed Release APK
+      env:
+        ANDROID_KEY_STORE_FILE: ${{ steps.keystore.outputs.path }}
+        ANDROID_KEY_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+        ANDROID_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+        ANDROID_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+      run: ./gradlew testDefaultDebugUnitTest assembleDefaultRelease
+
+    - name: Locate and rename APK
+      run: |
+        APK=$(find app/build/outputs/apk/default/release -name "*.apk" -type f | head -n 1)
+        if [ -z "$APK" ]; then
+          echo "No APK was produced. Contents of app/build/outputs/apk:"
+          find app/build/outputs/apk -type f || true
+          exit 1
+        fi
+        echo "Found APK: $APK"
+        mkdir -p artifacts
+        cp "$APK" "artifacts/MyScreenTime-v${{ steps.version.outputs.version }}.apk"
+        ls -lh artifacts
+
+    - name: Verify package, version and signing certificate
+      shell: bash
+      run: |
+        APK="artifacts/MyScreenTime-v${{ steps.version.outputs.version }}.apk"
+        BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+        AAPT="$BUILD_TOOLS/aapt"
+        APKSIGNER="$BUILD_TOOLS/apksigner"
+        test -x "$AAPT"
+        test -x "$APKSIGNER"
+        BADGING="$("$AAPT" dump badging "$APK" | head -n 1)"
+        echo "$BADGING"
+        echo "$BADGING" | grep -q "name='com.atharok.screentime.debug'"
+        echo "$BADGING" | grep -q "versionCode='${{ steps.version.outputs.version_code }}' versionName='${{ steps.version.outputs.version }}'"
+        "$APKSIGNER" verify "$APK"
+        CERT="$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]')"
+        EXPECTED="d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501"
+        echo "Signer SHA-256: $CERT"
+        if [ "$CERT" != "$EXPECTED" ]; then
+          echo "Signing certificate mismatch; refusing to publish." >&2
+          exit 1
+        fi
+        echo "Package, version and fixed signing certificate verified."
+
+    - name: Create Release and Upload APK
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: MyScreenTime v${{ steps.version.outputs.version }}
+        body: |
+          MyScreenTime **v${{ steps.version.outputs.version }}** - automated build from commit ${{ github.sha }} (run #${{ github.run_number }}).
+
+          > The version shown inside the app, the APK filename and this release tag are ALL read
+          > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
+
+          What's new in v1.0.21 — performance and install-safe Release:\n          - Load app icons on demand through the bounded downscaled cache instead of retaining full-size Drawable objects for every app in usage results.\n          - Record long idle/background Choreographer suspensions as FRAME_MONITOR_GAP, not JANK.\n          - Build a non-debuggable, minified Release APK while preserving applicationId com.atharok.screentime.debug for direct upgrades from v1.0.20.\n          - CI requires the fixed keystore and verifies package ID, version and pinned certificate SHA-256 before publishing.\n          - No database schema, backup format or user data is changed.\n\n          Previously, v1.0.20 — logs you can actually send:
+          Exporting used to mean one 1.6 MB / 9,000-line file: too big for WeChat, too long for a
+          chat box. The log screen now lets you pick the granularity instead of forcing the full dump.
+          - Copy (top bar) now copies a ~600-character diagnostic digest: version, device, Android
+            version, usage-access state, error count, abnormal exits, tap/query/frame numbers and the
+            slowest few operations. It fits in a single message and pastes straight into a chat.
+          - Share asks first: digest / recent 500 lines (~60 KB TXT) / full history.
+          - The digest is capped at 1,500 characters. If it overflows, slowest-operation lines are
+            dropped first; errors and device info are never dropped.
+          - Exit records are de-duplicated. Android returns the same ApplicationExitInfo list on
+            every launch, so a single kill used to be written 8 times: the previous log claimed
+            "109 LOW_MEMORY exits" when only 13 had really happened. New exits are keyed by
+            (reason, timestamp), and the digest de-duplicates historical records too.
+          Nothing is deleted: the full log is still captured and kept forever. This release only
+          adds shorter ways to export it.
+
+          Previously, v1.0.19 — combined ranking by opens x screen time:
+          - New 4th sort option "Combined" in the app ranking. Combined share = time share x w +
+            open share x (1 - w); both shares are taken against all apps in the selected range, so
+            the combined shares add up to 100%. Shares (not raw values) are used because
+            milliseconds and counts have different scales.
+          - Three one-tap weights: time first 7:3 / balanced 5:5 (default) / opens first 3:7.
+          - Each row shows rank, icon, name, time + share, opens + share and the combined share.
+            With no open counts recorded for the range it falls back to screen time only and says so.
+          - Small fix: "show more" now appears whenever there are more apps than the first screen
+            (it used to need more than 40, so 21-40 apps could not be expanded); "Show top 40 only"
+            now reads "Collapse".
+          - Nothing is deleted or migrated: data, backups and the permanent log are untouched.
+
+          Previously, v1.0.18 — making the runtime log trustworthy:
+
+          v1.0.18 — making the runtime log trustworthy:
+          The previous log had 922 JANK records at the same time as 10 ms tap-to-frame latency,
+          which is self-contradictory. Root cause: the frame monitor counted "the UI is idle, so
+          there is no new frame" as a dropped frame (one gap was 2.3 s). That noise would keep
+          misleading every future performance decision, so this release fixes the measurement
+          before optimising anything else.
+          - JANK now only covers intervals within 1.2 s of a touch, i.e. real dropped frames.
+            Idle intervals are recorded separately as IDLE_GAP and are NOT counted as jank.
+          - IDLE_GAP is summarised once per 30 s (longest gap in that window) instead of up to one
+            record per second, so the log stops growing ~1.7 MB/day just from idle time.
+          - The export summary has a separate "Idle gaps" line, and the analysis prompt now states
+            that CLICK_TO_FRAME is the metric to judge responsiveness by.
+          - Backfill with 0 days now returns immediately. It used to invalidate the caches and
+            rebuild the whole screen anyway, which showed up as a 627 ms stall with zero data change.
+          - Nothing is deleted: every event is still captured and kept forever. Idle duration is
+            still fully preserved in IDLE_GAP; it just is not called a dropped frame any more.
+
+          What v1.0.17 delivered, measured on the user's own logs:
+          - tap-to-frame worst case 397 ms -> 76 ms (average 14 ms -> 10 ms)
+          - PSS peak 1375 MB -> 303 MB, no more LOW_MEMORY process kills
+          - launch-history backfill: 10+ manual taps of 31 days -> one automatic 365-day run
+            (log confirms stored days: 366, then "Backfilled 0 days")
+
+          - v1.0.17: removed runBlocking(DataStore) from the ViewModel constructor (971 ms first
+            frame); first screen 40 -> 20 cells (904 ms long frame); one-shot 365-day backfill with
+            progress; batch disk writes every 8 days; automatic silent backfill; auto-backup status
+            in Settings.
+          - v1.0.16: complete backup / restore / migration — versioned JSON (format, schemaVersion,
+            export time, time zone, record counts, SHA-256 checksum); write-then-read-back verify;
+            restore = validate -> safety snapshot + crash marker -> MERGE (max per day/app, so a
+            repeat import never doubles counts) or OVERWRITE -> re-verify, with automatic rollback on
+            any failure; optional AES-256-GCM + PBKDF2 password encryption; daily auto backup keeping
+            the latest 7; safety snapshot before "delete all data"; permission re-check after restore.
+          - v1.0.14: statistical accuracy - removed INTERVAL_BEST (auto-picked YEARLY for a 30-day
+            window), DISJOINT DAILY+WEEKLY+MONTHLY segments, fixed DAILY filtering (~71% of rows were
+            dropped), data-completeness classification, SEGMENT / DATA_COMPLETENESS log events,
+            per-bucket retention ceilings (~28 / ~182 / ~730 days)
+          - v1.0.12: async icon loading off the main thread, incremental "+40" ranking rendering,
+            JANK split into DEBUG/WARN, newest-first log view
+          - v1.0.11: 8MB downscaled icon LruCache, top-40 grid, permission-screen flash fix,
+            cheaper log reads, no more false Wi-Fi WARN
+          - v1.0.10: long-range hour totals, permanent per-day launch history with cancellable
+            backfill, always-visible click counts, 24-hour distribution
+          - v1.0.9: full-capture runtime log + TXT export with AI prompt
+          - v1.0.8: merged long-range ranking grid using system WEEKLY/MONTHLY/YEARLY buckets
+
+          Measured on real devices (v1.0.11 / v1.0.12 logs): PSS peak 1375MB -> 254MB (OnePlus PGZ110),
+          694MB -> 334MB (Xiaomi 22041216C); >500ms frame stalls 26 -> 1 and 46 -> 1; 0 ERROR / 0 FATAL;
+          no LOW_MEMORY kills after the fix.
+
+          Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7+ with
+          no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.
+        files: artifacts/*.apk
+        fail_on_unmatched_files: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+; then echo "Invalid versionCode: $C" >&2; exit 1; fi
         echo "version=$V" >> "$GITHUB_OUTPUT"
+        echo "version_code=$C" >> "$GITHUB_OUTPUT"
         echo "Release version: v$V (from app/build.gradle.kts)"
 
     # A fixed keystore keeps the signing certificate identical across every CI run, so users can
