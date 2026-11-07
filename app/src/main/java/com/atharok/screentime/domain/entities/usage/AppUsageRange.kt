@@ -19,7 +19,16 @@ data class AppUsageRange(
     /** 点击量最早记录日；null 表示还没有任何记录。 */
     val clickSinceDay: Long? = null,
     /** 系统该聚合桶的理论保留上限（天）：WEEKLY≈28 / MONTHLY≈182 / YEARLY≈730。 */
-    val retentionCapDays: Int = 0
+    val retentionCapDays: Int = 0,
+    /** Raw system entries returned before validating their represented time range. */
+    val rawBucketCount: Int = 0,
+    /** Buckets whose full represented time range is inside the requested window. */
+    val keptBucketCount: Int = 0,
+    /** Buckets crossing either requested boundary; their aggregate cannot be prorated safely. */
+    val droppedPartialBucketCount: Int = 0,
+    val droppedOutsideWindowBucketCount: Int = 0,
+    val zeroDurationBucketCount: Int = 0,
+    val invalidTimestampBucketCount: Int = 0
 )
 
 data class RankedApp(
