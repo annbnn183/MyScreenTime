@@ -32,6 +32,8 @@ class MonthlyDeviceUsage(
     val systemRetentionDays: Int = 0,
     /** 在保留上限之内、却因过滤/无时间戳/无使用而缺失的天数。 */
     val filteredDays: Int = 0,
+    /** Total calendar days covered by complete, non-overlapping DAILY/WEEKLY/MONTHLY buckets. */
+    val systemBucketCoveredDays: Int = 0,
     /** 总时长中属于系统聚合估算（而非逐日实测）的天数。 */
     val estimatedDays: Int = 0,
     /** 总时长是否含聚合桶估算部分（分段拼接口径）。 */
