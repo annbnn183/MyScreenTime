@@ -168,7 +168,7 @@
     <string name="range_daily_average">日均</string>
     <string name="range_total_launches">点击总量</string>
     <string name="range_days_recorded">已记录天数</string>
-    <string name="click_backfill_hint">点击量在本机逐日永久保存，已记录 %1$d/%2$d 天；更早的历史会在后台自动补齐，无需手动操作。</string>
+    <string name="click_backfill_hint">已记录 %1$d/%2$d 天。系统事件补录最多只能检查最近 %3$d 天；更早的事件可能已过期，无法从本地打开次数存档还原屏幕使用时长。</string>
     <string name="click_backfill">立即补算</string>
     <string name="click_backfill_running">正在补算…</string>
     <string name="click_backfill_progress">正在补算… 已推进 %1$d 天</string>
