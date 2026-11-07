@@ -355,6 +355,7 @@ class DeviceUsageRepositoryImpl(
             "30-day window explained: real days vs retention cap vs filtering",
             "dailyBucketTotalMs" to dailyTotals.sumOf { it.duration },
             "segmentedTotalMs" to aggregatedDeviceTotal,
+            "systemBucketCoveredDays" to segmented.coveredDays,
             "headlineSource" to "SEGMENTED DAILY(7d)+WEEKLY(8-28d)+MONTHLY(29d+); INTERVAL_BEST removed",
             "daysWithData" to daysWithData,
             "requestedDays" to requestedDays,
@@ -409,6 +410,7 @@ class DeviceUsageRepositoryImpl(
             daysWithData = daysWithData,
             systemRetentionDays = systemRetentionDays,
             filteredDays = filteredDays,
+            systemBucketCoveredDays = segmented.coveredDays,
             estimatedDays = estimatedDays,
             isEstimated = segmented.isEstimated,
             hourlyTotals = hourlyTotals
