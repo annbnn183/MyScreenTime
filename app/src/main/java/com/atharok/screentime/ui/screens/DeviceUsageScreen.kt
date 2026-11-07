@@ -3,7 +3,6 @@ package com.atharok.screentime.ui.screens
 import android.graphics.drawable.Drawable
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.PagerSnapDistance
@@ -138,8 +137,7 @@ private fun StatelessDeviceUsageScreen(
     backfillRunning: Boolean = false,
     backfillProgress: Int = 0,
     comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
-    modifier: Modifier = Modifier,
-    modelProducer: CartesianChartModelProducer = remember { CartesianChartModelProducer() }
+    modifier: Modifier = Modifier
 ) {
     AppScaffold(
         title = stringResource(id = R.string.usage_analysis),
@@ -181,8 +179,7 @@ private fun StatelessDeviceUsageScreen(
                 deviceUsageResource = deviceUsageResource,
                 openApplicationUsageScreen = openApplicationUsageScreen,
                 innerPadding = innerPadding,
-                modelProducer = modelProducer,
-                onBackfill = onBackfill,
+                        onBackfill = onBackfill,
                 backfillRunning = backfillRunning,
                 backfillProgress = backfillProgress,
                 comparison = comparison
@@ -203,7 +200,6 @@ private fun PortraitDeviceUsageScreen(
     deviceUsageResource: Resource<DeviceUsage<*>>,
     openApplicationUsageScreen: (appPackageName: String) -> Unit,
     innerPadding: PaddingValues,
-    modelProducer: CartesianChartModelProducer,
     onBackfill: (() -> Unit)? = null,
     backfillRunning: Boolean = false,
     backfillProgress: Int = 0,
@@ -241,6 +237,9 @@ private fun PortraitDeviceUsageScreen(
             .padding(innerPadding)
     ) { periodPage ->
         val pagePeriod = Period.entries[periodPage]
+        // Each composed period page owns its own chart producer; adjacent pager pages may
+        // coexist during animation and must never race over one shared Vico model producer.
+        val pageModelProducer = remember(pagePeriod) { CartesianChartModelProducer() }
         // Overview first, app ranking second. Each chapter keeps a LazyColumn for long lists.
         val chapterPagerState = rememberPagerState(pageCount = { 2 })
 
@@ -314,7 +313,7 @@ private fun PortraitDeviceUsageScreen(
                                         selectedCentralTendency = selectedCentralTendency,
                                         onSelectedCentralTendencyChange = onSelectedCentralTendencyChange,
                                         deviceUsage = deviceUsage,
-                                        modelProducer = modelProducer,
+                                        modelProducer = pageModelProducer,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
