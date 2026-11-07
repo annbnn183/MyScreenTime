@@ -231,7 +231,7 @@
     <string name="range_daily_average">Daily average</string>
     <string name="range_total_launches">Total opens</string>
     <string name="range_days_recorded">Days recorded</string>
-    <string name="click_backfill_hint">Open counts are stored day by day on this device, permanently. %1$d of %2$d days recorded; older days are backfilled automatically in the background.</string>
+    <string name="click_backfill_hint">Recorded %1$d of %2$d requested days. Event backfill can only check the most recent %3$d days; older events may have expired and cannot be used to reconstruct screen time.</string>
     <string name="click_backfill">Backfill now</string>
     <string name="click_backfill_running">Backfilling…</string>
     <string name="click_backfill_progress">Backfilling… %1$d days</string>
