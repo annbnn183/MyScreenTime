@@ -18,8 +18,8 @@ android {
         // The CI workflow reads this versionName to build the release tag, release name and APK
         // filename, so the in-app version and the GitHub release can never drift apart again.
         // Keep it in sync with versionCode: v1.0.20 -> versionCode 30 -> versionName 1.0.20.
-        versionCode = 30
-        versionName = "1.0.20"
+        versionCode = 31
+        versionName = "1.0.21"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -50,6 +50,8 @@ android {
         }
         release {
             isDebuggable = false
+            // Keep the installed v1.0.20 package ID for in-place updates from *.debug.
+            applicationIdSuffix = ".debug"
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles(

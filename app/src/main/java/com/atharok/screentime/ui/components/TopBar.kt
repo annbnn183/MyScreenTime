@@ -42,6 +42,7 @@ fun TopBar(
 fun TopBar(
     title: String,
     icon: Drawable?,
+    iconPackageName: String? = null,
     modifier: Modifier = Modifier,
     navigateUp: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
@@ -52,11 +53,19 @@ fun TopBar(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                ApplicationIcon(
-                    drawable = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size))
-                )
+                if (iconPackageName != null) {
+                    ApplicationIcon(
+                        packageName = iconPackageName,
+                        contentDescription = null,
+                        modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size))
+                    )
+                } else {
+                    ApplicationIcon(
+                        drawable = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(dimensionResource(id = R.dimen.icon_medium_size))
+                    )
+                }
                 TextLarge(
                     text = title,
                     modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.padding_medium))

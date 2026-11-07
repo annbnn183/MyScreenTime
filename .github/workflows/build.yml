@@ -45,28 +45,31 @@ jobs:
     # install newer builds directly over older ones instead of being forced to uninstall first.
     - name: Decode the fixed signing keystore
       id: keystore
+      env:
+        SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
       run: |
-        if [ -n "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" ]; then
-          echo "${{ secrets.SIGNING_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/myscreentime.jks"
-          echo "path=$RUNNER_TEMP/myscreentime.jks" >> "$GITHUB_OUTPUT"
-          echo "Fixed signing keystore decoded."
-        else
-          echo "No keystore secret configured; falling back to the default debug certificate."
+        if [ -z "$SIGNING_KEYSTORE_BASE64" ]; then
+          echo "SIGNING_KEYSTORE_BASE64 is required; refusing to publish with a fallback certificate." >&2
+          exit 1
         fi
+        printf '%s' "$SIGNING_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/myscreentime.jks"
+        test -s "$RUNNER_TEMP/myscreentime.jks"
+        echo "path=$RUNNER_TEMP/myscreentime.jks" >> "$GITHUB_OUTPUT"
+        echo "Fixed signing keystore decoded."
 
     # The project has "default" and "gplay" product flavors, so a plain `assembleDebug` puts the
     # APK under apk/<flavor>/debug/ instead of apk/debug/. Build one flavor explicitly.
-    - name: Build debug APK with Gradle
+    - name: Run unit tests and build signed Release APK
       env:
         ANDROID_KEY_STORE_FILE: ${{ steps.keystore.outputs.path }}
         ANDROID_KEY_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
         ANDROID_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
         ANDROID_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
-      run: ./gradlew assembleDefaultDebug
+      run: ./gradlew testDefaultDebugUnitTest assembleDefaultRelease
 
     - name: Locate and rename APK
       run: |
-        APK=$(find app/build/outputs/apk/default/debug -name "*.apk" -type f | head -n 1)
+        APK=$(find app/build/outputs/apk/default/release -name "*.apk" -type f | head -n 1)
         if [ -z "$APK" ]; then
           echo "No APK was produced. Contents of app/build/outputs/apk:"
           find app/build/outputs/apk -type f || true
@@ -76,6 +79,29 @@ jobs:
         mkdir -p artifacts
         cp "$APK" "artifacts/MyScreenTime-v${{ steps.version.outputs.version }}.apk"
         ls -lh artifacts
+
+    - name: Verify package, version and signing certificate
+      shell: bash
+      run: |
+        APK="artifacts/MyScreenTime-v${{ steps.version.outputs.version }}.apk"
+        BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)"
+        AAPT="$BUILD_TOOLS/aapt"
+        APKSIGNER="$BUILD_TOOLS/apksigner"
+        test -x "$AAPT"
+        test -x "$APKSIGNER"
+        BADGING="$("$AAPT" dump badging "$APK" | head -n 1)"
+        echo "$BADGING"
+        echo "$BADGING" | grep -q "name='com.atharok.screentime.debug'"
+        echo "$BADGING" | grep -q "versionCode='31' versionName='1.0.21'"
+        "$APKSIGNER" verify "$APK"
+        CERT="$("$APKSIGNER" verify --print-certs "$APK" | sed -n 's/.*certificate SHA-256 digest: //p' | head -n 1 | tr '[:upper:]' '[:lower:]')"
+        EXPECTED="d075b5e1611b318d9e2f11e62d2bfebe0afbed51c17f935ba701d233d3fef501"
+        echo "Signer SHA-256: $CERT"
+        if [ "$CERT" != "$EXPECTED" ]; then
+          echo "Signing certificate mismatch; refusing to publish." >&2
+          exit 1
+        fi
+        echo "Package, version and fixed signing certificate verified."
 
     - name: Create Release and Upload APK
       uses: softprops/action-gh-release@v2
@@ -88,7 +114,7 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
-          What's new in v1.0.20 — logs you can actually send:
+          What's new in v1.0.21 — performance and install-safe Release:\n          - Load app icons on demand through the bounded downscaled cache instead of retaining full-size Drawable objects for every app in usage results.\n          - Record long idle/background Choreographer suspensions as FRAME_MONITOR_GAP, not JANK.\n          - Build a non-debuggable, minified Release APK while preserving applicationId com.atharok.screentime.debug for direct upgrades from v1.0.20.\n          - CI requires the fixed keystore and verifies package ID, version and pinned certificate SHA-256 before publishing.\n          - No database schema, backup format or user data is changed.\n\n          Previously, v1.0.20 — logs you can actually send:
           Exporting used to mean one 1.6 MB / 9,000-line file: too big for WeChat, too long for a
           chat box. The log screen now lets you pick the granularity instead of forcing the full dump.
           - Copy (top bar) now copies a ~600-character diagnostic digest: version, device, Android

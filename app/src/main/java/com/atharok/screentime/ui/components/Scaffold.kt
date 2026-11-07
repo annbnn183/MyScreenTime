@@ -42,6 +42,7 @@ fun AppScaffold(
 fun AppScaffold(
     title: String,
     icon: Drawable?,
+    iconPackageName: String? = null,
     modifier: Modifier = Modifier,
     navigateUp: @Composable () -> Unit = {},
     topBarActions: @Composable RowScope.() -> Unit = {},
@@ -55,6 +56,7 @@ fun AppScaffold(
             TopBar(
                 title = title,
                 icon = icon,
+                iconPackageName = iconPackageName,
                 navigateUp = navigateUp,
                 actions = topBarActions,
                 scrollBehavior = scrollBehavior

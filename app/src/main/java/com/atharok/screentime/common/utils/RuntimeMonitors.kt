@@ -43,6 +43,8 @@ object RuntimeMonitors {
     private const val IDLE_GAP_LOG_MS = 700L
     /** 静止状态下最多每 30 秒汇总一条 IDLE_GAP。 */
     private const val IDLE_GAP_SUMMARY_MS = 30_000L
+    /** Ignore long idle/background callback gaps; they are lifecycle discontinuities, not jank. */
+    private const val FRAME_MONITOR_DISCONTINUITY_MS = 10_000L
 
     fun install(app: Application) {
         installLifecycle(app)
@@ -210,7 +212,17 @@ object RuntimeMonitors {
                         val nowUptime = SystemClock.uptimeMillis()
                         val idle = (nowUptime - TouchTracker.lastEventUptime) >= IDLE_AFTER_MS
                         if (AppLog.isForeground) {
-                            if (!idle && gap >= JANK_THRESHOLD_MS) {
+                            // Choreographer may pause while the process is backgrounded or the display is idle.
+                            // Do not count that whole suspension as a user-visible dropped frame.
+                            if (idle && gap >= FRAME_MONITOR_DISCONTINUITY_MS) {
+                                AppLog.event(
+                                    "DEBUG", "Perf", "FRAME_MONITOR_GAP",
+                                    "Frame monitor resumed after an idle/background gap",
+                                    "gapMs" to gap, "screen" to AppLog.screen
+                                )
+                                idleMaxGap = 0L
+                                lastIdleLog = nowUptime
+                            } else if (!idle && gap >= JANK_THRESHOLD_MS) {
                                 AppLog.event(
                                     if (gap >= JANK_WARN_THRESHOLD_MS) "WARN" else "DEBUG",
                                     "Perf", "JANK", "Frame gap ${gap}ms",

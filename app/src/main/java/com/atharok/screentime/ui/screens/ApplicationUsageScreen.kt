@@ -220,7 +220,8 @@ private fun ApplicationUsageScaffold(
     if(deviceUsageResource is Resource.Success) {
         AppScaffold(
             title = deviceUsageResource.data.getAppUsage(packageName).appName,
-            icon = deviceUsageResource.data.getAppUsage(packageName).appIcon,
+            icon = null,
+            iconPackageName = packageName,
             modifier = modifier,
             navigateUp = navigateUp,
             topBarActions = topBarActions,

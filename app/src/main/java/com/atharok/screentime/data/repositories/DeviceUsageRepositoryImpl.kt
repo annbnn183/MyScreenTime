@@ -3,7 +3,6 @@ package com.atharok.screentime.data.repositories
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import com.atharok.screentime.R
-import com.atharok.screentime.common.extensions.getApplicationIconSafety
 import com.atharok.screentime.common.extensions.getApplicationName
 import com.atharok.screentime.common.utils.AppLog
 import com.atharok.screentime.common.utils.DateTimeUtils
@@ -115,7 +114,7 @@ class DeviceUsageRepositoryImpl(
                 WeeklyAppUsage(
                     packageName = key,
                     appName = context.packageManager.getApplicationName(key) ?: "",
-                    appIcon = context.packageManager.getApplicationIconSafety(key),
+                    appIcon = null,
                     durations = value
                         .filterKeys { timestamp ->
                             timestamp in timeInterval.first..timeInterval.second
@@ -149,7 +148,7 @@ class DeviceUsageRepositoryImpl(
                 DailyAppUsage(
                     packageName = key,
                     appName = context.packageManager.getApplicationName(key) ?: "",
-                    appIcon = context.packageManager.getApplicationIconSafety(key),
+                    appIcon = null,
                     durations = value[dayTimestamp] ?: LongArray(24),
                     launchCount = launchCountByPackage[key] ?: 0
                 )
@@ -359,7 +358,7 @@ class DeviceUsageRepositoryImpl(
                 MonthlyAppUsage(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
-                    appIcon = context.packageManager.getApplicationIconSafety(packageName),
+                    appIcon = null,
                     dayTimestamps = dayTimestamps,
                     durations = byDay,
                     // Launch counts come from the permanent per-day event store; system buckets
