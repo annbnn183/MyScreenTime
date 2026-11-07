@@ -448,6 +448,7 @@ class UsageStatsTracker(
 
     data class AggregatedUsageQuery(
         val apps: Map<String, AggregatedUsage>,
+        val coveredDays: Int,
         val rawEntries: Int,
         val keptBuckets: Int,
         val droppedPartialBuckets: Int,
@@ -470,6 +471,7 @@ class UsageStatsTracker(
     ): AggregatedUsageQuery {
         val queryStarted = android.os.SystemClock.uptimeMillis()
         val result = mutableMapOf<String, AggregatedUsage>()
+        val coveredRanges = mutableSetOf<Pair<Long, Long>>()
         val statsList = try {
             usageStatsManager.queryUsageStats(intervalType, startTimestamp, endTimestamp)
         } catch (e: Exception) {
@@ -510,6 +512,7 @@ class UsageStatsTracker(
                 continue
             }
             val launches = readLaunchCount(stats)
+            coveredRanges.add(bucketBegin to bucketEnd)
             val previous = result[packageName]
             result[packageName] = AggregatedUsage(
                 packageName = packageName,
@@ -521,6 +524,9 @@ class UsageStatsTracker(
 
         val query = AggregatedUsageQuery(
             apps = result,
+            coveredDays = coveredRanges.sumOf { (begin, end) ->
+                ((end - begin) / MILLIS_IN_A_DAY).toInt().coerceAtLeast(0)
+            },
             rawEntries = statsList.size,
             keptBuckets = keptBuckets,
             droppedPartialBuckets = droppedPartialBuckets,
@@ -537,6 +543,7 @@ class UsageStatsTracker(
             "windowEnd" to endTimestamp,
             "rawEntries" to query.rawEntries,
             "keptBuckets" to query.keptBuckets,
+            "coveredDays" to query.coveredDays,
             "droppedPartialBuckets" to query.droppedPartialBuckets,
             "droppedOutsideWindow" to query.droppedOutsideWindow,
             "zeroDurationBuckets" to query.zeroDurationBuckets,
