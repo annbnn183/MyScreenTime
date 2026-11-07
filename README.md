@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.30-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,15 +28,15 @@
 
 ---
 
-## ✅ 当前版本：v1.0.29（年 / 月 / 周 / 日横向滑动切换）
+## ✅ 当前版本：v1.0.30（年 / 月 / 周 / 日横向滑动切换）
 
-v1.0.29 将统计主页升级为四个横向分页：在统计内容区域轻轻左右滑动，即可切换「年 / 月 / 周 / 日」，页面以原生分页动画平滑滑入并自动吸附到整页；顶部周期选择栏与当前页面同步，点击选择仍然保留。原有上下滑动切换「统计概览 / 应用排行」的双页结构也继续保留。
+v1.0.30 将统计主页升级为四个横向分页：在统计内容区域轻轻左右滑动，即可切换「年 / 月 / 周 / 日」，页面以原生分页动画平滑滑入并自动吸附到整页；顶部周期选择栏与当前页面同步，点击选择仍然保留。原有上下滑动切换「统计概览 / 应用排行」的双页结构也继续保留。
 
 本次只调整界面导航，不改统计来源、计算逻辑、历史数据、数据库结构或备份格式。沿用原有包名与固定签名；GitHub Actions 会在发布前核验包名、版本和证书指纹。**签名验证通过后，才可确认直接覆盖安装。**
 
 建议定期通过「设置 → 数据管理」备份重要数据；遇到异常欢迎通过 Issues 反馈。
 
-## 🆕 v1.0.29：统计内容支持左右轻扫切换
+## 🆕 v1.0.30：统计内容支持左右轻扫切换
 
 - **整块内容可滑动：** 在统计概览或应用排行内容区域左右轻扫，都能切换相邻周期。
 - **原生分页动画：** 使用横向分页与吸附效果，松手后完整停靠，不会卡在两页之间。
