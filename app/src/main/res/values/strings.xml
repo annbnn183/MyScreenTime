@@ -157,7 +157,7 @@
     <string name="goal_calendar_title">Daily goal calendar (last 30 days)</string>
     <string name="goal_calendar_summary">%1$d days within the %3$s goal, %2$d days over it</string>
     <string name="goal_calendar_hint">Set a daily goal in Settings to see the goal calendar.</string>
-    <string name="monthly_data_limited">Real per-day data: %1$d/%2$d days. %3$d days exceed the ~7-day Android DAILY cap (filled by weekly/monthly aggregates); %4$d more are missing inside the cap. Totals use disjoint DAILY+WEEKLY+MONTHLY segments, never INTERVAL_BEST.</string>
+    <string name="monthly_data_limited">Positive daily usage: %1$d/%2$d days. %3$d days are beyond Android's ~7-day DAILY window; only complete weekly/monthly buckets inside the requested range contribute to totals. %4$d more days have no positive DAILY record inside the cap. Unavailable history is not filled with zero or fabricated estimates.</string>
     <string name="export_report">Export CSV report</string>
     <string name="export_report_subject">MyScreenTime usage report</string>
 
@@ -308,4 +308,5 @@
     <string name="increased_by">▲ %1$s</string>
     <string name="decreased_by">▼ %1$s</string>
     <string name="no_comparison_data">No data for the previous period yet</string>
+    <string name="range_bucket_coverage">System buckets: %1$d complete of %2$d returned; %3$d partial, %4$d outside, %5$d zero-duration and %6$d invalid-timestamp entries excluded. Partial buckets are never prorated.</string>
 </resources>
