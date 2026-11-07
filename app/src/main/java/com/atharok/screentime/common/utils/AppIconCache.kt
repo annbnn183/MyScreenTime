@@ -30,6 +30,12 @@ object AppIconCache {
             (value.byteCount / 1024).coerceAtLeast(1)
     }
 
+    /** Release transient icon bitmaps when Android reports that the UI is hidden or memory is tight. */
+    @Synchronized
+    fun trimMemory() {
+        cache.evictAll()
+    }
+
     /** Cache-only lookup: cheap and synchronous, safe to call during composition. */
     @Synchronized
     fun peek(packageName: String, sizePx: Int): ImageBitmap? =

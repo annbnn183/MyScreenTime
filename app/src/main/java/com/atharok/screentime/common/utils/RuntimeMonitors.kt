@@ -327,8 +327,35 @@ object RuntimeMonitors {
         "UNKNOWN"
     }
 
-    /** Called from Application.onTrimMemory / onLowMemory so LMK pressure is visible in the log. */
+    /**
+     * Android may deliver the same trim level repeatedly during one memory-pressure episode.
+     * Keep the first event and aggregate rapid duplicates so diagnostics do not become a source
+     * of extra binder work or log I/O. The suppressed count is carried into the next event.
+     */
+    private const val TRIM_LOG_DEBOUNCE_MS = 5_000L
+    private var lastTrimLogUptime = 0L
+    private var lastTrimLogLevel = -1
+    private var suppressedTrimCallbacks = 0
+
+    @Synchronized
     fun onTrimMemory(level: Int) {
+        // UI_HIDDEN and stronger levels mean cached UI resources are no longer useful.
+        // Keep persisted usage history and calculation caches untouched.
+        if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
+            AppIconCache.trimMemory()
+        }
+
+        val now = SystemClock.uptimeMillis()
+        if (level == lastTrimLogLevel && now - lastTrimLogUptime < TRIM_LOG_DEBOUNCE_MS) {
+            suppressedTrimCallbacks++
+            return
+        }
+
+        val suppressed = suppressedTrimCallbacks
+        suppressedTrimCallbacks = 0
+        lastTrimLogLevel = level
+        lastTrimLogUptime = now
+
         val dbg = Debug.MemoryInfo()
         Debug.getMemoryInfo(dbg)
         AppLog.event(
@@ -336,11 +363,13 @@ object RuntimeMonitors {
             "level" to level,
             "pssMb" to dbg.totalPss / 1024,
             "fg" to AppLog.isForeground,
-            "screen" to AppLog.screen
+            "screen" to AppLog.screen,
+            "suppressedCallbacks" to suppressed
         )
     }
 
     fun onLowMemory() {
+        AppIconCache.trimMemory()
         AppLog.event("WARN", "Memory", "LOW_MEMORY", "onLowMemory callback received")
     }
 }

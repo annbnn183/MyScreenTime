@@ -18,8 +18,8 @@ android {
         // The CI workflow reads this versionName to build the release tag, release name and APK
         // filename, so the in-app version and the GitHub release can never drift apart again.
         // Keep it in sync with versionCode: v1.0.27 -> versionCode 37 -> versionName 1.0.27.
-        versionCode = 37
-        versionName = "1.0.27"
+        versionCode = 38
+        versionName = "1.0.28"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
