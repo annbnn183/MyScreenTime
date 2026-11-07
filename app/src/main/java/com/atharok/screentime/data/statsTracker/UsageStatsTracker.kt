@@ -333,10 +333,8 @@ class UsageStatsTracker(
             val packageName = stats.packageName ?: continue
             // Filter policy (v1.0.14): drop ONLY entries with no foreground time, our own
             // package, explicitly ignored apps and (optionally) non-launchable system apps.
-            // We no longer require lastTimeUsed to sit inside the exact millisecond window:
-            // many ROMs report DAILY buckets whose first/last timestamps fall outside the query
-            // range even though the bucket belongs to a day inside it. That old rule silently
-            // discarded ~71% of DAILY buckets (device log: 2364 -> 688).
+            // Do not use lastTimeUsed as a bucket boundary. The represented interval is checked
+            // below using firstTimeStamp / lastTimeStamp, and only whole daily buckets are kept.
             if (packageName.isEmpty() || packageName == selfPackage) { filteredByPolicy++; continue }
             if (ignoredPackages.contains(packageName)) { filteredByPolicy++; continue }
             if (ignoreSystemApps && packageName !in launchableApp) { filteredByPolicy++; continue }
@@ -401,7 +399,7 @@ class UsageStatsTracker(
             "daysWithData" to dailyTotals.size,
             "rawTotalMs" to dailyTotals.values.sum(),
             "retentionCapDays" to 7,
-            "filterPolicy" to "drop ONLY duration<=0 | self | ignored | system; NO lastTimeUsed day-filter",
+            "filterPolicy" to "drop duration<=0 | self | ignored | system; require full [firstTimeStamp,lastTimeStamp] bucket interval; attribute day by firstTimeStamp",
             "deduplication" to "max per (package, day)",
             "timezone" to java.util.TimeZone.getDefault().id,
             "dayBoundary" to "local midnight (DateTimeUtils.truncateToDay)"
