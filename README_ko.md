@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -376,7 +376,7 @@ MyScreenTime은 기능이 가장 많은 화면 사용 시간 앱이 될 필요�
 
 ## ⚙️ 자동 빌드
 
-`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultRelease`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.20.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
+`main`에 푸시하면 [`.github/workflows/build.yml`](.github/workflows/build.yml)이 실행되어 `assembleDefaultRelease`를 빌드, 고정 키로 서명해 APK를 Releases에 게시합니다. **버전 번호는 [`app/build.gradle.kts`](app/build.gradle.kts)의 `versionName`을 유일한 진짜 소스**로 합니다. Release 태그·Release 이름·APK 파일명(예 `MyScreenTime-v1.0.22.apk`)·설정 → 정보에 표시되는 버전은 모두 여기서 생성되므로 항상 일치합니다. 새 버전 게시 시 `versionName`과 `versionCode`를 함께 올리기만 하면 됩니다. 서명 키는 저장소의 Actions Secrets에만 있고 커밋되지 않습니다(`.gitignore` 참조).
 
 ---
 
