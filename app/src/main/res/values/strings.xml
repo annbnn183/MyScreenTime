@@ -185,7 +185,7 @@
     <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">Sort: %1$s</string>
     <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
-    <string name="aggregate_hint">Screen time = disjoint DAILY (last 7d) + WEEKLY (8-28d) + MONTHLY (29d+) segments; INTERVAL_BEST is not used. Open counts come from the permanent local per-day event history, because system buckets contain none.</string>
+    <string name="aggregate_hint">Screen time uses Android DAILY, WEEKLY and MONTHLY aggregates. Only buckets fully contained in their assigned range are counted; partial boundary buckets are not prorated, and unavailable periods remain missing. Open counts come from this device's per-day event history.</string>
     <string name="no_usage_data">No usage data available yet.</string>
 
     <!-- Runtime logs -->
