@@ -275,9 +275,9 @@ class DeviceUsageRepositoryImpl(
             )
             // 系统长期桶不保存启动次数，逐日存档才是 4 周 / 半年 / 一年点击量的真实来源。
             val history = launchHistory.sumRange(rangeStart, nowMillis)
-            val packageNames = (aggregated.keys + history.keys).toSet()
+            val packageNames = (aggregated.apps.keys + history.keys).toSet()
             val rankedApps = packageNames.map { packageName ->
-                val item = aggregated[packageName]
+                val item = aggregated.apps[packageName]
                 RankedApp(
                     packageName = packageName,
                     appName = context.packageManager.getApplicationName(packageName) ?: packageName,
@@ -298,15 +298,28 @@ class DeviceUsageRepositoryImpl(
                 apps = rankedApps,
                 totalLaunchCount = rankedApps.sumOf { it.launchCount },
                 totalTimeMillis = rankedApps.sumOf { it.duration },
-                clickDaysRecorded = launchHistory.countScannedInRange(rangeStart, nowMillis),
-                clickSinceDay = launchHistory.earliestScannedDay(),
+                // Older v1.0.17 backfills marked days outside Android's event retention as
+                // scanned empty days. Do not present those placeholders as verified records.
+                clickDaysRecorded = launchHistory.countScannedInRange(
+                    maxOf(rangeStart, DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)),
+                    nowMillis
+                ),
+                clickSinceDay = launchHistory.earliestScannedDay()?.takeIf {
+                    it >= DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)
+                },
                 // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY.
                 // surfacing the cap lets the UI explain why very old days cannot be exact.
                 retentionCapDays = when (interval) {
                     UsageStatsManager.INTERVAL_WEEKLY -> 28
                     UsageStatsManager.INTERVAL_MONTHLY -> 182
                     else -> 730
-                }
+                },
+                rawBucketCount = aggregated.rawEntries,
+                keptBucketCount = aggregated.keptBuckets,
+                droppedPartialBucketCount = aggregated.droppedPartialBuckets,
+                droppedOutsideWindowBucketCount = aggregated.droppedOutsideWindow,
+                zeroDurationBucketCount = aggregated.zeroDurationBuckets,
+                invalidTimestampBucketCount = aggregated.invalidTimestampBuckets
             )
         }
 
@@ -318,6 +331,9 @@ class DeviceUsageRepositoryImpl(
             "appsHalfYear" to rangeRankings[1].apps.size,
             "appsYear" to rangeRankings[2].apps.size,
             "totalMs4w" to rangeRankings[0].apps.sumOf { it.duration },
+            "rawBuckets4w" to rangeRankings[0].rawBucketCount,
+            "keptBuckets4w" to rangeRankings[0].keptBucketCount,
+            "partialBuckets4w" to rangeRankings[0].droppedPartialBucketCount,
             "timezone" to java.util.TimeZone.getDefault().id
         )
 
@@ -405,12 +421,14 @@ class DeviceUsageRepositoryImpl(
     ): Int {
         val today = DateTimeUtils.truncateToDay(System.currentTimeMillis())
         val earliest = launchHistory.earliestScannedDay() ?: today
-        val oldestAllowed = DateTimeUtils.addDaysToTimestamp(today, -365)
+        // Android 的事件明细通常只保留最近 7~14 天。只补系统仍可能提供事件的窗口，
+        // 不再把窗口外的空结果写成“已扫描、0 次点击”。
+        val eventHorizonStart = DateTimeUtils.addDaysToTimestamp(today, -EVENT_DETAIL_HORIZON_DAYS)
+        val oldestAllowed = eventHorizonStart
         // Android 的事件明细通常只保留最近 7~14 天，更早的日期即使逐个 queryEvents 也拿不到东西，
         // 却仍要付出一次 binder 往返（实测 30~120ms/天）。因此超过这个窗口的日期直接标记为
         // 「已扫描、0 次点击」，既不丢数据，也不会把一次补算拖成几十秒。
-        val eventHorizonStart = DateTimeUtils.addDaysToTimestamp(today, -EVENT_DETAIL_HORIZON_DAYS)
-        var day = DateTimeUtils.addDaysToTimestamp(earliest, -1)
+        var day = DateTimeUtils.addDaysToTimestamp(earliest.coerceAtLeast(eventHorizonStart), -1)
         var done = 0
         var pending = LinkedHashMap<Long, Map<String, Int>>()
         var lastReported = 0
@@ -424,7 +442,9 @@ class DeviceUsageRepositoryImpl(
                         ignoredPackages = ignoredPackages
                     )
                 } else {
-                    emptyMap()
+                    // Defensive: this branch should be unreachable because the loop is bounded
+                    // by eventHorizonStart. Never persist an unavailable historical day as zero.
+                    break
                 }
                 pending[day] = counts
                 // 每 8 天落盘一次：既控制单次写入量，又保证进程被杀时最多丢一批。
@@ -445,7 +465,7 @@ class DeviceUsageRepositoryImpl(
         onProgress?.invoke(done, maxDays)
         AppLog.i(
             "DeviceUsageRepository",
-            "Backfilled $done days of launch history (stored days: ${launchHistory.scannedDays()})"
+            "Backfilled $done event-retained days of launch history (stored days: ${launchHistory.scannedDays()}, verified recent days: ${launchHistory.countScannedInRange(eventHorizonStart, today)})"
         )
         return done
     }
@@ -471,7 +491,7 @@ class DeviceUsageRepositoryImpl(
             ignoreSystemApps = ignoreSystemApps,
             ignoredPackages = ignoredPackages
         )
-        val totalDurationMs = aggregated.values.sumOf { it.totalTimeInForeground }
+        val totalDurationMs = aggregated.apps.values.sumOf { it.totalTimeInForeground }
         // 系统聚合桶不含启动次数，逐日历史才是真实来源（仅覆盖已记录的那些天）。
         val totalLaunches = launchHistory.sumRange(startTimestamp, endTimestamp).values.sum()
         return IntervalTotal(
