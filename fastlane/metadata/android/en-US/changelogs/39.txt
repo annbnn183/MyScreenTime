@@ -1,0 +1,7 @@
+1.0.29
+
+- Add four horizontal pages for Year / Month / Week / Day; swipe anywhere in the statistics content to switch adjacent periods.
+- Use native horizontal paging with slide animation and snapping; one gesture advances at most one period.
+- Keep the period selector synchronized and preserve direct segment taps.
+- Preserve vertical swiping between Overview and App Ranking.
+- No changes to statistics logic, usage history, database schema or backup format.
