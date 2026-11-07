@@ -307,6 +307,7 @@ class DeviceUsageRepositoryImpl(
                 clickSinceDay = launchHistory.earliestScannedDay()?.takeIf {
                     it >= DateTimeUtils.addDaysToTimestamp(DateTimeUtils.truncateToDay(nowMillis), -EVENT_DETAIL_HORIZON_DAYS)
                 },
+                backfillLimitDays = minOf(days, EVENT_DETAIL_HORIZON_DAYS),
                 // Android keeps ~4 weeks of WEEKLY, ~6 months of MONTHLY and ~2 years of YEARLY.
                 // surfacing the cap lets the UI explain why very old days cannot be exact.
                 retentionCapDays = when (interval) {
@@ -464,7 +465,7 @@ class DeviceUsageRepositoryImpl(
         onProgress?.invoke(done, maxDays)
         AppLog.i(
             "DeviceUsageRepository",
-            "Backfilled $done event-retained days of launch history (stored days: ${launchHistory.scannedDays()}, verified recent days: ${launchHistory.countScannedInRange(eventHorizonStart, today)})"
+            "Backfilled $done event-retained days of launch history (stored days: ${launchHistory.scannedDays()}, recent scanned days: ${launchHistory.countScannedInRange(eventHorizonStart, today)})"
         )
         return done
     }
