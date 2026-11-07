@@ -344,12 +344,12 @@ class UsageStatsTracker(
             val duration = stats.totalTimeInForeground
             if (duration <= 0L) { filteredZeroDuration++; continue }
 
-            // Attribute a bucket to a calendar DAY, not to a millisecond window. A missing/zero
-            // timestamp is recorded as "unattributed" instead of being lumped into the generic
-            // filtered count, so the log can separate the system retention cap from a real loss.
-            val anchor = if (stats.lastTimeStamp > 0L) stats.lastTimeStamp else stats.firstTimeStamp
-            if (anchor <= 0L) { unattributedTimestamps++; continue }
-            val dayTimestamp = DateTimeUtils.truncateToDay(anchor)
+            // firstTimeStamp is the beginning of the time range represented by this daily
+            // bucket. Use it for calendar-day attribution; lastTimeStamp is the range end and may
+            // fall on the following midnight on some Android builds.
+            val bucketBegin = stats.firstTimeStamp
+            if (bucketBegin <= 0L) { unattributedTimestamps++; continue }
+            val dayTimestamp = DateTimeUtils.truncateToDay(bucketBegin)
             if (dayTimestamp < startDay || dayTimestamp > endDay) { filteredOutOfWindow++; continue }
 
             val clampedDuration = duration.coerceAtMost(MILLIS_IN_A_DAY)
