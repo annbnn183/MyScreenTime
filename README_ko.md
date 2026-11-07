@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.30-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,13 +28,13 @@
 
 ---
 
-## ✅ 현재 버전: v1.0.29 (기간 페이지 가로 스와이프 전환)
+## ✅ 현재 버전: v1.0.30 (기간 페이지 가로 스와이프 전환)
 
-v1.0.29에서는 통계 화면을 「연 / 월 / 주 / 일」 네 개의 가로 페이지로 구성했습니다. 통계 콘텐츠 어디에서나 가볍게 좌우로 스와이프하면 인접한 기간으로 이동하며, 페이지 슬라이드와 스냅 애니메이션으로 자연스럽게 전환됩니다. 기간 선택 버튼은 현재 페이지와 동기화되고 직접 탭하는 방식도 유지됩니다. 기존의 「개요 / 앱 순위」 세로 스와이프도 그대로 사용할 수 있습니다.
+v1.0.30에서는 통계 화면을 「연 / 월 / 주 / 일」 네 개의 가로 페이지로 구성했습니다. 통계 콘텐츠 어디에서나 가볍게 좌우로 스와이프하면 인접한 기간으로 이동하며, 페이지 슬라이드와 스냅 애니메이션으로 자연스럽게 전환됩니다. 기간 선택 버튼은 현재 페이지와 동기화되고 직접 탭하는 방식도 유지됩니다. 기존의 「개요 / 앱 순위」 세로 스와이프도 그대로 사용할 수 있습니다.
 
 이번 변경은 화면 탐색 방식만 조정합니다. 통계 데이터 출처와 계산, 기록, 데이터베이스 구조, 백업 형식은 변경하지 않습니다. 기존 application ID와 고정 서명을 유지하며, GitHub Actions가 배포 전에 인증서 지문을 검증합니다.
 
-## 🆕 v1.0.29: 통계 콘텐츠 전체에서 좌우 스와이프
+## 🆕 v1.0.30: 통계 콘텐츠 전체에서 좌우 스와이프
 
 - 통계 개요와 앱 순위 화면 어디에서나 좌우로 스와이프해 인접 기간으로 이동합니다.
 - 부드러운 가로 페이지 애니메이션과 스냅으로 페이지 중간에 멈추지 않습니다.
