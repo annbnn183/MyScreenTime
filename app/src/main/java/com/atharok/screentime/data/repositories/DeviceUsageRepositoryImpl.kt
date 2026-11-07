@@ -420,15 +420,14 @@ class DeviceUsageRepositoryImpl(
         onProgress: ((done: Int, total: Int) -> Unit)?
     ): Int {
         val today = DateTimeUtils.truncateToDay(System.currentTimeMillis())
-        val earliest = launchHistory.earliestScannedDay() ?: today
-        // Android 的事件明细通常只保留最近 7~14 天。只补系统仍可能提供事件的窗口，
-        // 不再把窗口外的空结果写成“已扫描、0 次点击”。
+        // Android's event history has a finite retention window. Only scan dates inside that
+        // window; an empty result outside it is ambiguous (no usage OR expired history) and must
+        // never be persisted as a verified zero-launch day.
         val eventHorizonStart = DateTimeUtils.addDaysToTimestamp(today, -EVENT_DETAIL_HORIZON_DAYS)
         val oldestAllowed = eventHorizonStart
-        // Android 的事件明细通常只保留最近 7~14 天，更早的日期即使逐个 queryEvents 也拿不到东西，
-        // 却仍要付出一次 binder 往返（实测 30~120ms/天）。因此超过这个窗口的日期直接标记为
-        // 「已扫描、0 次点击」，既不丢数据，也不会把一次补算拖成几十秒。
-        var day = DateTimeUtils.addDaysToTimestamp(earliest.coerceAtLeast(eventHorizonStart), -1)
+        // Start near today and skip dates already scanned. This also repairs older installations
+        // whose previous backfill marked hundreds of expired dates as scanned empty days.
+        var day = DateTimeUtils.addDaysToTimestamp(today, -1)
         var done = 0
         var pending = LinkedHashMap<Long, Map<String, Int>>()
         var lastReported = 0
