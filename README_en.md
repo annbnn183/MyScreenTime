@@ -12,7 +12,7 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.27-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,13 +28,13 @@ An Android app for viewing device and app usage time, open counts, and long-term
 
 ---
 
-## ✅ Current release: v1.0.27 (statistics back to v1.0.24)
+## ✅ Current release: v1.0.29 (swipe between time periods)
 
-v1.0.27 **restores the time statistics, app ranking and UI exactly as they were in v1.0.24**, undoing later changes to the statistics logic. The version number is raised to 1.0.27 only because Android refuses to update over a higher version code. It keeps the existing application ID and fixed signing certificate, so it **installs directly over any release from v1.0.7 on**. No database schema, backup format or user data is changed.
+v1.0.29 adds horizontal swipe navigation to the Year / Month / Week / Day selector while preserving direct taps. The statistics calculations and data sources are unchanged. It keeps the existing application ID and fixed signing certificate, so it **installs directly over v1.0.7 and later**. No database schema, backup format or user data is changed.
 
 Back up important data regularly via **Settings → Data Management**. Please report any issue through Issues.
 
-## 🆕 v1.0.24: two-page layout with responsive vertical swipes
+## 🆕 v1.0.29: swipe navigation for time periods\n\n- **Swipe left / right** on the Year / Month / Week / Day selector to move to the adjacent period.\n- **Direct selection remains:** tap any segment as before.\n- **Short gesture:** approximately 40 dp of horizontal movement triggers a switch.\n- **Safe boundaries:** the selector never moves beyond Year or Day, and one gesture changes only one period.\n- **Statistics are untouched:** this is an interaction-only change; no query logic, history, database schema or backup format is modified.\n\n## 🆕 v1.0.24: two-page layout with responsive vertical swipes
 
 - **Two vertical chapters:** page one groups the period selector, total usage and period comparison; page two contains monthly insights and the app ranking.
 - **Lighter swipes:** a lower page-switch threshold makes short upward or downward swipes easier to trigger.
