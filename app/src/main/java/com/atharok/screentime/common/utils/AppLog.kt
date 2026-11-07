@@ -618,91 +618,109 @@ object AppLog {
      *
      * 只扫最近两个日志文件，避免历史越久越慢；不影响磁盘上的完整日志，一条都不删。
      */
-    fun digest(maxChars: Int = 1500): String {
+    fun digest(maxChars: Int = 2200): String {
+        // Only count events whose event timestamp falls inside the same rolling 24-hour window.
+        // Include both calendar days so midnight does not silently shorten the window.
+        val now = System.currentTimeMillis()
+        val cutoff = now - TimeUnit.HOURS.toMillis(24)
+        val firstDay = dayFormat.format(Date(cutoff))
         val errors = mutableListOf<String>()
         val exits = mutableListOf<Pair<Long, String>>()
         val exitKeys = mutableSetOf<Pair<String, Long>>()
         val slowClicks = mutableListOf<Pair<Long, String>>()
         val slowQueries = mutableListOf<Pair<Long, String>>()
-        var errTotal = 0
-        var jank = 0
+        var scanned = 0
+        var errorCount = 0
+        var fatalCount = 0
+        var anrCount = 0
+        var jankCount = 0
         var jankMax = 0L
-        var clicks = 0
+        var gapCount = 0
+        var clickCount = 0
         var clickSum = 0L
         var clickMax = 0L
-        var queries = 0
+        var queryCount = 0
         var querySum = 0L
         var queryMax = 0L
-        var trims = 0
-        var total = 0
-        var firstTs = Long.MAX_VALUE
-        var lastTs = 0L
+        var trimCount = 0
+        var memorySamples = 0
+        var pssSum = 0L
+        var pssMax = 0L
+        var heapMax = 0L
+        var availMemMin = Long.MAX_VALUE
+        var lastEventTs = 0L
 
-        logFiles().takeLast(2).forEach { file ->
+        logFiles().filter { it.name.take(10) >= firstDay }.forEach { file ->
             runCatching {
-                file.useLines(Charsets.UTF_8) { seq ->
-                    seq.forEach { raw ->
-                        val o = runCatching { JSONObject(raw) }.getOrNull() ?: return@forEach
-                        total++
+                file.useLines(Charsets.UTF_8) { lines ->
+                    lines.forEach lineLoop@{ raw ->
+                        val o = runCatching { JSONObject(raw) }.getOrNull() ?: return@lineLoop
                         val ts = o.optLong("ts", 0L)
-                        if (ts > 0) {
-                            if (ts < firstTs) firstTs = ts
-                            if (ts > lastTs) lastTs = ts
-                        }
+                        if (ts < cutoff || ts > now) return@lineLoop
+                        scanned++
+                        if (ts > lastEventTs) lastEventTs = ts
                         val lv = o.optString("lv", "")
                         val ev = o.optString("ev", "")
                         val mod = o.optString("mod", "")
                         val x = o.optJSONObject("x")
 
                         if (lv == "ERROR" || lv == "FATAL") {
-                            errTotal++
+                            errorCount++
+                            if (lv == "FATAL") fatalCount++
+                            if (ev == "MAIN_THREAD_BLOCKED" || mod == "ANR") anrCount++
                             if (errors.size >= 6) errors.removeAt(0)
-                            errors.add("${shortTime(ts)} [$lv] $mod/${ev}: ${clip(o.optString("msg"), 80)}")
+                            errors.add("${shortTime(ts)} [$lv] $mod/$ev: ${clip(o.optString("msg"), 96)}")
                         }
 
                         when (ev) {
                             "EXIT_INFO" -> {
                                 val reason = x?.optString("reasonName", "") ?: ""
                                 val at = x?.optLong("timestamp", ts) ?: ts
-                                // 每次启动都会重读系统历史，同一次退出会被重复写入；
-                                // 摘要按 (原因, 时间) 去重，避免把 1 次被杀说成 100 次。
                                 if (reason.isNotEmpty() && reason !in benignExitReasons &&
                                     exitKeys.add(reason to at)
                                 ) {
                                     val pss = x?.optInt("pssKb", 0) ?: 0
-                                    exits.add(
-                                        at to ("${shortTime(at)} $reason" +
-                                            if (pss > 0) " · PSS ${pss / 1024}MB" else "")
-                                    )
-                                    if (exits.size > 12) exits.removeAt(0)
+                                    exits.add(at to ("${shortTime(at)} $reason" +
+                                        if (pss > 0) " · PSS ${pss / 1024}MB" else ""))
                                 }
                             }
                             "JANK" -> {
-                                jank++
-                                val g = x?.optLong("gapMs", 0L) ?: 0L
-                                if (g > jankMax) jankMax = g
+                                jankCount++
+                                val gap = x?.optLong("gapMs", 0L) ?: 0L
+                                if (gap > jankMax) jankMax = gap
                             }
+                            "FRAME_MONITOR_GAP" -> gapCount++
                             "CLICK_TO_FRAME" -> {
-                                val c = x?.optLong("costMs", 0L) ?: 0L
-                                clicks++
-                                clickSum += c
-                                if (c > clickMax) clickMax = c
-                                if (c >= 120) {
-                                    if (slowClicks.size >= 3) slowClicks.removeAt(0)
-                                    slowClicks.add(c to "${shortTime(ts)} ${x?.optString("screen", "")}")
+                                val cost = x?.optLong("costMs", 0L) ?: 0L
+                                clickCount++
+                                clickSum += cost
+                                if (cost > clickMax) clickMax = cost
+                                if (cost >= 100) {
+                                    slowClicks.add(cost to "${shortTime(ts)} ${x?.optString("screen", o.optString("scr", "?"))}")
                                 }
                             }
                             "QUERY_RESULT" -> {
-                                val c = x?.optLong("costMs", 0L) ?: 0L
-                                queries++
-                                querySum += c
-                                if (c > queryMax) queryMax = c
-                                if (c >= 80) {
-                                    if (slowQueries.size >= 2) slowQueries.removeAt(0)
-                                    slowQueries.add(c to "${shortTime(ts)} ${clip(o.optString("msg"), 48)}")
+                                val cost = x?.optLong("costMs", 0L) ?: 0L
+                                queryCount++
+                                querySum += cost
+                                if (cost > queryMax) queryMax = cost
+                                if (cost >= 80) {
+                                    slowQueries.add(cost to "${shortTime(ts)} ${clip(o.optString("msg"), 64)}")
                                 }
                             }
-                            "TRIM_MEMORY" -> trims++
+                            "SYS_SAMPLE" -> {
+                                val pss = x?.optLong("pssMb", -1L) ?: -1L
+                                val heap = x?.optLong("heapUsedMb", -1L) ?: -1L
+                                val avail = x?.optLong("availMemMb", -1L) ?: -1L
+                                if (pss >= 0) {
+                                    memorySamples++
+                                    pssSum += pss
+                                    if (pss > pssMax) pssMax = pss
+                                }
+                                if (heap > heapMax) heapMax = heap
+                                if (avail >= 0 && avail < availMemMin) availMemMin = avail
+                            }
+                            "TRIM_MEMORY" -> trimCount++
                         }
                     }
                 }
@@ -710,80 +728,74 @@ object AppLog {
         }
 
         val version = runCatching { context.getAppVersion() }.getOrDefault("?")
-        val head = buildString {
-            append("MyScreenTime 诊断摘要 · v").append(version).append(" · ")
-            append(lineFormat.format(Date())).append('\n')
-            append("设备: ").append(Build.MANUFACTURER).append(' ').append(Build.MODEL)
-                .append(" · Android ").append(Build.VERSION.RELEASE)
-                .append(" (SDK ").append(Build.VERSION.SDK_INT).append(")")
-                .append(" · ").append(Build.SUPPORTED_ABIS.firstOrNull() ?: "?")
+        val device = "${Build.MANUFACTURER} ${Build.MODEL}".trim()
+        val header = buildString {
+            append("MyScreenTime 诊断报告 · v").append(version).append('\n')
+            append("设备: ").append(device).append(" · Android ").append(Build.VERSION.RELEASE)
+                .append(" / SDK ").append(Build.VERSION.SDK_INT).append('\n')
+            append("包名: ").append(context.packageName)
+                .append(" · 使用情况访问: ").append(if (usageAccess() == "GRANTED") "已授权" else "未授权").append('\n')
+            append("窗口: 最近 24 小时（").append(lineFormat.format(Date(cutoff)))
+                .append(" 至 ").append(lineFormat.format(Date(now))).append("）\n")
+            append("有效事件: ").append(scanned).append(" 条 · 最新记录: ")
+                .append(if (lastEventTs > 0) lineFormat.format(Date(lastEventTs)) else "无")
                 .append('\n')
-            append("权限: 使用情况访问 ").append(if (usageAccess() == "GRANTED") "已授权" else "未授权")
-            append(" · 包名 ").append(context.packageName).append('\n')
-            append("日志: ").append(total).append(" 条 · ")
-            append(if (firstTs == Long.MAX_VALUE) "-" else lineFormat.format(Date(firstTs)))
-            append(" ~ ").append(if (lastTs == 0L) "-" else lineFormat.format(Date(lastTs)))
-            append("（仅摘要，完整日志留在本机）")
         }
 
-        val errorBlock = buildString {
-            append("【错误】")
-            if (errTotal == 0) {
-                append("无 ERROR / FATAL / 崩溃 / ANR\n")
-            } else {
-                append("共 ").append(errTotal).append(" 条，最近 ")
-                    .append(minOf(errTotal, errors.size)).append(" 条：\n")
-                errors.forEach { append("  · ").append(it).append('\n') }
-            }
+        val faults = buildString {
+            append("【故障】ERROR/FATAL ").append(errorCount)
+                .append("（FATAL ").append(fatalCount).append("） · 主线程阻塞/ANR ").append(anrCount).append('\n')
+            if (errors.isEmpty()) append("  最近 24 小时未记录 ERROR/FATAL\n")
+            else errors.forEach { append("  · ").append(it).append('\n') }
             if (exits.isNotEmpty()) {
-                append("【异常退出】最近 ")
-                    .append(minOf(exits.size, 3)).append(" 次（已按原因+时间去重）：\n")
-                exits.takeLast(3).forEach { append("  · ").append(it.second).append('\n') }
-            }
-        }
-
-        val metrics = buildString {
-            append("【关键指标】\n")
-            append("  点击响应: ").append(clicks).append(" 次")
-            if (clicks > 0) {
-                append("，平均 ").append(clickSum / clicks).append("ms，最差 ").append(clickMax).append("ms")
-            }
-            append('\n')
-            append("  掉帧: ").append(jank).append(" 次")
-            if (jank > 0) append("，最长 ").append(jankMax).append("ms")
-            append('\n')
-            append("  查询: ").append(queries).append(" 次")
-            if (queries > 0) {
-                append("，平均 ").append(querySum / queries).append("ms，最差 ").append(queryMax).append("ms")
-            }
-            append('\n')
-            if (trims > 0) append("  内存回收: ").append(trims).append(" 次\n")
-        }
-
-        val slowest = buildString {
-            if (slowClicks.isNotEmpty() || slowQueries.isNotEmpty()) {
-                append("【最慢操作】\n")
-                slowClicks.sortedByDescending { it.first }.take(3).forEach {
-                    append("  点击 ").append(it.first).append("ms · ").append(it.second).append('\n')
+                append("【系统记录的异常退出】（按原因+发生时间去重）\n")
+                exits.sortedByDescending { it.first }.take(4).forEach {
+                    append("  · ").append(it.second).append('\n')
                 }
-                slowQueries.sortedByDescending { it.first }.take(2).forEach {
-                    append("  查询 ").append(it.first).append("ms · ").append(it.second).append('\n')
-                }
+                append("  注：退出发生时间可能早于本报告窗口；上面只表示系统记录在本窗口被读取。\n")
             }
         }
 
-        // 按优先级拼装：超长先丢「最慢操作」，再丢「关键指标」，错误与设备信息永不丢。
-        var text = listOf(head, errorBlock, metrics, slowest).joinToString("\n")
-        if (text.length > maxChars) {
-            text = listOf(head, errorBlock, metrics).joinToString("\n")
-            if (text.length > maxChars) {
-                text = listOf(head, errorBlock).joinToString("\n")
+        val performance = buildString {
+            append("【交互性能】点击到首帧 ").append(clickCount)
+            if (clickCount > 0) append(" 次 · 平均 ").append(clickSum / clickCount)
+                .append("ms · 最差 ").append(clickMax).append("ms")
+            append('\n')
+            append("  交互掉帧 ").append(jankCount).append(" 次 · 最大间隔 ").append(jankMax).append("ms")
+                .append(" · 监控中断间隔 ").append(gapCount).append(" 次\n")
+            append("  查询 ").append(queryCount)
+            if (queryCount > 0) append(" 次 · 平均 ").append(querySum / queryCount)
+                .append("ms · 最差 ").append(queryMax).append("ms")
+            append('\n')
+            append("  内存采样 ").append(memorySamples).append(" 次")
+            if (memorySamples > 0) append(" · PSS 平均/峰值 ").append(pssSum / memorySamples)
+                .append("/").append(pssMax).append("MB")
+            if (heapMax > 0) append(" · Heap 峰值 ").append(heapMax).append("MB")
+            if (availMemMin != Long.MAX_VALUE) append(" · 可用内存最低 ").append(availMemMin).append("MB")
+            append('\n')
+            append("  内存回收事件 ").append(trimCount).append(" 次\n")
+        }
+
+        val hotspots = buildString {
+            val clicksTop = slowClicks.sortedByDescending { it.first }.take(3)
+            val queriesTop = slowQueries.sortedByDescending { it.first }.take(3)
+            if (clicksTop.isNotEmpty() || queriesTop.isNotEmpty()) {
+                append("【优先排查的慢操作】\n")
+                clicksTop.forEach { append("  · 首帧 ").append(it.first).append("ms · ").append(it.second).append('\n') }
+                queriesTop.forEach { append("  · 查询 ").append(it.first).append("ms · ").append(it.second).append('\n') }
+            } else {
+                append("【慢操作】最近 24 小时未达到记录阈值（首帧 100ms / 查询 80ms）\n")
             }
         }
-        if (text.length > maxChars) {
-            text = text.take(maxChars - 12) + "\n…（已截断）"
-        }
-        return text.trimEnd()
+
+        val guidance = "【下一步】请结合本报告窗口内的事件判断；若要定位具体调用链，再导出最近 500 行或完整日志。原始日志未删除。"
+        val sections = listOf(header, faults, performance, hotspots, guidance)
+        var report = sections.joinToString("\n")
+        // Preserve device/window/fault context first; trim lower-priority detail before faults.
+        if (report.length > maxChars) report = listOf(header, faults, performance, guidance).joinToString("\n")
+        if (report.length > maxChars) report = listOf(header, faults, guidance).joinToString("\n")
+        if (report.length > maxChars) report = report.take(maxChars - 16) + "\n…（报告过长，已截断）"
+        return report.trimEnd()
     }
 
     /** 直接把摘要文本交给系统分享面板（微信/ChatGPT 等），不经过文件。 */
