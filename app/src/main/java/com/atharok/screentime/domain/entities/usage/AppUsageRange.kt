@@ -3,9 +3,9 @@ package com.atharok.screentime.domain.entities.usage
 import android.graphics.drawable.Drawable
 
 /**
- * A long-range ranking built from Android aggregation buckets (WEEKLY / MONTHLY / YEARLY).
- * Only buckets whose full represented time range fits inside the requested window contribute;
- * partial boundary buckets are excluded because their durations cannot be split safely.
+ * A long-range ranking built from one of Android's aggregation buckets (WEEKLY / MONTHLY /
+ * YEARLY). Unlike the per-day buckets, these survive for weeks to years, so the totals are
+ * complete even for a whole year, without ever scanning usage events.
  */
 data class AppUsageRange(
     val labelRes: Int,
@@ -18,21 +18,8 @@ data class AppUsageRange(
     val clickDaysRecorded: Int = 0,
     /** 点击量最早记录日；null 表示还没有任何记录。 */
     val clickSinceDay: Long? = null,
-    /** Number of recent days for which event-based backfill is still potentially possible. */
-    val backfillLimitDays: Int = 0,
     /** 系统该聚合桶的理论保留上限（天）：WEEKLY≈28 / MONTHLY≈182 / YEARLY≈730。 */
-    val retentionCapDays: Int = 0,
-    /** Number of calendar days covered by accepted, non-overlapping aggregate intervals. */
-    val screenTimeDaysCovered: Int = 0,
-    /** Raw system entries returned before validating their represented time range. */
-    val rawBucketCount: Int = 0,
-    /** Buckets whose full represented time range is inside the requested window. */
-    val keptBucketCount: Int = 0,
-    /** Buckets crossing either requested boundary; their aggregate cannot be prorated safely. */
-    val droppedPartialBucketCount: Int = 0,
-    val droppedOutsideWindowBucketCount: Int = 0,
-    val zeroDurationBucketCount: Int = 0,
-    val invalidTimestampBucketCount: Int = 0
+    val retentionCapDays: Int = 0
 )
 
 data class RankedApp(

@@ -32,8 +32,6 @@ class MonthlyDeviceUsage(
     val systemRetentionDays: Int = 0,
     /** 在保留上限之内、却因过滤/无时间戳/无使用而缺失的天数。 */
     val filteredDays: Int = 0,
-    /** Total calendar days covered by complete, non-overlapping DAILY/WEEKLY/MONTHLY buckets. */
-    val systemBucketCoveredDays: Int = 0,
     /** 总时长中属于系统聚合估算（而非逐日实测）的天数。 */
     val estimatedDays: Int = 0,
     /** 总时长是否含聚合桶估算部分（分段拼接口径）。 */
@@ -50,16 +48,13 @@ class MonthlyDeviceUsage(
 
     private val _totalTimeUsed: Long = dailyTotals.fold(0L) { acc, day -> acc + day.duration }
 
-    /** Never lower than the real per-day sum. The segmented total adds only complete,
-     *  non-overlapping system intervals; missing periods are not synthesized. */
+    /** Never lower than the real per-day sum: the segmented total only fills in the days beyond
+     *  the DAILY retention cap. v1.0.14 removed INTERVAL_BEST from this headline entirely
+     *  (disjoint DAILY 7d + WEEKLY 8-28d + MONTHLY 29d+). */
     private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedTotalTimeMillis)
 
-    // Do not divide a partial total by the full requested window. Prefer the calendar coverage
-    // represented by complete system buckets, then fall back to days with positive daily usage.
     private val effectiveDays: Int =
-        systemBucketCoveredDays.takeIf { it > 0 }
-            ?: daysWithData.takeIf { it > 0 }
-            ?: requestedDays.coerceAtLeast(1)
+        if (requestedDays > 0) requestedDays else dailyTotals.size.coerceAtLeast(1)
 
     private val _averageTimeUsed: Long = effectiveTotal / effectiveDays
 

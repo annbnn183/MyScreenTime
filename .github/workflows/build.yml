@@ -120,16 +120,11 @@ jobs:
           The version shown inside the app, the APK filename and this release tag are all read
           from `versionName` in `app/build.gradle.kts`, so they cannot drift apart.
 
-          ### v1.0.26 - accuracy and stability
-          - Fixed inflated "today" totals: an app still in the foreground is now counted only up
-            to the current time instead of up to the end of the day.
-          - Fixed possible date/hour mix-ups when backfill, refresh and the widget run at the same
-            time (the shared Calendar and date formatters are now locked).
-          - Faster, lighter usage queries (hash-set ignore list, reused event object, one-time
-            reflection lookup).
-          - No database schema, backup format or user data change.
-
-          Full history of earlier releases is in the README.
+          ### v1.0.27 - statistics restored to v1.0.24
+          - Time statistics, app ranking and UI are restored exactly as in v1.0.24; later changes
+            to the statistics logic are reverted.
+          - The version number is higher only because Android cannot update over a higher version
+            code. No database schema, backup format or user data change.
 
           Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7 and
           later with no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.

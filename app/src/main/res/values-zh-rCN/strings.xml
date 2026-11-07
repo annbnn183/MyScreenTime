@@ -94,7 +94,7 @@
     <string name="goal_calendar_title">每日目标达标日历（近 30 天）</string>
     <string name="goal_calendar_summary">%3$s 目标内 %1$d 天，超标 %2$d 天</string>
     <string name="goal_calendar_hint">在设置中设定每日目标后，可查看达标日历。</string>
-    <string name="monthly_data_limited">逐日桶中有正使用时长：%1$d/%2$d 天。%3$d 天超出系统约 7 天 DAILY 保留窗口；完整且不重叠的系统桶实际覆盖 %5$d 个日历日。保留窗口内另有 %4$d 天没有正时长记录。没有可用聚合桶的历史不会用 0 或伪造估算补齐。</string>
+    <string name="monthly_data_limited">逐日实测 %1$d/%2$d 天：其中 %3$d 天超出系统约 7 天的 DAILY 保留上限（由周/月聚合桶补全），另有 %4$d 天在上限内缺失（过滤或未使用）。总量按 DAILY+WEEKLY+MONTHLY 分段拼接，不再用自动选桶。</string>
     <string name="export_report">导出 CSV 报告</string>
     <string name="export_report_subject">MyScreenTime 用量报告</string>
 
@@ -122,7 +122,7 @@
     <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">排序：%1$s</string>
     <string name="launch_count_line">%1$d 次 · %2$.1f%%</string>
-    <string name="aggregate_hint">屏幕时长来自 DAILY、WEEKLY、MONTHLY 系统聚合桶；只有完整落在对应统计区间内的桶才会计入。不完整边界桶不会按比例估算，系统未提供的区间会保持缺失。打开次数来自本机逐日事件记录。</string>
+    <string name="aggregate_hint">时长按 DAILY(近7天)+WEEKLY(8-28天)+MONTHLY(更早) 分段拼接，不使用自动选桶；点击量来自本机永久逐日事件记录，系统聚合桶不含启动次数。</string>
     <string name="no_usage_data">暂时没有用量数据。</string>
 
     <!-- 运行日志 -->
@@ -168,7 +168,7 @@
     <string name="range_daily_average">日均</string>
     <string name="range_total_launches">点击总量</string>
     <string name="range_days_recorded">已记录天数</string>
-    <string name="click_backfill_hint">已记录 %1$d/%2$d 天。系统事件补录最多只能检查最近 %3$d 天；更早的事件可能已过期，无法从本地打开次数存档还原屏幕使用时长。</string>
+    <string name="click_backfill_hint">点击量在本机逐日永久保存，已记录 %1$d/%2$d 天；更早的历史会在后台自动补齐，无需手动操作。</string>
     <string name="click_backfill">立即补算</string>
     <string name="click_backfill_running">正在补算…</string>
     <string name="click_backfill_progress">正在补算… 已推进 %1$d 天</string>
@@ -245,7 +245,4 @@
     <string name="increased_by">▲ %1$s</string>
     <string name="decreased_by">▼ %1$s</string>
     <string name="no_comparison_data">上一周期暂无数据</string>
-    <string name="range_bucket_coverage">系统聚合桶：返回 %2$d 条，完整入窗 %1$d 条，覆盖 %3$d 天；排除部分越界 %4$d 条、完全越界 %5$d 条、零时长 %6$d 条、时间戳无效 %7$d 条。不会按比例拆分不完整桶。</string>
-    <string name="usage_data_quality_title">数据完整性说明</string>
-    <string name="monthly_aggregate_quality">其中 %1$d 天的总量来自周/月聚合桶；它们只能提供区间总量，不能还原每一天的精确分布。</string>
 </resources>

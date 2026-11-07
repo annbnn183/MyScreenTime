@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.26-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.27-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,26 +28,11 @@
 
 ---
 
-## ✅ 현재 버전: v1.0.26 — 더 정확하고 더 안정적
+## ✅ 현재 버전: v1.0.27 (통계를 v1.0.24로 복원)
 
-v1.0.26은 GitHub Actions로 빌드되며, 배포 전에 패키지 이름, 버전, 고정 서명 인증서를 검증합니다. 이번 버전은 **통계 정확도와 안정성**에 집중했습니다. 기존 application ID와 고정 서명을 유지하므로 **v1.0.7 이상에서 바로 덮어쓰기 업데이트**할 수 있으며, 데이터베이스 구조, 백업 형식, 사용자 데이터는 변경하지 않습니다.
+v1.0.27은 사용 시간 통계, 앱 순위, UI를 **v1.0.24 구현 그대로 복원**하고 이후의 통계 로직 변경을 되돌렸습니다. 버전 번호를 1.0.27로 올린 것은 Android가 더 낮은 버전 코드로의 덮어쓰기 업데이트를 허용하지 않기 때문입니다. 기존 application ID와 고정 서명을 유지하므로 **v1.0.7 이상의 어느 버전에서든 바로 덮어쓰기 업데이트**할 수 있습니다. 데이터베이스 구조, 백업 형식, 사용자 데이터는 변경하지 않습니다.
 
-중요한 데이터는 「설정 → 데이터 관리」에서 정기적으로 백업하세요. 기기별 문제가 있으면 Issues로 알려 주세요.
-
-## 🆕 v1.0.26: 통계 정확도와 안정성
-
-- **'오늘' 사용 시간이 높게 나오던 문제 수정:** 앱이 계속 전면에 있으면 끝나지 않은 사용 구간이 당일 23:59:59까지 계산되어 아직 오지 않은 시간까지 포함되었습니다. 이제 현재 시각까지만 계산합니다.
-- **동시 실행 시 날짜·시간대 오류 수정:** 날짜 계산이 하나의 `Calendar`를 공유해 백필, 새로고침, 위젯이 동시에 실행되면 날짜 경계나 시간대 분할이 어긋날 수 있었습니다. 공유 캘린더와 날짜 포맷터에 잠금을 적용했습니다.
-- **더 빠르고 가벼운 조회:** 무시 앱 목록을 해시 집합으로 바꾸고, 이벤트 스캔에서 하나의 이벤트 객체를 재사용하며, 실행 횟수 리플렉션 조회는 한 번만 수행합니다.
-- **버전 표기 일원화:** 앱 내 버전, APK 파일명, 릴리스 태그는 모두 `app/build.gradle.kts`의 `versionName`에서 가져옵니다.
-- **호환성 유지:** 데이터베이스 구조, 백업 형식, 사용자 데이터는 변경하지 않습니다.
-
-## 🗓 v1.0.25: 장기 기록의 신뢰성
-
-- 롤링 기간에는 완전하고 겹치지 않는 일 / 주 / 월 / 년 시스템 버킷을 선택합니다.
-- 1년 순위는 완전한 연간 버킷이 없으면 월간·주간 버킷으로 대체합니다.
-- 확인할 수 없는 기록을 '확인된 0'으로 표시하거나 추정치로 채우지 않습니다.
-- 이벤트 기록 백필은 시스템이 실제로 보관하는 범위에서 멈춥니다.
+중요한 데이터는 「설정 → 데이터 관리」에서 정기적으로 백업하세요.
 
 ## 🆕 v1.0.24: 두 페이지 구성과 가벼운 세로 스와이프
 

@@ -53,7 +53,6 @@ import com.atharok.screentime.ui.components.TextSmall
 import com.atharok.screentime.ui.views.AppUsageGridView
 import com.atharok.screentime.ui.views.MaintainerNotice
 import com.atharok.screentime.ui.views.MonthlyInsightsView
-import com.atharok.screentime.ui.views.MonthlyDataQualityBanner
 import com.atharok.screentime.ui.views.PeriodSelector
 import com.atharok.screentime.ui.views.TotalUsageView
 import com.atharok.screentime.ui.views.ComparisonView
@@ -279,19 +278,6 @@ private fun PortraitDeviceUsageScreen(
                         }
                         is Resource.Success -> {
                             val deviceUsage = deviceUsageResource.data
-                            if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
-                                item {
-                                    MonthlyDataQualityBanner(
-                                        deviceUsage = deviceUsage,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(
-                                                horizontal = dimensionResource(id = R.dimen.padding_medium),
-                                                vertical = dimensionResource(id = R.dimen.padding_small)
-                                            )
-                                    )
-                                }
-                            }
                             item {
                                 TotalUsageView(
                                     period = period,
