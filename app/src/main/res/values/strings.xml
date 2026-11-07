@@ -157,7 +157,7 @@
     <string name="goal_calendar_title">Daily goal calendar (last 30 days)</string>
     <string name="goal_calendar_summary">%1$d days within the %3$s goal, %2$d days over it</string>
     <string name="goal_calendar_hint">Set a daily goal in Settings to see the goal calendar.</string>
-    <string name="monthly_data_limited">Real per-day data: %1$d/%2$d days. %3$d days exceed the ~7-day Android DAILY cap (filled by weekly/monthly aggregates); %4$d more are missing inside the cap. Totals use disjoint DAILY+WEEKLY+MONTHLY segments, never INTERVAL_BEST.</string>
+    <string name="monthly_data_limited">Positive daily usage: %1$d/%2$d days. %3$d days are beyond Android\'s ~7-day DAILY window; complete non-overlapping system buckets currently cover %5$d calendar days. %4$d more days have no positive DAILY record inside the cap. Unavailable history is not filled with zero or fabricated estimates.</string>
     <string name="export_report">Export CSV report</string>
     <string name="export_report_subject">MyScreenTime usage report</string>
 
@@ -185,7 +185,7 @@
     <string name="combined_score">%1$.1f%%</string>
     <string name="sort_label">Sort: %1$s</string>
     <string name="launch_count_line">%1$d opens · %2$.1f%%</string>
-    <string name="aggregate_hint">Screen time = disjoint DAILY (last 7d) + WEEKLY (8-28d) + MONTHLY (29d+) segments; INTERVAL_BEST is not used. Open counts come from the permanent local per-day event history, because system buckets contain none.</string>
+    <string name="aggregate_hint">Screen time uses Android DAILY, WEEKLY and MONTHLY aggregates. Only buckets fully contained in their assigned range are counted; partial boundary buckets are not prorated, and unavailable periods remain missing. Open counts come from this device\'s per-day event history.</string>
     <string name="no_usage_data">No usage data available yet.</string>
 
     <!-- Runtime logs -->
@@ -231,7 +231,7 @@
     <string name="range_daily_average">Daily average</string>
     <string name="range_total_launches">Total opens</string>
     <string name="range_days_recorded">Days recorded</string>
-    <string name="click_backfill_hint">Open counts are stored day by day on this device, permanently. %1$d of %2$d days recorded; older days are backfilled automatically in the background.</string>
+    <string name="click_backfill_hint">Recorded %1$d of %2$d requested days. Event backfill can only check the most recent %3$d days; older events may have expired and cannot be used to reconstruct screen time.</string>
     <string name="click_backfill">Backfill now</string>
     <string name="click_backfill_running">Backfilling…</string>
     <string name="click_backfill_progress">Backfilling… %1$d days</string>
@@ -308,4 +308,7 @@
     <string name="increased_by">▲ %1$s</string>
     <string name="decreased_by">▼ %1$s</string>
     <string name="no_comparison_data">No data for the previous period yet</string>
+    <string name="range_bucket_coverage">System buckets: %1$d complete of %2$d returned, covering %3$d days; excluded %4$d partial, %5$d outside, %6$d zero-duration and %7$d invalid-timestamp entries. Partial buckets are never prorated.</string>
+    <string name="usage_data_quality_title">Data coverage</string>
+    <string name="monthly_aggregate_quality">Weekly/monthly aggregates contribute totals for %1$d days; they provide interval totals, not an exact day-by-day breakdown.</string>
 </resources>

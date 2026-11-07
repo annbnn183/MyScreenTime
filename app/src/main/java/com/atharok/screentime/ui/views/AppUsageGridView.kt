@@ -285,7 +285,9 @@ private fun RangeSummaryCard(
     backfillProgress: Int
 ) {
     val hours = DateTimeUtils.convertToHourFloat(range.totalTimeMillis)
-    val dailyHours = hours / range.numberOfDays.coerceAtLeast(1)
+    // Average only over days represented by accepted whole system buckets, not the requested
+    // rolling window; otherwise partial coverage would make the average look artificially low.
+    val dailyHours = hours / range.screenTimeDaysCovered.coerceAtLeast(1)
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -330,13 +332,30 @@ private fun RangeSummaryCard(
                 )
             }
 
-            if (onBackfill != null && range.clickDaysRecorded < range.numberOfDays) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = stringResource(
+                    id = R.string.range_bucket_coverage,
+                    range.keptBucketCount,
+                    range.rawBucketCount,
+                    range.screenTimeDaysCovered,
+                    range.droppedPartialBucketCount,
+                    range.droppedOutsideWindowBucketCount,
+                    range.zeroDurationBucketCount,
+                    range.invalidTimestampBucketCount
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (onBackfill != null && range.clickDaysRecorded < range.backfillLimitDays) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(
                         id = R.string.click_backfill_hint,
                         range.clickDaysRecorded,
-                        range.numberOfDays
+                        range.numberOfDays,
+                        range.backfillLimitDays
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant

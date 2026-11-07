@@ -120,6 +120,18 @@ jobs:
           > The version shown inside the app, the APK filename and this release tag are ALL read
           > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
 
+          What's new in v1.0.25 — trustworthy long-range usage history:
+          - Select complete, non-overlapping DAILY / WEEKLY / MONTHLY / YEARLY system buckets for
+            rolling ranges instead of assuming one coarse interval fully covers a rolling window.
+          - One-year rankings can fall back to complete monthly and weekly buckets when no whole
+            yearly bucket fits inside the requested dates.
+          - Log raw, accepted, partial, outside-window, zero-duration and invalid-timestamp counts.
+          - Explain daily and aggregate coverage in the monthly screen; unavailable history is not
+            silently presented as verified zero or fabricated estimates.
+          - Stop event-history backfill at the system's finite event horizon. Old scan markers are
+            not treated as proof that 366 days of launch counts or screen-time history exist.
+          - Keep the existing application ID and pinned signing certificate for direct upgrades.
+
           What's new in v1.0.22 — actionable 24-hour diagnostics:
           - The short report uses a rolling 24-hour event window and prints exact start/end times,
             preventing historical cumulative counters from being mistaken for current performance.
