@@ -50,9 +50,8 @@ class MonthlyDeviceUsage(
 
     private val _totalTimeUsed: Long = dailyTotals.fold(0L) { acc, day -> acc + day.duration }
 
-    /** Never lower than the real per-day sum: the segmented total only fills in the days beyond
-     *  the DAILY retention cap. v1.0.14 removed INTERVAL_BEST from this headline entirely
-     *  (disjoint DAILY 7d + WEEKLY 8-28d + MONTHLY 29d+). */
+    /** Never lower than the real per-day sum. The segmented total adds only complete,
+     *  non-overlapping system intervals; missing periods are not synthesized. */
     private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedTotalTimeMillis)
 
     private val effectiveDays: Int =
