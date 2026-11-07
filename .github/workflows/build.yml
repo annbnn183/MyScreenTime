@@ -117,111 +117,22 @@ jobs:
         body: |
           MyScreenTime **v${{ steps.version.outputs.version }}** - automated build from commit ${{ github.sha }} (run #${{ github.run_number }}).
 
-          > The version shown inside the app, the APK filename and this release tag are ALL read
-          > from `versionName` in `app/build.gradle.kts`, so they can never drift apart again.
+          The version shown inside the app, the APK filename and this release tag are all read
+          from `versionName` in `app/build.gradle.kts`, so they cannot drift apart.
 
-          What's new in v1.0.25 — trustworthy long-range usage history:
-          - Select complete, non-overlapping DAILY / WEEKLY / MONTHLY / YEARLY system buckets for
-            rolling ranges instead of assuming one coarse interval fully covers a rolling window.
-          - One-year rankings can fall back to complete monthly and weekly buckets when no whole
-            yearly bucket fits inside the requested dates.
-          - Log raw, accepted, partial, outside-window, zero-duration and invalid-timestamp counts.
-          - Explain daily and aggregate coverage in the monthly screen; unavailable history is not
-            silently presented as verified zero or fabricated estimates.
-          - Stop event-history backfill at the system's finite event horizon. Old scan markers are
-            not treated as proof that 366 days of launch counts or screen-time history exist.
-          - Keep the existing application ID and pinned signing certificate for direct upgrades.
+          ### v1.0.26 - accuracy and stability
+          - Fixed inflated "today" totals: an app still in the foreground is now counted only up
+            to the current time instead of up to the end of the day.
+          - Fixed possible date/hour mix-ups when backfill, refresh and the widget run at the same
+            time (the shared Calendar and date formatters are now locked).
+          - Faster, lighter usage queries (hash-set ignore list, reused event object, one-time
+            reflection lookup).
+          - No database schema, backup format or user data change.
 
-          What's new in v1.0.22 — actionable 24-hour diagnostics:
-          - The short report uses a rolling 24-hour event window and prints exact start/end times,
-            preventing historical cumulative counters from being mistaken for current performance.
-          - Highlights ERROR/FATAL, main-thread stalls/ANRs, interactive frame gaps, query latency,
-            average/peak PSS, peak heap, minimum available memory and the slowest screen operations.
-          - Expected package-update exits are excluded from fault counts. Original logs remain intact.
+          Full history of earlier releases is in the README.
 
-          What's new in v1.0.21 — performance and install-safe Release:\n          - Load app icons on demand through the bounded downscaled cache instead of retaining full-size Drawable objects for every app in usage results.\n          - Record long idle/background Choreographer suspensions as FRAME_MONITOR_GAP, not JANK.\n          - Build a non-debuggable, minified Release APK while preserving applicationId com.atharok.screentime.debug for direct upgrades from v1.0.20.\n          - CI requires the fixed keystore and verifies package ID, version and pinned certificate SHA-256 before publishing.\n          - No database schema, backup format or user data is changed.\n\n          Previously, v1.0.20 — logs you can actually send:
-          Exporting used to mean one 1.6 MB / 9,000-line file: too big for WeChat, too long for a
-          chat box. The log screen now lets you pick the granularity instead of forcing the full dump.
-          - Copy (top bar) now copies a ~600-character diagnostic digest: version, device, Android
-            version, usage-access state, error count, abnormal exits, tap/query/frame numbers and the
-            slowest few operations. It fits in a single message and pastes straight into a chat.
-          - Share asks first: digest / recent 500 lines (~60 KB TXT) / full history.
-          - The digest is capped at 1,500 characters. If it overflows, slowest-operation lines are
-            dropped first; errors and device info are never dropped.
-          - Exit records are de-duplicated. Android returns the same ApplicationExitInfo list on
-            every launch, so a single kill used to be written 8 times: the previous log claimed
-            "109 LOW_MEMORY exits" when only 13 had really happened. New exits are keyed by
-            (reason, timestamp), and the digest de-duplicates historical records too.
-          Nothing is deleted: the full log is still captured and kept forever. This release only
-          adds shorter ways to export it.
-
-          Previously, v1.0.19 — combined ranking by opens x screen time:
-          - New 4th sort option "Combined" in the app ranking. Combined share = time share x w +
-            open share x (1 - w); both shares are taken against all apps in the selected range, so
-            the combined shares add up to 100%. Shares (not raw values) are used because
-            milliseconds and counts have different scales.
-          - Three one-tap weights: time first 7:3 / balanced 5:5 (default) / opens first 3:7.
-          - Each row shows rank, icon, name, time + share, opens + share and the combined share.
-            With no open counts recorded for the range it falls back to screen time only and says so.
-          - Small fix: "show more" now appears whenever there are more apps than the first screen
-            (it used to need more than 40, so 21-40 apps could not be expanded); "Show top 40 only"
-            now reads "Collapse".
-          - Nothing is deleted or migrated: data, backups and the permanent log are untouched.
-
-          Previously, v1.0.18 — making the runtime log trustworthy:
-
-          v1.0.18 — making the runtime log trustworthy:
-          The previous log had 922 JANK records at the same time as 10 ms tap-to-frame latency,
-          which is self-contradictory. Root cause: the frame monitor counted "the UI is idle, so
-          there is no new frame" as a dropped frame (one gap was 2.3 s). That noise would keep
-          misleading every future performance decision, so this release fixes the measurement
-          before optimising anything else.
-          - JANK now only covers intervals within 1.2 s of a touch, i.e. real dropped frames.
-            Idle intervals are recorded separately as IDLE_GAP and are NOT counted as jank.
-          - IDLE_GAP is summarised once per 30 s (longest gap in that window) instead of up to one
-            record per second, so the log stops growing ~1.7 MB/day just from idle time.
-          - The export summary has a separate "Idle gaps" line, and the analysis prompt now states
-            that CLICK_TO_FRAME is the metric to judge responsiveness by.
-          - Backfill with 0 days now returns immediately. It used to invalidate the caches and
-            rebuild the whole screen anyway, which showed up as a 627 ms stall with zero data change.
-          - Nothing is deleted: every event is still captured and kept forever. Idle duration is
-            still fully preserved in IDLE_GAP; it just is not called a dropped frame any more.
-
-          What v1.0.17 delivered, measured on the user's own logs:
-          - tap-to-frame worst case 397 ms -> 76 ms (average 14 ms -> 10 ms)
-          - PSS peak 1375 MB -> 303 MB, no more LOW_MEMORY process kills
-          - launch-history backfill: 10+ manual taps of 31 days -> one automatic 365-day run
-            (log confirms stored days: 366, then "Backfilled 0 days")
-
-          - v1.0.17: removed runBlocking(DataStore) from the ViewModel constructor (971 ms first
-            frame); first screen 40 -> 20 cells (904 ms long frame); one-shot 365-day backfill with
-            progress; batch disk writes every 8 days; automatic silent backfill; auto-backup status
-            in Settings.
-          - v1.0.16: complete backup / restore / migration — versioned JSON (format, schemaVersion,
-            export time, time zone, record counts, SHA-256 checksum); write-then-read-back verify;
-            restore = validate -> safety snapshot + crash marker -> MERGE (max per day/app, so a
-            repeat import never doubles counts) or OVERWRITE -> re-verify, with automatic rollback on
-            any failure; optional AES-256-GCM + PBKDF2 password encryption; daily auto backup keeping
-            the latest 7; safety snapshot before "delete all data"; permission re-check after restore.
-          - v1.0.14: statistical accuracy - removed INTERVAL_BEST (auto-picked YEARLY for a 30-day
-            window), DISJOINT DAILY+WEEKLY+MONTHLY segments, fixed DAILY filtering (~71% of rows were
-            dropped), data-completeness classification, SEGMENT / DATA_COMPLETENESS log events,
-            per-bucket retention ceilings (~28 / ~182 / ~730 days)
-          - v1.0.12: async icon loading off the main thread, incremental "+40" ranking rendering,
-            JANK split into DEBUG/WARN, newest-first log view
-          - v1.0.11: 8MB downscaled icon LruCache, top-40 grid, permission-screen flash fix,
-            cheaper log reads, no more false Wi-Fi WARN
-          - v1.0.10: long-range hour totals, permanent per-day launch history with cancellable
-            backfill, always-visible click counts, 24-hour distribution
-          - v1.0.9: full-capture runtime log + TXT export with AI prompt
-          - v1.0.8: merged long-range ranking grid using system WEEKLY/MONTHLY/YEARLY buckets
-
-          Measured on real devices (v1.0.11 / v1.0.12 logs): PSS peak 1375MB -> 254MB (OnePlus PGZ110),
-          694MB -> 334MB (Xiaomi 22041216C); >500ms frame stalls 26 -> 1 and 46 -> 1; 0 ERROR / 0 FATAL;
-          no LOW_MEMORY kills after the fix.
-
-          Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7+ with
-          no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.
+          Fixed signing certificate (SHA-256 d075b5e1...fef501): installs directly over v1.0.7 and
+          later with no uninstall. From v1.0.4-v1.0.6 an uninstall is still required once.
         files: artifacts/*.apk
         fail_on_unmatched_files: true
       env:

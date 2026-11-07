@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.24-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.26-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,11 +28,26 @@
 
 ---
 
-## ✅ 目前版本：穩定流暢，適合日常使用
+## ✅ 目前版本：v1.0.26，統計更準、執行更穩
 
-v1.0.24 已完成建置、固定簽章驗證並正式發布。近期實際操作中，日常使用與上下滑動切換頁面的體驗符合預期；若遇到裝置差異或異常，歡迎透過 Issues 回報。**歡迎下載體驗。**
+v1.0.26 由 GitHub Actions 建置，並在發布前核對套件名稱、版本號與固定簽章憑證。本版聚焦**統計準確性與穩定性**；沿用原有套件名稱與固定簽章，**可直接覆蓋安裝 v1.0.7 及之後的版本**，不修改資料庫結構、備份格式或使用者資料。
 
-軟體仍會持續維護；為保護自己的歷史紀錄，建議定期透過「設定 → 資料管理」備份重要資料。若遇到異常，歡迎透過 Issues 回報。
+建議定期透過「設定 → 資料管理」備份重要資料；若遇到裝置差異或異常，歡迎透過 Issues 回報。
+
+## 🆕 v1.0.26：統計準確性與穩定性
+
+- **修正「今天」時長偏高：** 應用程式仍在前景時，尚未結束的使用區間過去會一路算到當天 23:59:59，把還沒發生的時間也算進去；現在最多算到「此刻」。
+- **修正並行時的日期與小時錯位：** 日期計算共用同一個 `Calendar`，在備份補算、重新整理與小工具同時執行時可能互相覆蓋，造成日界或小時分段錯誤；現在對共用的日曆與日期格式化器加鎖。
+- **查詢更快、更省記憶體：** 忽略應用程式清單改用雜湊集合，事件掃描重複使用同一個事件物件，系統「啟動次數」的反射方法只查找一次。
+- **版本資訊統一：** 應用程式內版本、APK 檔名與 Release 標籤皆來自 `app/build.gradle.kts` 的 `versionName`。
+- **維持相容：** 資料庫結構、備份格式與使用者資料皆不變。
+
+## 🗓 v1.0.25：長週期歷史更可信
+
+- 滾動區間改為選取完整且互不重疊的 日 / 週 / 月 / 年 系統資料桶。
+- 一年排行在沒有完整年度資料桶時，回退為完整的月、週資料桶。
+- 無法取得的歷史不會被當作「已驗證的 0」，也不會以估算值填補。
+- 事件歷史補算在系統實際保留的上限處停止。
 
 ## 🆕 v1.0.24：雙頁縱向輕掃體驗
 

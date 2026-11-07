@@ -67,20 +67,24 @@ class UsageStatsTracker(
         ignoredPackages: List<String>
     ): Map<String, List<Pair<Long, Long>>> {
         val usageIntervals = mutableMapOf<String, MutableList<Pair<Long, Long>>>()
+        // A Set makes the per-event lookup O(1); the incoming List made it O(n) for every event.
+        val ignoredPackageSet: Set<String> = ignoredPackages.toHashSet()
 
         usageStatsManager.queryEvents(startTimestamp, endTimestamp)?.let { usageEvents: UsageEvents ->
 
             val resumedPackages = mutableMapOf<String, ResumedPackage>()
             //val isFirstResumedCalled = mutableMapOf<String, Boolean>()
+            // getNextEvent() overwrites the passed object, so one instance is reused for the whole
+            // scan instead of allocating one per event (tens of thousands on a busy device).
+            val event = UsageEvents.Event()
 
             while (usageEvents.hasNextEvent()) {
-                val event = UsageEvents.Event()
 
                 if(usageEvents.getNextEvent(event)) {
 
                     if(ignoreSystemApps && event.packageName !in launchableApp) continue
 
-                    if(ignoredPackages.contains(event.packageName)) continue
+                    if(event.packageName in ignoredPackageSet) continue
 
                     event.packageName?.let { eventPackageName: String ->
                         val packageClassName: String = event.className ?: eventPackageName
@@ -125,12 +129,19 @@ class UsageStatsTracker(
             // If the last retrieved event was in the RESUMED state, we add the interval between
             // the timestamp of that RESUMED event and the end timestamp provided as a function
             // parameter.
+            //
+            // The end timestamp can lie in the future (for example the last millisecond of
+            // today). An app that is still in the foreground must only be credited up to "now",
+            // otherwise today's usage is inflated by all the hours that have not happened yet.
+            val openIntervalEnd: Long = minOf(endTimestamp, System.currentTimeMillis())
             resumedPackages.maxByOrNull {
                 it.value.timestamp
             }?.value?.let { lastResumedPackage: ResumedPackage ->
-                usageIntervals
-                    .getOrPut(lastResumedPackage.packageName) { mutableListOf() }
-                    .add(lastResumedPackage.timestamp to endTimestamp)
+                if (openIntervalEnd > lastResumedPackage.timestamp) {
+                    usageIntervals
+                        .getOrPut(lastResumedPackage.packageName) { mutableListOf() }
+                        .add(lastResumedPackage.timestamp to openIntervalEnd)
+                }
             }
         }
 
@@ -328,6 +339,7 @@ class UsageStatsTracker(
         val startDay = DateTimeUtils.truncateToDay(startTimestamp)
         val endDay = DateTimeUtils.truncateToDay(endTimestamp)
         val selfPackage = context.packageName
+        val ignoredPackageSet: Set<String> = ignoredPackages.toHashSet()
 
         for (stats in usageStatsList) {
             val packageName = stats.packageName ?: continue
@@ -336,7 +348,7 @@ class UsageStatsTracker(
             // Do not use lastTimeUsed as a bucket boundary. The represented interval is checked
             // below using firstTimeStamp / lastTimeStamp, and only whole daily buckets are kept.
             if (packageName.isEmpty() || packageName == selfPackage) { filteredByPolicy++; continue }
-            if (ignoredPackages.contains(packageName)) { filteredByPolicy++; continue }
+            if (packageName in ignoredPackageSet) { filteredByPolicy++; continue }
             if (ignoreSystemApps && packageName !in launchableApp) { filteredByPolicy++; continue }
 
             val duration = stats.totalTimeInForeground
@@ -419,11 +431,20 @@ class UsageStatsTracker(
      */
     private fun readLaunchCount(stats: android.app.usage.UsageStats): Int {
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P) return 0
+        // The reflective lookup is done once; it used to run for every bucket of every query.
+        val method = launchCountMethod ?: return 0
         return try {
-            val method = stats.javaClass.getMethod("getLaunchCount")
             (method.invoke(stats) as? Int)?.coerceAtLeast(0) ?: 0
         } catch (_: Exception) {
             0
+        }
+    }
+
+    private val launchCountMethod: java.lang.reflect.Method? by lazy {
+        try {
+            android.app.usage.UsageStats::class.java.getMethod("getLaunchCount")
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -491,6 +512,8 @@ class UsageStatsTracker(
         var droppedOutsideWindow = 0
         var zeroDurationBuckets = 0
         var invalidTimestampBuckets = 0
+        val ignoredPackageSet: Set<String> = ignoredPackages.toHashSet()
+        val selfPackage = context.packageName
 
         for (stats in statsList) {
             val bucketBegin = stats.firstTimeStamp
@@ -509,8 +532,8 @@ class UsageStatsTracker(
             }
 
             val packageName = stats.packageName ?: continue
-            if (packageName.isEmpty() || packageName == context.packageName ||
-                ignoredPackages.contains(packageName)
+            if (packageName.isEmpty() || packageName == selfPackage ||
+                packageName in ignoredPackageSet
             ) continue
             if (ignoreSystemApps && packageName !in launchableApp) continue
 
@@ -634,10 +657,11 @@ class UsageStatsTracker(
         }
 
         val selfPackage = context.packageName
+        val ignoredPackageSet: Set<String> = ignoredPackages.toHashSet()
         fun isAllowed(stats: android.app.usage.UsageStats): Boolean {
             val packageName = stats.packageName ?: return false
             if (packageName.isEmpty() || packageName == selfPackage) return false
-            if (ignoredPackages.contains(packageName)) return false
+            if (packageName in ignoredPackageSet) return false
             if (ignoreSystemApps && packageName !in launchableApp) return false
             return true
         }

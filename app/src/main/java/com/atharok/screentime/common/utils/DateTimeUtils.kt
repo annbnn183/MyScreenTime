@@ -68,15 +68,19 @@ object DateTimeUtils {
      * - (fr): 00h | 04h | 08h | 12ħ | 16h | 20h
      */
     fun formatToHour(value: Int): String {
-        calendar.apply {
-            // Avoids incorrect values during the time change (only the time is displayed, not the date, so these values will not be shown).
-            set(Calendar.MONTH, Calendar.JANUARY)
-            set(Calendar.DAY_OF_MONTH, 1)
+        val hourMillis: Long = synchronized(calendar) {
+            calendar.apply {
+                // Avoids incorrect values during the time change (only the time is displayed, not the date, so these values will not be shown).
+                set(Calendar.MONTH, Calendar.JANUARY)
+                set(Calendar.DAY_OF_MONTH, 1)
 
-            // Sets the time to be displayed.
-            setTime(value, 0, 0, 0)
+                // Sets the time to be displayed.
+                setTime(value, 0, 0, 0)
+            }
+            calendar.timeInMillis
         }
-        return koin.get<SimpleDateFormat>(named(KOIN_SIMPLE_HOUR_FORMAT)).format(calendar.timeInMillis)
+        val hourFormat = koin.get<SimpleDateFormat>(named(KOIN_SIMPLE_HOUR_FORMAT))
+        return synchronized(hourFormat) { hourFormat.format(hourMillis) }
     }
 
     fun convertToHourDouble(timestamp: Long): Double = timestamp / MILLIS_IN_A_HOUR.toDouble()
@@ -90,7 +94,7 @@ object DateTimeUtils {
         SimpleDateFormat("MM/dd", Locale.getDefault()).apply { timeZone = koin.get<TimeZone>() }
     }
 
-    fun formatToShortDate(timestamp: Long): String = shortDateFormatter.format(timestamp)
+    fun formatToShortDate(timestamp: Long): String = synchronized(shortDateFormatter) { shortDateFormatter.format(timestamp) }
 
     /**
      * Format example:
@@ -120,61 +124,69 @@ object DateTimeUtils {
      * Example:
      * 1735742198000 (Wednesday 1 January 2025 14:36:38) -> 1735689600000 (Wednesday 1 January 2025 00:00:00)
      */
-    fun truncateToDay(timestamp: Long): Long = calendar.apply {
-        this.timeInMillis = timestamp
-        this.setTime(0, 0, 0, 0)
-    }.timeInMillis
+    fun truncateToDay(timestamp: Long): Long = synchronized(calendar) {
+        calendar.apply {
+            this.timeInMillis = timestamp
+            this.setTime(0, 0, 0, 0)
+        }.timeInMillis
+    }
 
     /**
      * Example:
      * 1735742198000 (Wednesday 1 January 2025 14:36:38) -> 1735743600000 (Wednesday 1 January 2025 15:00:00)
      */
-    fun truncateToNextHour(timestamp: Long): Long = calendar.apply {
-        timeInMillis = timestamp
-        add(Calendar.HOUR_OF_DAY, 1)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
+    fun truncateToNextHour(timestamp: Long): Long = synchronized(calendar) {
+        calendar.apply {
+            timeInMillis = timestamp
+            add(Calendar.HOUR_OF_DAY, 1)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
 
     /**
      * Example:
      * 1735742198000 (Wednesday 1 January 2025 14:36:38) -> 1735828598000 (Thursday 2 January 2025 14:36:38)
      */
-    fun addDaysToTimestamp(timestamp: Long, dayOffset: Int): Long = calendar.apply {
-        timeInMillis = timestamp
-        add(Calendar.DATE, dayOffset)
-    }.timeInMillis
+    fun addDaysToTimestamp(timestamp: Long, dayOffset: Int): Long = synchronized(calendar) {
+        calendar.apply {
+            timeInMillis = timestamp
+            add(Calendar.DATE, dayOffset)
+        }.timeInMillis
+    }
 
     /**
      * Example:
      * 1735742198000 (Wednesday 1 January 2025 14:36:38) -> 14
      */
-    fun getHourOfDay(timestamp: Long): Int = calendar.apply {
-        this.timeInMillis = timestamp
-    }.get(Calendar.HOUR_OF_DAY)
+    fun getHourOfDay(timestamp: Long): Int = synchronized(calendar) {
+        calendar.apply {
+            this.timeInMillis = timestamp
+        }.get(Calendar.HOUR_OF_DAY)
+    }
 
-    fun computeInterval(now: Long, numberOfDays: Int): Pair<Long, Long> {
+    fun computeInterval(now: Long, numberOfDays: Int): Pair<Long, Long> = synchronized(calendar) {
         calendar.timeInMillis = now
         val periodEnd: Long = calendar.timeInMillis
         calendar.add(Calendar.DATE, -numberOfDays)
         calendar.setTime(0, 0, 0, 0)
         val periodBegin = calendar.timeInMillis
 
-        return Pair(first = periodBegin, second = periodEnd)
+        Pair(first = periodBegin, second = periodEnd)
     }
 
-    fun computeLast7DaysIntervalFrom(now: Long): Pair<Long, Long> {
+    fun computeLast7DaysIntervalFrom(now: Long): Pair<Long, Long> = synchronized(calendar) {
         calendar.timeInMillis = now
         calendar.setTime(0, 0, 0, 0)
         val periodEnd = calendar.timeInMillis - 1
         calendar.add(Calendar.DATE, -7)
         val periodBegin = calendar.timeInMillis
 
-        return Pair(periodBegin, periodEnd)
+        Pair(periodBegin, periodEnd)
     }
 
-    fun computeDayIntervalFrom(now: Long, dayOffset: Int): Pair<Long, Long> {
+    fun computeDayIntervalFrom(now: Long, dayOffset: Int): Pair<Long, Long> = synchronized(calendar) {
         calendar.timeInMillis = now
         calendar.add(Calendar.DATE, -(NUMBER_OF_DAYS - 1) + dayOffset)
         calendar.setTime(0, 0, 0, 0)
@@ -182,6 +194,6 @@ object DateTimeUtils {
         calendar.add(Calendar.DATE, 1)
         val periodEnd = calendar.timeInMillis - 1
 
-        return Pair(periodBegin, periodEnd)
+        Pair(periodBegin, periodEnd)
     }
 }

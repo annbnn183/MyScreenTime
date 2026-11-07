@@ -1,0 +1,3 @@
+1.0.26
+
+Fixed inflated "today" totals (an open foreground interval is now counted only up to the current time); fixed possible date/hour mix-ups under concurrency; faster, lighter queries. Database schema, backup format and user data are unchanged.
