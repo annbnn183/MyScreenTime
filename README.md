@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.21-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.22-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -112,7 +112,7 @@
 {
   "format": 2,
   "schemaVersion": 2,
-  "appVersion": "1.0.20",
+  "appVersion": "1.0.22",
   "exportedAt": "2026-11-07 05:13:23",
   "exportedAtEpochMs": 1793999603000,
   "timeZoneId": "Asia/Shanghai",
@@ -425,7 +425,7 @@ MyScreenTime 不需要成为功能最多的屏幕时间软件，而应该成为�
 
 ## ⚙️ 自动构建
 
-推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultRelease`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.20.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
+推送到 `main` 会触发 [`.github/workflows/build.yml`](.github/workflows/build.yml)，构建 `assembleDefaultRelease`，用固定密钥签名后把 APK 发布到 Releases。**版本号以 [`app/build.gradle.kts`](app/build.gradle.kts) 的 `versionName` 为唯一来源**：Release 标签、Release 名称、APK 文件名（如 `MyScreenTime-v1.0.22.apk`）以及应用内「设置 → 关于」显示的版本都由它生成，因此始终一致；发布新版本只需同时递增 `versionName` 与 `versionCode`。签名密钥只存放在仓库的 Actions Secrets 中，不入库（见 `.gitignore`）。
 
 ---
 
