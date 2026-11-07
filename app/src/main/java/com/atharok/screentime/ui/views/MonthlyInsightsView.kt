@@ -124,7 +124,8 @@ fun MonthlyDataQualityBanner(
                     deviceUsage.daysWithData,
                     deviceUsage.requestedDays,
                     deviceUsage.systemRetentionDays,
-                    deviceUsage.filteredDays
+                    deviceUsage.filteredDays,
+                    deviceUsage.systemBucketCoveredDays
                 )
             )
             if (deviceUsage.isEstimated) {
