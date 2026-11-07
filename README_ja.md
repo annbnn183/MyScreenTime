@@ -12,7 +12,7 @@
 
 <div align="center">
 
-[![GitHub Release](https://img.shields.io/badge/Release-v1.0.29-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
+[![GitHub Release](https://img.shields.io/badge/Release-v1.0.30-blue?style=for-the-badge)](https://github.com/annbnn183/MyScreenTime/releases)
 [![Platform](https://img.shields.io/badge/Platform-Android-green?style=for-the-badge)](https://www.android.com)
 [![Language](https://img.shields.io/badge/Language-Kotlin-7F52FF?style=for-the-badge)](https://kotlinlang.org)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
@@ -28,13 +28,13 @@
 
 ---
 
-## ✅ 現行バージョン：v1.0.29（期間ページの横スワイプ切り替え）
+## ✅ 現行バージョン：v1.0.30（期間ページの横スワイプ切り替え）
 
-v1.0.29 では統計画面を「年 / 月 / 週 / 日」の 4 つの横ページにしました。統計コンテンツ上を軽く左右にスワイプすると隣の期間へ移動し、ページスライドと吸着アニメーションで自然に切り替わります。期間選択ボタンも表示中のページに同期し、ボタンを直接タップする操作も維持しています。従来の「概要 / アプリランキング」の縦スワイプもそのまま利用できます。
+v1.0.30 では統計画面を「年 / 月 / 週 / 日」の 4 つの横ページにしました。統計コンテンツ上を軽く左右にスワイプすると隣の期間へ移動し、ページスライドと吸着アニメーションで自然に切り替わります。期間選択ボタンも表示中のページに同期し、ボタンを直接タップする操作も維持しています。従来の「概要 / アプリランキング」の縦スワイプもそのまま利用できます。
 
 変更は画面ナビゲーションのみです。統計データの取得元・計算・履歴・データベース構造・バックアップ形式は変更しません。既存のアプリ ID と固定署名を維持し、GitHub Actions で公開前に署名証明書を検証します。
 
-## 🆕 v1.0.29：統計コンテンツを左右にスワイプ
+## 🆕 v1.0.30：統計コンテンツを左右にスワイプ
 
 - 統計概要とアプリランキングのどちらからでも左右スワイプで隣の期間へ移動。
 - 横方向のページアニメーションと自動吸着で、ページ間の中途半端な位置に止まりません。
