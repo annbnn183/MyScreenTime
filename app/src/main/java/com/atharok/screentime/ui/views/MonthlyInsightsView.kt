@@ -129,7 +129,12 @@ fun MonthlyDataQualityBanner(
                 )
             )
             if (deviceUsage.isEstimated) {
-                TextSmall(text = stringResource(id = R.string.monthly_aggregate_quality))
+                TextSmall(
+                    text = stringResource(
+                        id = R.string.monthly_aggregate_quality,
+                        deviceUsage.estimatedDays
+                    )
+                )
             }
         }
     }
