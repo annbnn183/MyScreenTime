@@ -54,8 +54,12 @@ class MonthlyDeviceUsage(
      *  non-overlapping system intervals; missing periods are not synthesized. */
     private val effectiveTotal: Long = maxOf(_totalTimeUsed, aggregatedTotalTimeMillis)
 
+    // Do not divide a partial total by the full requested window. Prefer the calendar coverage
+    // represented by complete system buckets, then fall back to days with positive daily usage.
     private val effectiveDays: Int =
-        if (requestedDays > 0) requestedDays else dailyTotals.size.coerceAtLeast(1)
+        systemBucketCoveredDays.takeIf { it > 0 }
+            ?: daysWithData.takeIf { it > 0 }
+            ?: requestedDays.coerceAtLeast(1)
 
     private val _averageTimeUsed: Long = effectiveTotal / effectiveDays
 
