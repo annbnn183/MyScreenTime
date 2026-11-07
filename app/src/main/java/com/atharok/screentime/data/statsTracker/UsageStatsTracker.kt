@@ -571,8 +571,8 @@ class UsageStatsTracker(
         val perPackageMs: Map<String, Long>,
         val totalMs: Long,
         val segments: List<SegmentEvidence>,
-        /** Aggregated buckets cannot give per-day detail, so these totals are flagged estimates. */
-        val isEstimated: Boolean = true
+        /** True only when at least one non-daily aggregate bucket contributes to the total. */
+        val isEstimated: Boolean = false
     )
 
     /**
@@ -585,7 +585,8 @@ class UsageStatsTracker(
      * INTERVAL_BEST is intentionally NOT used: it silently picks whichever bucket the system
      * considers "best" (device logs: BEST returned exactly the YEARLY figures), so a 30-day window
      * would be reported with a one-year granularity. Each bucket is credited to exactly one segment
-     * by its anchor timestamp, so the segments never double-count the same bucket.
+     * only when its full represented time range fits inside one segment. Partial buckets are
+     * rejected because their aggregate duration cannot be split across segment boundaries.
      */
     fun querySegmentedMonthTotals(
         startTimestamp: Long,
@@ -640,6 +641,9 @@ class UsageStatsTracker(
             )
         }
         val totalMs = perPackageMs.values.sum()
+        val isEstimated = evidences.any {
+            it.bucketName != "INTERVAL_DAILY" && it.keptBuckets > 0
+        }
         AppLog.event(
             "DEBUG", "UsageStatsTracker", "SEGMENT_TOTALS",
             "Segmented ${requestedDays}d total = $totalMs ms from ${evidences.size} disjoint buckets",
@@ -647,11 +651,11 @@ class UsageStatsTracker(
             "totalMs" to totalMs,
             "distinctPackages" to perPackageMs.size,
             "segments" to evidences.joinToString("|") { "${it.bucketName}:${it.contributedMs}" },
-            "isEstimated" to true,
+            "isEstimated" to isEstimated,
             "bestBucketUsed" to false,
             "launchSource" to "queryEvents day-by-day permanent store (system buckets expose no launch counts)"
         )
-        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, true)
+        return SegmentedMonthTotals(perPackageMs, totalMs, evidences, isEstimated)
     }
 
     /** Reads one bucket for a single disjoint segment and folds each entry into [sink]. */
