@@ -120,7 +120,7 @@ jobs:
           The version shown inside the app, the APK filename and this release tag are all read
           from `versionName` in `app/build.gradle.kts`, so they cannot drift apart.
 
-          ### v1.0.29 - animated swipe navigation across statistics content
+          ### v1.0.30 - animated swipe navigation across statistics content
           - Use horizontal paging across Year / Month / Week / Day, with a smooth slide and snap animation.
           - Swipe from the Overview or App Ranking content; the period selector stays synchronized and direct taps remain available.
           - Keep the existing vertical pager between Overview and App Ranking; each swipe advances at most one period.
