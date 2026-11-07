@@ -1,7 +1,10 @@
 package com.atharok.screentime.ui.screens
 
 import android.graphics.drawable.Drawable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.pager.VerticalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -184,6 +187,7 @@ private fun StatelessDeviceUsageScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun PortraitDeviceUsageScreen(
     period: Period,
@@ -202,114 +206,150 @@ private fun PortraitDeviceUsageScreen(
     comparison: com.atharok.screentime.domain.usecases.UsageComparison? = null,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
-        modifier = modifier,
-        contentPadding = innerPadding
+    // Two full-screen chapters: overview first, app ranking second.
+    // Each chapter owns a LazyColumn, preserving efficient rendering for long content.
+    val pagerState = rememberPagerState(pageCount = { 2 })
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(innerPadding)
     ) {
+        TextSmall(
+            text = if (pagerState.currentPage == 0) {
+                "1 / 2  ·  ${stringResource(id = R.string.usage_analysis)}  ·  ↑"
+            } else {
+                "2 / 2  ·  ${stringResource(id = R.string.app_usage_ranking)}  ·  ↓"
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+                .padding(top = dimensionResource(id = R.dimen.padding_small))
+        )
 
-        // Who is maintaining the project now, visible as soon as the app is opened.
-        item {
-            MaintainerNotice(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        horizontal = dimensionResource(id = R.dimen.padding_medium),
-                        vertical = dimensionResource(id = R.dimen.padding_normal)
+        VerticalPager(
+            state = pagerState,
+            modifier = Modifier.weight(1f)
+        ) { page ->
+            when (page) {
+                0 -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        bottom = dimensionResource(id = R.dimen.padding_large)
                     )
-            )
-        }
-
-        item {
-            PeriodSelector(
-                period = period,
-                onPeriodChange = onPeriodChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(id = R.dimen.padding_medium))
-            )
-        }
-
-        when(deviceUsageResource) {
-            is Resource.Failure -> {
-                item {
-                    FailureView(deviceUsageResource.throwable.toString())
-                }
-            }
-            is Resource.Progress -> {
-                item {
-                    LoadingDialog(
-                        title = stringResource(id = R.string.calculating),
-                        message = stringResource(id = R.string.calculating_message)
-                    )
-                }
-            }
-            is Resource.Success -> {
-                val deviceUsage: DeviceUsage<*> = deviceUsageResource.data
-
-                item {
-                    TotalUsageView(
-                        period = period,
-                        dayIndex = dayIndex,
-                        onDayIndexChange = onDayIndexChange,
-                        selectedCentralTendency = selectedCentralTendency,
-                        onSelectedCentralTendencyChange = onSelectedCentralTendencyChange,
-                        deviceUsage = deviceUsage,
-                        modelProducer = modelProducer,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
-                    )
-                }
-
-                // 本周期 vs 上一周期对比（周/月/年；日周期无对比）。
-                comparison?.let { cmp ->
-                    if (cmp.period != Period.DAY) {
-                        item {
-                            ComparisonView(
-                                comparison = cmp,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(
-                                        horizontal = dimensionResource(id = R.dimen.padding_medium),
-                                        vertical = dimensionResource(id = R.dimen.padding_small)
-                                    )
-                            )
-                        }
-                    }
-                }
-
-                if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
+                ) {
                     item {
-                        MonthlyInsightsView(
-                            deviceUsage = deviceUsage,
+                        MaintainerNotice(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(
                                     horizontal = dimensionResource(id = R.dimen.padding_medium),
-                                    vertical = dimensionResource(id = R.dimen.padding_small)
+                                    vertical = dimensionResource(id = R.dimen.padding_normal)
                                 )
                         )
                     }
+
+                    item {
+                        PeriodSelector(
+                            period = period,
+                            onPeriodChange = onPeriodChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(dimensionResource(id = R.dimen.padding_medium))
+                        )
+                    }
+
+                    when (deviceUsageResource) {
+                        is Resource.Failure -> item {
+                            FailureView(deviceUsageResource.throwable.toString())
+                        }
+                        is Resource.Progress -> item {
+                            LoadingDialog(
+                                title = stringResource(id = R.string.calculating),
+                                message = stringResource(id = R.string.calculating_message)
+                            )
+                        }
+                        is Resource.Success -> {
+                            val deviceUsage = deviceUsageResource.data
+                            item {
+                                TotalUsageView(
+                                    period = period,
+                                    dayIndex = dayIndex,
+                                    onDayIndexChange = onDayIndexChange,
+                                    selectedCentralTendency = selectedCentralTendency,
+                                    onSelectedCentralTendencyChange = onSelectedCentralTendencyChange,
+                                    deviceUsage = deviceUsage,
+                                    modelProducer = modelProducer,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+                                )
+                            }
+                            comparison?.let { cmp ->
+                                if (cmp.period != Period.DAY) {
+                                    item {
+                                        ComparisonView(
+                                            comparison = cmp,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(
+                                                    horizontal = dimensionResource(id = R.dimen.padding_medium),
+                                                    vertical = dimensionResource(id = R.dimen.padding_small)
+                                                )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
-                // Four-column app ranking (Usage Analyzer style) with switchable long ranges.
-                item {
-                    AppUsageGridView(
-                        deviceUsage = deviceUsage,
-                        onAppClick = openApplicationUsageScreen,
-                        onBackfill = onBackfill,
-                        backfillRunning = backfillRunning,
-                        backfillProgress = backfillProgress,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = dimensionResource(id = R.dimen.padding_medium))
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(
+                        horizontal = dimensionResource(id = R.dimen.padding_medium),
+                        vertical = dimensionResource(id = R.dimen.padding_medium)
                     )
+                ) {
+                    when (deviceUsageResource) {
+                        is Resource.Failure -> item {
+                            FailureView(deviceUsageResource.throwable.toString())
+                        }
+                        is Resource.Progress -> item {
+                            LoadingDialog(
+                                title = stringResource(id = R.string.calculating),
+                                message = stringResource(id = R.string.calculating_message)
+                            )
+                        }
+                        is Resource.Success -> {
+                            val deviceUsage = deviceUsageResource.data
+                            if (period == Period.MONTH && deviceUsage is MonthlyDeviceUsage) {
+                                item {
+                                    MonthlyInsightsView(
+                                        deviceUsage = deviceUsage,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = dimensionResource(id = R.dimen.padding_small))
+                                    )
+                                }
+                            }
+                            item {
+                                AppUsageGridView(
+                                    deviceUsage = deviceUsage,
+                                    onAppClick = openApplicationUsageScreen,
+                                    onBackfill = onBackfill,
+                                    backfillRunning = backfillRunning,
+                                    backfillProgress = backfillProgress,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
-
 /*@Composable
 private fun LandscapeDeviceUsageScreen(
     period: Period,
